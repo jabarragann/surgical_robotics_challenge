@@ -49,9 +49,9 @@ cameraL:
   field view angle: 1.2
   monitor: 1
   parent: BODY CameraFrame
-  # publish image: True
+  publish image: True
   # publish image resolution: {width: 1920, height: 1080}
-  # publish depth: True
+  publish depth: True
   # depth compute shaders:
   #   path: /home/adnan/ambf/ambf_shaders/depth
   #   vertex: "shader.vs"
@@ -69,6 +69,7 @@ cameraR:
   field view angle: 1.2
   monitor: 2
   parent: BODY CameraFrame
+  publish image: True
   # publish depth: True
   # multipass: True
 

@@ -29,21 +29,21 @@ if __name__ == "__main__":
     print("position")
     print(cam_pose.p) 
     
-    pose = pm.toMatrix(cam_pose)
+    # pose = pm.toMatrix(cam_pose)
 
-    data = {}
-    data['people'] = []
+    # data = {}
+    # data['people'] = []
 
-    data['people'].append({
-        'name': 'Larry',
-        'website': 'google.com',
-        'from': pose[:3,3].tolist() 
-    })
-    data['people'].append({
-        'name': 'Tim',
-        'website': 'apple.com',
-        'from': 'Alabama'
-    })
+    # data['people'].append({
+    #     'name': 'Larry',
+    #     'website': 'google.com',
+    #     'from': pose[:3,3].tolist() 
+    # })
+    # data['people'].append({
+    #     'name': 'Tim',
+    #     'website': 'apple.com',
+    #     'from': 'Alabama'
+    # })
 
-    with open('data.txt', 'w') as outfile:
-        json.dump(data, outfile)
+    # with open('data.txt', 'w') as outfile:
+    #     json.dump(data, outfile)

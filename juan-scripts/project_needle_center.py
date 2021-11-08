@@ -4,7 +4,8 @@ import numpy as np
 from numpy.linalg import inv
 
 if __name__ == "__main__":
-    name = "./data/1635920726404870261"
+    # name = "./data/1635920726404870261"
+    name = "./data/1636328075966555985"
     fvg = 1.2
     width = 640
     height = 480
@@ -26,11 +27,12 @@ if __name__ == "__main__":
     T_WC[:,:] = data['camera']['pose']
 
     T_CN = inv(T_WC).dot(T_WN)
+    # T_CN = T_WC.dot(T_WN)
 
     rvecs,_ = cv2.Rodrigues(T_CN[:3,:3]) 
     tvecs = T_CN[:3,3]
 
-    img_pt, _ = cv2.projectPoints(np.float32([[3,0,0]]), rvecs, tvecs, intrinsic_params, np.float32([0,0,0,0,0]))
+    img_pt, _ = cv2.projectPoints(np.float32([[0,0,0]]), rvecs, tvecs, intrinsic_params, np.float32([0,0,0,0,0]))
 
     print("intrinsic")
     print(intrinsic_params)

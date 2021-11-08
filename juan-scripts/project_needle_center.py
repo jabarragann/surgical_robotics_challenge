@@ -6,7 +6,7 @@ from numpy.linalg import inv
 np.set_printoptions(precision=3)
 
 if __name__ == "__main__":
-    name = "./data/1635920726404870261"
+    name = "./data/1636346692105409376"
     # name = "./data/1636328075966555985"
     fvg = 1.2
     width = 640
@@ -23,11 +23,11 @@ if __name__ == "__main__":
 
 
     data = json.load(open(name+'.txt'))
-    T_WN = np.zeros((4,4))
-    T_WN[:,:] = data['needle']['pose']
-    T_WC = np.zeros((4,4))
-    T_WC[:,:] = data['camera']['pose']
+    T_WN = np.array(data['needle']['pose'])
+    T_FC = np.array(data['cam_l']['pose'])
+    T_WF = np.array(data['cam_frame']['pose'])
 
+    T_WC = T_WF.dot(T_FC) 
     T_CN = inv(T_WC).dot(T_WN)
     # T_CN = T_WC.dot(T_WN)
 

@@ -40,7 +40,8 @@ class ImageSaver:
         self.scene = Scene(c)
         time.sleep(0.3)
         
-        self.ambf_cam = Camera(c,"cameraL")
+        self.ambf_cam_l = Camera(c,"cameraL")
+        self.ambf_cam_frame = Camera(c,"CameraFrame")
 
     def save_frame(self):
         # Save frame
@@ -61,7 +62,8 @@ class ImageSaver:
             print(e)
     
     def get_spatial_info(self):
-        cam_pose = pm.toMatrix(self.ambf_cam.get_T_w_c())
+        cam_l_pose = pm.toMatrix(self.ambf_cam_l.get_T_w_c())
+        cam_frame_pose = pm.toMatrix(self.ambf_cam_frame.get_T_w_c())
         needle_pose = pm.toMatrix(self.scene.needle_measured_cp())
         
         data = {}
@@ -71,13 +73,18 @@ class ImageSaver:
             'position': needle_pose[:3,3].tolist(),
             'pose': needle_pose.tolist()
         }
-        data['camera'] = {
-            'name': 'left_camera',
-            'rotation': cam_pose[:3,:3].tolist(),
-            'position': cam_pose[:3,:3].tolist(),
-            'pose': cam_pose.tolist()
+        data['cam_l'] = {
+            'name': 'cam_l',
+            'rotation': cam_l_pose[:3,:3].tolist(),
+            'position': cam_l_pose[:3,3].tolist(),
+            'pose': cam_l_pose.tolist()
         }
-            
+        data['cam_frame'] = {
+            'name': 'cam_frame',
+            'rotation': cam_frame_pose[:3,:3].tolist(),
+            'position': cam_frame_pose[:3,3].tolist(),
+            'pose': cam_frame_pose.tolist()
+        }
             
         return data
 

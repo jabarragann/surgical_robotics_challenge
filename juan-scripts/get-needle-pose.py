@@ -8,7 +8,7 @@ import tf_conversions.posemath as pm
 
 if __name__ == "__main__":
     
-    c = Client()
+    c = Client('juanclient')
     c.connect()
     time.sleep(0.3)
     scene = Scene(c)

@@ -57,7 +57,7 @@ class ImageSaver:
             cv2_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             self.left_frame = cv2_img
             self.left_ts = msg.header.stamp
-        except CvBridgeError, e:
+        except CvBridgeError as e:
             print(e)
     
     def get_spatial_info(self):

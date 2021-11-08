@@ -3,9 +3,11 @@ import cv2
 import numpy as np
 from numpy.linalg import inv
 
+np.set_printoptions(precision=3)
+
 if __name__ == "__main__":
-    # name = "./data/1635920726404870261"
-    name = "./data/1636328075966555985"
+    name = "./data/1635920726404870261"
+    # name = "./data/1636328075966555985"
     fvg = 1.2
     width = 640
     height = 480

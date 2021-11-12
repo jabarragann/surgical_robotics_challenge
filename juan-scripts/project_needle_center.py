@@ -11,7 +11,7 @@ if __name__ == "__main__":
     fvg = 1.2
     width = 640
     height = 480
-    
+
     f = height/(2*np.tan(fvg/2))
 
     intrinsic_params = np.zeros((3,3))

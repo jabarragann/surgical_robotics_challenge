@@ -10,6 +10,7 @@ import tf_conversions.posemath as pm
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
+import pandas as pd
 
 np.set_printoptions(precision=3)
 
@@ -85,7 +86,11 @@ if __name__ == "__main__":
     rvecs, _ = cv2.Rodrigues(T_CN[:3, :3])
     tvecs = T_CN[:3, 3]
 
-    needle_salient = np.float32([[0, 0, 0], [-0.1018, 0, 0], [0, 0.1018, 0]])
+    # needle_salient = np.float32([[0, 0, 0], [-0.1018, 0, 0], [0, 0.1018, 0]])
+    theta = np.linspace(np.pi / 3, np.pi, num=8).reshape((-1, 1))
+    radius = 0.1018
+    needle_salient = radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0))
+
     img_pt, _ = cv2.projectPoints(
         needle_salient,
         rvecs,
@@ -106,15 +111,28 @@ if __name__ == "__main__":
     print(T_WN)
     print("T_WC. Transform from camera to world")
     print(T_WC)
+    print("T_CN. Transform from the needle to cam")
+    print(T_CN)
     print("Projected center")
     print(img_pt[0, 0])
     print(img_pt_2.reshape(-1))
 
     # Display image
+    results_df = pd.DataFrame(columns=["id", "x", "y"])
     for i in range(img_pt.shape[0]):
         img = cv2.circle(
             img, (int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])), 3, (255, 0, 0), -1
         )
+
+        # Save pts
+        results_df = results_df.append(
+            pd.DataFrame(
+                [[i, int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])]],
+                columns=["id", "x", "y"],
+            )
+        )
+    results_df.to_csv("./sample_ellipse_01.txt", index=None)
+
     cv2.imshow("img", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

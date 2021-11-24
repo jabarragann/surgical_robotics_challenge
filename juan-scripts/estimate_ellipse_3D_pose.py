@@ -6,8 +6,33 @@ import math as m
 import cv2
 from numpy.linalg import norm
 from numpy import cos, sin, pi
+from cv_bridge import CvBridge, CvBridgeError
+import rospy
+from sensor_msgs.msg import Image
 
 np.set_printoptions(precision=6)
+
+
+class ImageSaver:
+    def __init__(self):
+        self.bridge = CvBridge()
+        self.img_subs = rospy.Subscriber(
+            "/ambf/env/cameras/cameraL/ImageData", Image, self.left_callback
+        )
+
+        self.left_frame = None
+        self.left_ts = None
+
+        # Wait a until subscribers and publishers are ready
+        rospy.sleep(0.5)
+
+    def left_callback(self, msg):
+        try:
+            cv2_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            self.left_frame = cv2_img
+            self.left_ts = msg.header.stamp
+        except CvBridgeError as e:
+            print(e)
 
 
 class ellipse_2d:
@@ -87,7 +112,7 @@ class Circle_3d:
         projected[1, :] = projected[1, :] / projected[2, :]
         projected[2, :] = projected[2, :] / projected[2, :]
 
-        img = np.zeros((480, 640, 3))
+        # img = np.zeros((480, 640, 3))
         for xp, yp in zip(projected[0, :], projected[1, :]):
             img = cv2.circle(
                 img, (int(xp), int(yp)), radius=1, color=(0, 255, 0), thickness=-1
@@ -97,6 +122,9 @@ class Circle_3d:
 
 
 if __name__ == "__main__":
+    rospy.init_node("image_listener")
+    saver = ImageSaver()
+    img = saver.left_frame
 
     # Ground truth
     radius = 0.1018
@@ -200,7 +228,8 @@ if __name__ == "__main__":
     Y = df["y"].values.reshape(-1, 1)
 
     for i in range(2):
-        img = np.zeros((480, 640, 3))
+        # img = np.zeros((480, 640, 3))
+        img = saver.left_frame
 
         # Sample 3D circle
         pts = circles[i].generate_parametric(30)

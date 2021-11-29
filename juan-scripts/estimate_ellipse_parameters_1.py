@@ -29,7 +29,7 @@ if __name__ == "__main__":
     print("camera matrix")
     print(mtx)
 
-    df = pd.read_csv("sample_ellipse_01.txt")
+    df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
 
     X = df["x"].values.reshape(-1, 1) - cx
     Y = df["y"].values.reshape(-1, 1) - cy
@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # Save ellipse parameters
     # Ellipse: ax^2 + by^2 +cxy +dx + ey + f = 0
-    with open("ellipse_coefficients.txt", "w") as file:
+    with open("./juan-scripts/output/ellipse_coefficients.txt", "w") as file:
         for name, param in zip(["a", "b", "c", "d", "e"], x):
             file.write(",".join([name, "{:0.10f}".format(param), "\n"]))
         file.write(",".join(["f", "{:0.10f}".format(f), "\n"]))

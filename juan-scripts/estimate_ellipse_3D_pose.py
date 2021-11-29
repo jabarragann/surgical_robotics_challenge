@@ -55,7 +55,7 @@ class ellipse_2d:
         c_mat[1, 2] = c_mat[2, 1] = self.e_coeff / 2
         return c_mat
 
-    def load_coeff(self, file="./ellipse_coefficients.txt"):
+    def load_coeff(self, file):
         d = {
             "a": self.a_coeff,
             "b": self.b_coeff,
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 
     # Normalize ellipse coefficients
     ellipse = ellipse_2d()
-    ellipse.load_coeff()
+    ellipse.load_coeff("./juan-scripts/output/ellipse_coefficients.txt")
     c_mat = ellipse.get_c_matrix()
 
     c_mat[0, 0] = c_mat[0, 0]
@@ -223,7 +223,7 @@ if __name__ == "__main__":
         print(projections[:, k])
 
     # Draw the ellipse
-    df = pd.read_csv("sample_ellipse_01.txt")
+    df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
     X = df["x"].values.reshape(-1, 1)
     Y = df["y"].values.reshape(-1, 1)
 

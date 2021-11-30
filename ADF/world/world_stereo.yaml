@@ -69,16 +69,13 @@ cameraR:
   field view angle: 1.2
   monitor: 2
   parent: BODY CameraFrame
-<<<<<<< HEAD
   publish image: True
-=======
   # preprocessing shaders:
   #   path: ../../ambf_shaders/preprocessing
   #   vertex: shader.vs
   #   fragment: shader.fs
   # publish image: True
   # publish image resolution: {width: 1920, height: 1080}
->>>>>>> 8a62d0758a536a7a5755e4fa0236bb1e71b6dca4
   # publish depth: True
   # publish depth resolution: {width: 640, height: 480}
   # multipass: True

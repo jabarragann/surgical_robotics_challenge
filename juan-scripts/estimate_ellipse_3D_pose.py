@@ -15,6 +15,7 @@ from surgical_robotics_challenge.camera import Camera
 from ambf_client import Client
 import time
 import tf_conversions.posemath as pm
+from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D
 
 np.set_printoptions(precision=6)
 
@@ -39,92 +40,6 @@ class ImageSaver:
             self.left_ts = msg.header.stamp
         except CvBridgeError as e:
             print(e)
-
-
-class ellipse_2d:
-    def __init__(self):
-        # Ellipse: ax^2 + by^2 +cxy +dx + ey + f = 0
-        self.a_coeff = 0.1
-        self.b_coeff = 0.0
-        self.c_coeff = 0.0
-        self.d_coeff = 0.0
-        self.e_coeff = 0.0
-        self.f_coeff = 0.0
-
-    def get_c_matrix(self):
-        c_mat = np.ones((3, 3))
-        c_mat[0, 0] = self.a_coeff
-        c_mat[1, 1] = self.c_coeff
-        c_mat[2, 2] = self.f_coeff
-        c_mat[0, 1] = c_mat[1, 0] = self.b_coeff / 2
-        c_mat[0, 2] = c_mat[2, 0] = self.d_coeff / 2
-        c_mat[1, 2] = c_mat[2, 1] = self.e_coeff / 2
-        return c_mat
-
-    def load_coeff(self, file):
-        d = {
-            "a": self.a_coeff,
-            "b": self.b_coeff,
-            "c": self.c_coeff,
-            "d": self.d_coeff,
-            "e": self.e_coeff,
-            "f": self.f_coeff,
-        }
-        with open(file, "r") as f1:
-            for line in f1.readlines():
-                vals = line.split(sep=",")
-                d[vals[0]] = float(vals[1])
-        self.a_coeff = d["a"]
-        self.b_coeff = d["b"]
-        self.c_coeff = d["c"]
-        self.d_coeff = d["d"]
-        self.e_coeff = d["e"]
-        self.f_coeff = d["f"]
-
-
-class Circle_3d:
-    def __init__(self, center, normal, radius, intrinsic):
-        self.center = center
-        self.radius = radius
-        self.normal = normal / norm(normal)
-        self.intrinsic = intrinsic
-        # Orthogonal vectors to n
-        s = 0.5
-        t = 0.5
-        self.a = t * np.array([-self.normal[2] / self.normal[0], 0, 1]) + s * np.array(
-            [-self.normal[1] / self.normal[0], 1, 0]
-        )
-        self.a /= norm(self.a)
-        self.b = np.cross(self.a, self.normal)
-
-        # a is orthogonal to n
-        # l = self.normal.dot(self.a)
-
-    def generate_parametric(self, numb_pt):
-        pts = np.zeros((3, numb_pt))
-        theta = np.linspace(0, 2 * pi, numb_pt).reshape(-1, 1)
-        pts = (
-            self.center
-            + self.radius * cos(theta) * self.a
-            + self.radius * sin(theta) * self.b
-        )
-        pts = pts.T
-        return pts
-
-    def project_pt_to_img(self, img, intrinsic, numb_pt):
-        pts = self.generate_parametric(numb_pt)
-        projected = intrinsic @ pts
-        projected[0, :] = projected[0, :] / projected[2, :]
-        projected[1, :] = projected[1, :] / projected[2, :]
-        projected[2, :] = projected[2, :] / projected[2, :]
-
-        # img = np.zeros((480, 640, 3))
-        for xp, yp in zip(projected[0, :], projected[1, :]):
-            img = cv2.circle(
-                img, (int(xp), int(yp)), radius=1, color=(0, 255, 0), thickness=-1
-            )
-
-        return img
 
 
 if __name__ == "__main__":
@@ -158,10 +73,12 @@ if __name__ == "__main__":
 
     focal_length = (mtx[0, 0] + mtx[1, 1]) / 2
 
-    #Get 3D position of the tip and tail 
-    theta = np.array([np.pi / 3, np.pi]).reshape((2,1))    
+    # Get 3D position of the tip and tail
+    theta = np.array([np.pi / 3, np.pi]).reshape((2, 1))
     radius = 0.1018
-    needle_salient = radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0, np.ones((2,1))/radius))
+    needle_salient = radius * np.hstack(
+        (np.cos(theta), np.sin(theta), theta * 0, np.ones((2, 1)) / radius)
+    )
 
     T_WN = pm.toMatrix(scene.needle_measured_cp())  # Needle to world
     T_FC = pm.toMatrix(ambf_cam_l.get_T_c_w())  # CamL to CamFrame
@@ -173,11 +90,11 @@ if __name__ == "__main__":
     F = np.array([[0, 1, 0, 0], [0, 0, -1, 0], [-1, 0, 0, 0], [0, 0, 0, 1]])
     T_CN = F @ T_CN
 
-    tip_tail_pt =  T_CN @ needle_salient.T 
-    plane_vect = tip_tail_pt[:3,0] - tip_tail_pt[:3,1]
+    tip_tail_pt = T_CN @ needle_salient.T
+    plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 
     # Normalize ellipse coefficients
-    ellipse = ellipse_2d()
+    ellipse = Ellipse2D()
     ellipse.load_coeff("./juan-scripts/output/ellipse_coefficients.txt")
     c_mat = ellipse.get_c_matrix()
 
@@ -244,7 +161,7 @@ if __name__ == "__main__":
 
     circles = []
     for k in range(2):
-        circles.append(Circle_3d(translations[:, k], normals[:, k], radius, mtx))
+        circles.append(Circle3D(translations[:, k], normals[:, k], radius, mtx))
         print("solution {:d}".format(k))
         print("pose")
         print(translations[:, k])
@@ -274,9 +191,7 @@ if __name__ == "__main__":
 
         # #Draw ellipse samples
         for xp, yp in zip(X.squeeze(), Y.squeeze()):
-            img = cv2.circle(
-                img, (int(xp), int(yp)), radius=2, color=(0, 0, 255), thickness=-1
-            )
+            img = cv2.circle(img, (int(xp), int(yp)), radius=2, color=(0, 0, 255), thickness=-1)
 
         cv2.imshow("img", img)
         cv2.waitKey(0)

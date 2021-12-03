@@ -131,7 +131,7 @@ if __name__ == "__main__":
                 columns=["id", "x", "y"],
             )
         )
-    results_df.to_csv("./sample_ellipse_01.txt", index=None)
+    results_df.to_csv("./juan-scripts/output/sample_ellipse_01.txt", index=None)
 
     cv2.imshow("img", img)
     cv2.waitKey(0)

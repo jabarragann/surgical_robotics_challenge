@@ -9,6 +9,12 @@ from numpy import cos, sin, pi
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 from sensor_msgs.msg import Image
+from numpy.linalg import inv
+from surgical_robotics_challenge.scene import Scene
+from surgical_robotics_challenge.camera import Camera
+from ambf_client import Client
+import time
+import tf_conversions.posemath as pm
 
 np.set_printoptions(precision=6)
 
@@ -55,7 +61,7 @@ class ellipse_2d:
         c_mat[1, 2] = c_mat[2, 1] = self.e_coeff / 2
         return c_mat
 
-    def load_coeff(self, file="./ellipse_coefficients.txt"):
+    def load_coeff(self, file):
         d = {
             "a": self.a_coeff,
             "b": self.b_coeff,
@@ -126,6 +132,13 @@ if __name__ == "__main__":
     saver = ImageSaver()
     img = saver.left_frame
 
+    c = Client("juanclient")
+    c.connect()
+    time.sleep(0.3)
+
+    scene = Scene(c)
+    ambf_cam_l = Camera(c, "cameraL")
+    ambf_cam_frame = Camera(c, "CameraFrame")
     # Ground truth
     radius = 0.1018
 
@@ -145,9 +158,27 @@ if __name__ == "__main__":
 
     focal_length = (mtx[0, 0] + mtx[1, 1]) / 2
 
+    #Get 3D position of the tip and tail 
+    theta = np.array([np.pi / 3, np.pi]).reshape((2,1))    
+    radius = 0.1018
+    needle_salient = radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0, np.ones((2,1))/radius))
+
+    T_WN = pm.toMatrix(scene.needle_measured_cp())  # Needle to world
+    T_FC = pm.toMatrix(ambf_cam_l.get_T_c_w())  # CamL to CamFrame
+    T_WF = pm.toMatrix(ambf_cam_frame.get_T_c_w())  # CamFrame to world
+
+    T_WC = T_WF.dot(T_FC)
+    T_CN = inv(T_WC).dot(T_WN)
+    # Convert AMBF camera axis to Opencv Camera axis
+    F = np.array([[0, 1, 0, 0], [0, 0, -1, 0], [-1, 0, 0, 0], [0, 0, 0, 1]])
+    T_CN = F @ T_CN
+
+    tip_tail_pt =  T_CN @ needle_salient.T 
+    plane_vect = tip_tail_pt[:3,0] - tip_tail_pt[:3,1]
+
     # Normalize ellipse coefficients
     ellipse = ellipse_2d()
-    ellipse.load_coeff()
+    ellipse.load_coeff("./juan-scripts/output/ellipse_coefficients.txt")
     c_mat = ellipse.get_c_matrix()
 
     c_mat[0, 0] = c_mat[0, 0]
@@ -219,11 +250,13 @@ if __name__ == "__main__":
         print(translations[:, k])
         print("normal")
         print(normals[:, k])
+        print("plane vect dot normal")
+        print(normals[:, k].dot(plane_vect))
         print("projections")
         print(projections[:, k])
 
     # Draw the ellipse
-    df = pd.read_csv("sample_ellipse_01.txt")
+    df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
     X = df["x"].values.reshape(-1, 1)
     Y = df["y"].values.reshape(-1, 1)
 

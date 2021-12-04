@@ -4,10 +4,11 @@ from sensor_msgs.msg import Image
 import time
 from surgical_robotics_challenge.scene import Scene
 from surgical_robotics_challenge.camera import Camera
-
+import cv2
 import tf_conversions.posemath as pm
 import numpy as np
 from numpy.linalg import inv, norm
+import pandas as pd
 
 
 class ImageSaver:
@@ -80,8 +81,19 @@ class AMBFNeedle:
 
         return T_CN
 
-    def sample_3d_pts():
-        pass
+    def sample_3d_pts(self, N: int) -> np.ndarray:
+        """Sample `N` 3D points of the needle on the needle local coordinate frame
+
+        Args:
+            N (int): [description]
+
+        Returns:
+            np.ndarray: Needle 3D points
+        """
+
+        theta = np.linspace(np.pi / 3, np.pi, num=N).reshape((-1, 1))
+        needle_salient = self.radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0))
+        return needle_salient
 
 
 class AMBFCameras:
@@ -101,3 +113,30 @@ class AMBFCameras:
         self.mtx = intrinsic_params
 
         self.focal_length = (self.mtx[0, 0] + self.mtx[1, 1]) / 2
+
+    def project_points(self, T_CW: np.ndarray, obj_3d_pt: np.ndarray) -> np.ndarray:
+
+        rvecs, _ = cv2.Rodrigues(T_CW[:3, :3])
+        tvecs = T_CW[:3, 3]
+
+        img_pt, _ = cv2.projectPoints(
+            obj_3d_pt,
+            rvecs,
+            tvecs,
+            self.mtx,
+            np.float32([0, 0, 0, 0, 0]),
+        )
+        return img_pt
+
+    @staticmethod
+    def save_projected_points(file_path: str, img_pt):
+        results_df = pd.DataFrame(columns=["id", "x", "y"])
+        for i in range(img_pt.shape[0]):
+            # Save pts
+            results_df = results_df.append(
+                pd.DataFrame(
+                    [[i, int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])]],
+                    columns=["id", "x", "y"],
+                )
+            )
+        results_df.to_csv(file_path, index=None)

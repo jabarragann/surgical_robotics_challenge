@@ -111,10 +111,10 @@ class Ellipse2D:
         """Estimate the ellipse coefficients from sample points int the image plane.
         The estimation of the coefficients is done using the least squares solution for Ax = b
 
-        [X^2 XY Y^2 X Y] @ [A  = F
-                            B
-                            C
-                            D]
+        [X^2 XY Y^2 X Y] @ [A|  = F
+                            B|
+                            C|
+                            D|
 
         Args:
             cls (Ellipse2D): [description]

@@ -1,3 +1,4 @@
+from os import WIFEXITED
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 from sensor_msgs.msg import Image
@@ -102,6 +103,9 @@ class AMBFCameras:
         self.fvg = 1.2
         self.width = 640
         self.height = 480
+        self.cx = self.width / 2
+        self.cy = self.height / 2
+
         self.f = self.height / (2 * np.tan(self.fvg / 2))
 
         intrinsic_params = np.zeros((3, 3))

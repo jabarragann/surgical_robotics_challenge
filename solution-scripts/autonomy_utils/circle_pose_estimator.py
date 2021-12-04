@@ -3,8 +3,30 @@ import numpy as np
 import cv2
 from numpy.linalg import norm, inv
 from numpy import cos, sin, pi
-from typing import Tuple
+from typing import List, Tuple
 import pandas as pd
+from sympy.logic.boolalg import anf_coeffs
+
+
+def estimate_pose(
+    ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float
+) -> List[Circle3D]:
+    """[summary]
+
+    Args:
+        ellipse (Ellipse2D): [description]
+        mtx (np.ndarray): [description]
+        focal_length (float): [description]
+        radius (float): [description]
+
+    Returns:
+        List[Circle3D]: [description]
+    """
+    return [Circle3D(), Circle3D()]
+
+
+#  ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float
+#     ) -> List[Circle3D]
 
 
 class Ellipse2D:
@@ -18,6 +40,15 @@ class Ellipse2D:
         self.e_coeff = E
         self.f_coeff = F
 
+        self.parameter_vector = [
+            self.a_coeff,
+            self.b_coeff,
+            self.c_coeff,
+            self.d_coeff,
+            self.e_coeff,
+            self.f_coeff,
+        ]
+
     def get_c_matrix(self):
         c_mat = np.ones((3, 3))
         c_mat[0, 0] = self.a_coeff
@@ -28,29 +59,33 @@ class Ellipse2D:
         c_mat[1, 2] = c_mat[2, 1] = self.e_coeff / 2
         return c_mat
 
-    def load_coeff(self, file):
-        d = {
-            "a": self.a_coeff,
-            "b": self.b_coeff,
-            "c": self.c_coeff,
-            "d": self.d_coeff,
-            "e": self.e_coeff,
-            "f": self.f_coeff,
-        }
-        with open(file, "r") as f1:
-            for line in f1.readlines():
-                vals = line.split(sep=",")
-                d[vals[0]] = float(vals[1])
+    # def load_coeff(self, file):
+    #     d = {
+    #         "a": self.a_coeff,
+    #         "b": self.b_coeff,
+    #         "c": self.c_coeff,
+    #         "d": self.d_coeff,
+    #         "e": self.e_coeff,
+    #         "f": self.f_coeff,
+    #     }
+    #     with open(file, "r") as f1:
+    #         for line in f1.readlines():
+    #             vals = line.split(sep=",")
+    #             d[vals[0]] = float(vals[1])
 
-        self.a_coeff = d["a"]
-        self.b_coeff = d["b"]
-        self.c_coeff = d["c"]
-        self.d_coeff = d["d"]
-        self.e_coeff = d["e"]
-        self.f_coeff = d["f"]
+    #     self.a_coeff = d["a"]
+    #     self.b_coeff = d["b"]
+    #     self.c_coeff = d["c"]
+    #     self.d_coeff = d["d"]
+    #     self.e_coeff = d["e"]
+    #     self.f_coeff = d["f"]
 
-    def parameters_to_txt(self: Ellipse2D) -> None:
-        pass
+    def parameters_to_txt(self: Ellipse2D, file: str) -> None:
+        # Ellipse implicit equation: Ax^1 + Bxy + Cy^2 + Dx + Ey + F = 0
+        x = [self.a_coeff, self.b_coeff, self.c_coeff, self.d_coeff, self.e_coeff, self.f_coeff]
+        with open(file, "w") as file_handle:
+            for name, param in zip(["a", "b", "c", "d", "e", "f"], x):
+                file_handle.write(",".join([name, "{:0.10f}".format(param), "\n"]))
 
     def set_coefficients(self, A, B, C, D, E, F) -> None:
         self.a_coeff = A
@@ -73,18 +108,48 @@ class Ellipse2D:
 
     @classmethod
     def from_sample_points(cls: Ellipse2D, X: np.ndarray, Y: np.ndarray) -> Ellipse2D:
+        """Estimate the ellipse coefficients from sample points int the image plane.
+        The estimation of the coefficients is done using the least squares solution for Ax = b
+
+        [X^2 XY Y^2 X Y] @ [A  = F
+                            B
+                            C
+                            D]
+
+        Args:
+            cls (Ellipse2D): [description]
+            X (np.ndarray): x coordiante of the sample points. Shape (N,1)
+            Y (np.ndarray): y coordinate of the sample points. Shape (N,1)
+
+        Returns:
+            Ellipse2D: estimated ellipse
+        """
         # Formulate and solve the least squares problem ||Ax - b ||^2
+
         F = -1e6  # Ellipse constant
         A = np.hstack([X ** 2, X * Y, Y ** 2, X, Y])
-        b = np.ones_like(X) * (-F)
+        b = np.ones_like(X) * F
         x = np.linalg.lstsq(A, b, rcond=None)[0].squeeze()
 
         ellipse = cls(x[0], x[1], x[2], x[3], x[4], -F)
         return ellipse
 
     @classmethod
-    def from_coefficients(cls: Ellipse2D, coefficients: str) -> Ellipse2D:
-        pass
+    def from_coefficients(cls: Ellipse2D, coefficients_file: str) -> Ellipse2D:
+        d = {
+            "a": None,
+            "b": None,
+            "c": None,
+            "d": None,
+            "e": None,
+            "f": None,
+        }
+        with open(coefficients_file, "r") as f1:
+            for line in f1.readlines():
+                vals = line.split(sep=",")
+                d[vals[0]] = float(vals[1])
+
+        return Ellipse2D(d["a"], d["b"], d["c"], d["d"], d["e"], d["f"])
 
     @staticmethod
     def read_pts_in_file(file: str, width: int, height: int) -> Tuple[np.ndarray, np.ndarray]:
@@ -150,5 +215,83 @@ class Circle3D:
 
 
 class CirclePoseEstimator:
-    def __init__(self) -> None:
-        pass
+    def __init__(
+        self, ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float
+    ) -> None:
+        """[summary]
+
+        Args:
+            ellipse (Ellipse2D): [description]
+            mtx (np.ndarray): [description]
+            focal_length (float): [description]
+            radius (float): [description]
+        """
+
+        self.ellipse = ellipse
+        self.mtx = mtx
+        self.focal_length = focal_length
+        self.radius = radius
+
+        self.c_mat = ellipse.get_c_matrix()
+        # Normalize ellipse matrix with focal length
+        self.c_mat[0, 0] = self.c_mat[0, 0]
+        self.c_mat[0, 1] = self.c_mat[0, 1]
+        self.c_mat[0, 2] = self.c_mat[0, 2] / (focal_length)
+        self.c_mat[1, 0] = self.c_mat[1, 0]
+        self.c_mat[1, 1] = self.c_mat[1, 1]
+        self.c_mat[1, 2] = self.c_mat[1, 2] / (focal_length)
+        self.c_mat[2, 0] = self.c_mat[2, 0] / (focal_length)
+        self.c_mat[2, 1] = self.c_mat[2, 1] / (focal_length)
+        self.c_mat[2, 2] = self.c_mat[2, 2] / (focal_length * focal_length)
+
+    def estimate_pose(self) -> List[Circle3D]:
+        """[summary]
+
+        Returns:
+            List[Circle3D]: [description]
+        """
+
+        # Calculate Eigen vectors
+        ret, W, V = cv2.eigen(self.c_mat)
+        V = V.transpose()
+
+        e1 = W[0, 0]
+        e2 = W[1, 0]
+        e3 = W[2, 0]
+
+        S1 = [+1, +1, +1, +1, -1, -1, -1, -1]
+        S2 = [+1, +1, -1, -1, +1, +1, -1, -1]
+        S3 = [+1, -1, +1, -1, +1, -1, +1, -1]
+
+        g = np.sqrt((e2 - e3) / (e1 - e3))
+        h = np.sqrt((e1 - e2) / (e1 - e3))
+
+        # Calculate two possible solutions
+        translations = np.zeros((3, 2))
+        normals = np.zeros((3, 2))
+        projections = np.zeros((2, 2))
+
+        k = 0
+        for i in range(8):
+            z0 = S3[i] * (e2 * self.radius) / np.sqrt(-e1 * e3)
+            Tx = S2[i] * e3 / e2 * h
+            Ty = 0.0
+            Tz = -S1[i] * e1 / e2 * g
+            Nx = S2[i] * h
+            Ny = 0.0
+            Nz = -S1[i] * g
+
+            t = z0 * V @ np.array([Tx, Ty, Tz]).reshape((3, 1))
+            n = V @ np.array([Nx, Ny, Nz]).reshape((3, 1))
+
+            if t[2] > 0 and n[2] < 0:
+                translations[:, k] = t.reshape(-1)
+                normals[:, k] = n.reshape(-1)
+                pc = self.mtx @ t
+                projections[:, k] = [pc[0] / pc[2], pc[1] / pc[2]]
+                k += 1
+
+        return [
+            Circle3D(translations[:, 0], normals[:, 0], self.radius, self.mtx),
+            Circle3D(translations[:, 1], normals[:, 1], self.radius, self.mtx),
+        ]

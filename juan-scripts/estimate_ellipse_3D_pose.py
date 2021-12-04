@@ -15,7 +15,7 @@ from surgical_robotics_challenge.camera import Camera
 from ambf_client import Client
 import time
 import tf_conversions.posemath as pm
-from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D
+from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D, CirclePoseEstimator
 
 np.set_printoptions(precision=6)
 
@@ -86,6 +86,7 @@ if __name__ == "__main__":
 
     T_WC = T_WF.dot(T_FC)
     T_CN = inv(T_WC).dot(T_WN)
+
     # Convert AMBF camera axis to Opencv Camera axis
     F = np.array([[0, 1, 0, 0], [0, 0, -1, 0], [-1, 0, 0, 0], [0, 0, 0, 1]])
     T_CN = F @ T_CN
@@ -94,83 +95,29 @@ if __name__ == "__main__":
     plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 
     # Normalize ellipse coefficients
-    ellipse = Ellipse2D()
-    ellipse.load_coeff("./juan-scripts/output/ellipse_coefficients.txt")
-    c_mat = ellipse.get_c_matrix()
-
-    c_mat[0, 0] = c_mat[0, 0]
-    c_mat[0, 1] = c_mat[0, 1]
-    c_mat[0, 2] = c_mat[0, 2] / (focal_length)
-    c_mat[1, 0] = c_mat[1, 0]
-    c_mat[1, 1] = c_mat[1, 1]
-    c_mat[1, 2] = c_mat[1, 2] / (focal_length)
-    c_mat[2, 0] = c_mat[2, 0] / (focal_length)
-    c_mat[2, 1] = c_mat[2, 1] / (focal_length)
-    c_mat[2, 2] = c_mat[2, 2] / (focal_length * focal_length)
-
-    # Calculate Eigen vectors
-    ret, W, V = cv2.eigen(c_mat)
-    V = V.transpose()
-
-    e1 = W[0, 0]
-    e2 = W[1, 0]
-    e3 = W[2, 0]
-
-    S1 = [+1, +1, +1, +1, -1, -1, -1, -1]
-    S2 = [+1, +1, -1, -1, +1, +1, -1, -1]
-    S3 = [+1, -1, +1, -1, +1, -1, +1, -1]
-
-    g = m.sqrt((e2 - e3) / (e1 - e3))
-    h = m.sqrt((e1 - e2) / (e1 - e3))
-
-    # Calculate two possible solutions
-    translations = np.zeros((3, 2))
-    normals = np.zeros((3, 2))
-    projections = np.zeros((2, 2))
-
-    k = 0
-    for i in range(8):
-        z0 = S3[i] * (e2 * radius) / m.sqrt(-e1 * e3)
-        Tx = S2[i] * e3 / e2 * h
-        Ty = 0.0
-        Tz = -S1[i] * e1 / e2 * g
-        Nx = S2[i] * h
-        Ny = 0.0
-        Nz = -S1[i] * g
-
-        t = z0 * V @ np.array([Tx, Ty, Tz]).reshape((3, 1))
-        n = V @ np.array([Nx, Ny, Nz]).reshape((3, 1))
-
-        if t[2] > 0 and n[2] < 0:
-            translations[:, k] = t.reshape(-1)
-            normals[:, k] = n.reshape(-1)
-            pc = mtx @ t
-            projections[:, k] = [pc[0] / pc[2], pc[1] / pc[2]]
-            k += 1
+    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients.txt")
+    estimator = CirclePoseEstimator(ellipse, mtx, focal_length, radius)
+    circles = estimator.estimate_pose()
 
     print("algorithm summary")
     print("camera_matrix")
     print(mtx)
     print("focal length {:0.4f}".format(focal_length))
     print("ellipse c matrix")
-    print(c_mat)
-    print("eigen values")
-    print(W)
-    print("eigen vectors")
-    print(V)
+    print(estimator.c_mat)
+    # print("eigen values")
+    # print(W)
+    # print("eigen vectors")
+    # print(V)
 
-    circles = []
     for k in range(2):
-        circles.append(Circle3D(translations[:, k], normals[:, k], radius, mtx))
         print("solution {:d}".format(k))
         print("pose")
-        print(translations[:, k])
+        print(circles[k].center)
         print("normal")
-        print(normals[:, k])
+        print(circles[k].normal)
         print("plane vect dot normal")
-        print(normals[:, k].dot(plane_vect))
-        print("projections")
-        print(projections[:, k])
+        print(circles[k].normal.dot(plane_vect))
 
     # Draw the ellipse
     df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")

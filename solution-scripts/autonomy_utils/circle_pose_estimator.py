@@ -8,27 +8,6 @@ import pandas as pd
 from sympy.logic.boolalg import anf_coeffs
 
 
-def estimate_pose(
-    ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float
-) -> List[Circle3D]:
-    """[summary]
-
-    Args:
-        ellipse (Ellipse2D): [description]
-        mtx (np.ndarray): [description]
-        focal_length (float): [description]
-        radius (float): [description]
-
-    Returns:
-        List[Circle3D]: [description]
-    """
-    return [Circle3D(), Circle3D()]
-
-
-#  ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float
-#     ) -> List[Circle3D]
-
-
 class Ellipse2D:
     def __init__(self, A, B, C, D, E, F):
 
@@ -58,27 +37,6 @@ class Ellipse2D:
         c_mat[0, 2] = c_mat[2, 0] = self.d_coeff / 2
         c_mat[1, 2] = c_mat[2, 1] = self.e_coeff / 2
         return c_mat
-
-    # def load_coeff(self, file):
-    #     d = {
-    #         "a": self.a_coeff,
-    #         "b": self.b_coeff,
-    #         "c": self.c_coeff,
-    #         "d": self.d_coeff,
-    #         "e": self.e_coeff,
-    #         "f": self.f_coeff,
-    #     }
-    #     with open(file, "r") as f1:
-    #         for line in f1.readlines():
-    #             vals = line.split(sep=",")
-    #             d[vals[0]] = float(vals[1])
-
-    #     self.a_coeff = d["a"]
-    #     self.b_coeff = d["b"]
-    #     self.c_coeff = d["c"]
-    #     self.d_coeff = d["d"]
-    #     self.e_coeff = d["e"]
-    #     self.f_coeff = d["f"]
 
     def parameters_to_txt(self: Ellipse2D, file: str) -> None:
         # Ellipse implicit equation: Ax^1 + Bxy + Cy^2 + Dx + Ey + F = 0
@@ -193,15 +151,23 @@ class Circle3D:
         # a is orthogonal to n
         # l = self.normal.dot(self.a)
 
-    def generate_parametric(self, numb_pt):
-        pts = np.zeros((3, numb_pt))
-        theta = np.linspace(0, 2 * pi, numb_pt).reshape(-1, 1)
+    def generate_pts(self, N):
+        """Generate `N` sample point from the parametric representation of the 3D circle
+
+        Args:
+            numb_pt ([type]): [description]
+
+        Returns:
+            [type]: [description]
+        """
+        pts = np.zeros((3, N))
+        theta = np.linspace(0, 2 * pi, N).reshape(-1, 1)
         pts = self.center + self.radius * cos(theta) * self.a + self.radius * sin(theta) * self.b
         pts = pts.T
         return pts
 
     def project_pt_to_img(self, img, intrinsic, numb_pt):
-        pts = self.generate_parametric(numb_pt)
+        pts = self.generate_pts(numb_pt)
         projected = intrinsic @ pts
         projected[0, :] = projected[0, :] / projected[2, :]
         projected[1, :] = projected[1, :] / projected[2, :]
@@ -295,3 +261,8 @@ class CirclePoseEstimator:
             Circle3D(translations[:, 0], normals[:, 0], self.radius, self.mtx),
             Circle3D(translations[:, 1], normals[:, 1], self.radius, self.mtx),
         ]
+
+
+class PoseEvaluator:
+    def __init__(self) -> None:
+        pass

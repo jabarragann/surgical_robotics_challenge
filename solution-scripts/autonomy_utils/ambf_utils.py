@@ -1,4 +1,3 @@
-from os import WIFEXITED
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 from sensor_msgs.msg import Image
@@ -15,21 +14,41 @@ import pandas as pd
 class ImageSaver:
     def __init__(self):
         self.bridge = CvBridge()
-        self.img_subs = rospy.Subscriber(
+        self.left_cam_subs = rospy.Subscriber(
             "/ambf/env/cameras/cameraL/ImageData", Image, self.left_callback
         )
-
+        self.right_cam_subs = rospy.Subscriber(
+            "/ambf/env/cameras/cameraR/ImageData", Image, self.right_callback
+        )
         self.left_frame = None
         self.left_ts = None
+        self.right_frame = None
+        self.right_ts = None
 
         # Wait a until subscribers and publishers are ready
         rospy.sleep(0.5)
+
+    def get_current_frame(self, camera_selector: str) -> np.ndarray:
+        if camera_selector == "left":
+            return self.left_frame
+        elif camera_selector == "right":
+            return self.right_frame
+        else:
+            raise ValueError("camera selector should be either 'left' or 'right'")
 
     def left_callback(self, msg):
         try:
             cv2_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
             self.left_frame = cv2_img
             self.left_ts = msg.header.stamp
+        except CvBridgeError as e:
+            print(e)
+
+    def right_callback(self, msg):
+        try:
+            cv2_img = self.bridge.imgmsg_to_cv2(msg, "bgr8")
+            self.right_frame = cv2_img
+            self.right_ts = msg.header.stamp
         except CvBridgeError as e:
             print(e)
 
@@ -40,6 +59,7 @@ class AMBFNeedle:
         self.c = ambf_client
         self.scene = Scene(self.c)
         self.ambf_cam_l = Camera(self.c, "cameraL")
+        self.ambf_cam_r = Camera(self.c, "cameraR")
         self.ambf_cam_frame = Camera(self.c, "CameraFrame")
 
         self.radius = 0.1018
@@ -60,17 +80,30 @@ class AMBFNeedle:
         )
         return needle_salient
 
-    def get_current_pose(self) -> np.ndarray:
+    def get_current_pose(self, camera_selector: str) -> np.ndarray:
         """Generates the needle current pose with respect to the left camera frame. The resulting matrix
             uses the opencv convention instead of the AMBF convention.
 
+        Args:
+            camera_selector (str): either "left" or "right"
+
         Returns:
             np.ndarray: 4x4 transformation matrix representing the needle pose with respect to the camera
-
+        """
         """
 
+        Returns:
+            np.ndarray: 
+
+        """
+        if camera_selector == "left":
+            T_FC = pm.toMatrix(self.ambf_cam_l.get_T_c_w())  # CamL to CamFrame
+        elif camera_selector == "right":
+            T_FC = pm.toMatrix(self.ambf_cam_r.get_T_c_w())  # CamR to CamFrame
+        else:
+            raise ValueError("camera selector should be either 'left' or 'right'")
+
         T_WN = pm.toMatrix(self.scene.needle_measured_cp())  # Needle to world
-        T_FC = pm.toMatrix(self.ambf_cam_l.get_T_c_w())  # CamL to CamFrame
         T_WF = pm.toMatrix(self.ambf_cam_frame.get_T_c_w())  # CamFrame to world
 
         T_WC = T_WF @ T_FC
@@ -99,10 +132,14 @@ class AMBFNeedle:
 
 class AMBFCameras:
     def __init__(self) -> None:
-        # compute camera intrinsics
+        """Camera model for AMBF cameras. Since both cameras in the stereo rig have the same in intrinsic parameters,
+        a single instance of this class works for both the right and left camera of the stereo rig.
+
+        Intrinsic parameters will be the same but extrinsic parameters will be different
+        """
         self.fvg = 1.2
-        self.width = 640
-        self.height = 480
+        self.width = 1920
+        self.height = 1080
         self.cx = self.width / 2
         self.cy = self.height / 2
 

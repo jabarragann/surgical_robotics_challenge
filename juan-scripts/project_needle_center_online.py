@@ -9,9 +9,10 @@ from autonomy_utils.ambf_utils import ImageSaver, AMBFCameras, AMBFNeedle
 np.set_printoptions(precision=3)
 
 if __name__ == "__main__":
+    camera_selector = "right"
     rospy.init_node("image_listener")
-    saver = ImageSaver()
-    img = saver.left_frame
+    img_saver = ImageSaver()
+    img = img_saver.get_current_frame(camera_selector)
 
     c = Client("juanclient")
     c.connect()
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     needle_salient = needle_handle.get_tip_tail_pose()
 
     # Get needle pose wrt camera
-    T_CN = needle_handle.get_current_pose()
+    T_CN = needle_handle.get_current_pose(camera_selector)
     # Sample point on the needle
     needle_pts = needle_handle.sample_3d_pts(8)
 
@@ -54,6 +55,8 @@ if __name__ == "__main__":
     for i in range(img_pt.shape[0]):
         img = cv2.circle(img, (int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])), 3, (255, 0, 0), -1)
 
-    cv2.imshow("img", img)
+    window_n = "output_window"
+    cv2.namedWindow(window_n, cv2.WINDOW_NORMAL)
+    cv2.imshow(window_n, img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

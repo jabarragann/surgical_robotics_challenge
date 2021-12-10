@@ -81,7 +81,15 @@ class AMBFNeedle:
         )
         return needle_salient
 
-    def get_current_pose(self, camera_selector: str) -> np.ndarray:
+    def get_current_pose(self) -> np.ndarray:
+        """Get the needle current position with respect to its parent in the scene graph (this is the world.)
+
+        Returns:
+            np.ndarray: [description]
+        """
+        return pm.toMatrix(self.scene.needle_measured_cp())  # Needle to world
+
+    def get_needle_to_camera_pose(self, camera_selector: str) -> np.ndarray:
         """Generates the needle current pose with respect to the selected camera coordinate frame. The resulting matrix
             uses the opencv convention instead of the AMBF convention.
 
@@ -177,7 +185,7 @@ class AMBFCamera:
         Returns:
             np.ndarray: [description]
         """
-        return self.ambf_cam.get_T_c_w()
+        return pm.toMatrix(self.ambf_cam.get_T_c_w())
 
     def project_points(self, T_CW: np.ndarray, obj_3d_pt: np.ndarray) -> np.ndarray:
 
@@ -214,8 +222,9 @@ class AMBFStereoRig:
 
         Intrinsic parameters will be the same but extrinsic parameters will be different
         """
-        self.camera_left = AMBFCamera(ambf_client, "cameraL")
-        self.camera_right = AMBFCamera(ambf_client, "cameraR")
+        self.camera_left = AMBFCamera(ambf_client, "left")
+        self.camera_right = AMBFCamera(ambf_client, "right")
+        self.ambf_cam_frame = Camera(ambf_client, "CameraFrame")
 
     def get_intrinsics(self, camera_selector: str) -> np.ndarray:
         if camera_selector == "left":
@@ -224,3 +233,33 @@ class AMBFStereoRig:
             return self.camera_right.mtx
         else:
             raise ValueError("camera selector should be either 'left' or 'right'")
+
+    def get_camera_to_world_pose(self, camera_selector: str):
+        """Get camera to world pose.
+
+            T_WC = T_WF @ T_FC
+
+        Args:
+            camera_selector (str): [description]
+
+        Raises:
+            ValueError: [description]
+
+        Returns:
+            [type]: [description]
+        """
+        if camera_selector == "left":
+            return self.get_current_pose() @ self.camera_left.get_current_pose()
+        elif camera_selector == "right":
+            return self.get_current_pose() @ self.camera_right.get_current_pose()
+
+        else:
+            raise ValueError("camera selector should be either 'left' or 'right'")
+
+    def get_current_pose(self) -> np.ndarray:
+        """Get the stereo rig current position with respect to its parent in the scene graph (this is the world frame.)
+
+        Returns:
+            np.ndarray: [description]
+        """
+        return pm.toMatrix(self.ambf_cam_frame.get_T_c_w())

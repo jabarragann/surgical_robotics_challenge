@@ -2,9 +2,10 @@ import cv2
 import numpy as np
 from ambf_client import Client
 import time
+import ambf_client
 import rospy
 import pandas as pd
-from autonomy_utils.ambf_utils import ImageSaver, AMBFCameras, AMBFNeedle
+from autonomy_utils.ambf_utils import ImageSaver, AMBFCamera, AMBFNeedle
 
 np.set_printoptions(precision=3)
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     c.connect()
     time.sleep(0.3)
     needle_handle = AMBFNeedle(ambf_client=c)
-    camera_handle = AMBFCameras()
+    camera_handle = AMBFCamera(ambf_client=c, camera_selector=camera_selector)
 
     # Get 3D position of the tip and tail
     needle_salient = needle_handle.get_tip_tail_pose()
@@ -49,7 +50,7 @@ if __name__ == "__main__":
     print(img_pt[0, 0])
     print(img_pt_2.reshape(-1))
 
-    AMBFCameras.save_projected_points("./juan-scripts/output/sample_ellipse_01.txt", img_pt)
+    AMBFCamera.save_projected_points("./juan-scripts/output/sample_ellipse_01.txt", img_pt)
 
     # Display image
     for i in range(img_pt.shape[0]):

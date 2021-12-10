@@ -4,7 +4,7 @@ import cv2
 from ambf_client import Client
 import time
 from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D, CirclePoseEstimator
-from autonomy_utils.ambf_utils import AMBFCameras, ImageSaver, AMBFNeedle
+from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
 import rospy
 
 np.set_printoptions(precision=6)
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     c.connect()
     time.sleep(0.3)
     needle_handle = AMBFNeedle(ambf_client=c)
-    camera_handle = AMBFCameras()
+    camera_handle = AMBFCamera(c,camera_selector)
 
     # Get 3D position of the tip and tail
     needle_salient = needle_handle.get_tip_tail_pose()

@@ -1,5 +1,6 @@
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
+from rospy import client
 from sensor_msgs.msg import Image
 import time
 from surgical_robotics_challenge.scene import Scene
@@ -81,7 +82,7 @@ class AMBFNeedle:
         return needle_salient
 
     def get_current_pose(self, camera_selector: str) -> np.ndarray:
-        """Generates the needle current pose with respect to the left camera frame. The resulting matrix
+        """Generates the needle current pose with respect to the selected camera coordinate frame. The resulting matrix
             uses the opencv convention instead of the AMBF convention.
 
         Args:
@@ -130,13 +131,28 @@ class AMBFNeedle:
         return needle_salient
 
 
-class AMBFCameras:
-    def __init__(self) -> None:
-        """Camera model for AMBF cameras. Since both cameras in the stereo rig have the same in intrinsic parameters,
-        a single instance of this class works for both the right and left camera of the stereo rig.
+class AMBFCamera:
+    def __init__(self, ambf_client, camera_selector: str) -> None:
+        """AMBF camera handler
 
-        Intrinsic parameters will be the same but extrinsic parameters will be different
+        Args:
+            ambf_client ([type]): [description]
+            camera_name (str): either 'left' or 'right'
         """
+
+        if camera_selector not in ["left", "right"]:
+            raise ValueError("camera selector must be either 'left' or 'right'")
+
+        # AMBF handlers
+        self.c = ambf_client
+        self.scene = Scene(self.c)
+        camera_name = "cameraL" if camera_selector == "left" else "cameraR"
+        self.ambf_cam = Camera(self.c, camera_name)
+
+        # Initialize extrinsic
+        self.T_W_C = self.ambf_cam.get_T_c_w()
+
+        # Calculate intrinsic
         self.fvg = 1.2
         self.width = 1920
         self.height = 1080
@@ -154,6 +170,14 @@ class AMBFCameras:
         self.mtx = intrinsic_params
 
         self.focal_length = (self.mtx[0, 0] + self.mtx[1, 1]) / 2
+
+    def get_current_pose(self) -> np.ndarray:
+        """Get the camera current position with respect to its parent in the scene graph (this is the stereo rig frame.)
+
+        Returns:
+            np.ndarray: [description]
+        """
+        return self.ambf_cam.get_T_c_w()
 
     def project_points(self, T_CW: np.ndarray, obj_3d_pt: np.ndarray) -> np.ndarray:
 
@@ -181,3 +205,22 @@ class AMBFCameras:
                 )
             )
         results_df.to_csv(file_path, index=None)
+
+
+class AMBFStereoRig:
+    def __init__(self, ambf_client) -> None:
+        """Camera model for AMBF cameras. Since both cameras in the stereo rig have the same in intrinsic parameters,
+        a single instance of this class works for both the right and left camera of the stereo rig.
+
+        Intrinsic parameters will be the same but extrinsic parameters will be different
+        """
+        self.camera_left = AMBFCamera(ambf_client, "cameraL")
+        self.camera_right = AMBFCamera(ambf_client, "cameraR")
+
+    def get_intrinsics(self, camera_selector: str) -> np.ndarray:
+        if camera_selector == "left":
+            return self.camera_left.mtx
+        elif camera_selector == "right":
+            return self.camera_right.mtx
+        else:
+            raise ValueError("camera selector should be either 'left' or 'right'")

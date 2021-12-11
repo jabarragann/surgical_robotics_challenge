@@ -25,7 +25,7 @@ if __name__ == "__main__":
     needle_salient = needle_handle.get_tip_tail_pose()
 
     # Get needle pose wrt camera
-    T_CN = needle_handle.get_current_pose(camera_selector)
+    T_CN = needle_handle.get_needle_to_camera_pose(camera_selector)
     # Sample point on the needle
     needle_pts = needle_handle.sample_3d_pts(8)
 

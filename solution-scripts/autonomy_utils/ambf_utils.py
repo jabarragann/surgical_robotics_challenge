@@ -10,6 +10,7 @@ import tf_conversions.posemath as pm
 import numpy as np
 from numpy.linalg import inv, norm
 import pandas as pd
+from pathlib import Path
 
 
 class ImageSaver:
@@ -21,13 +22,13 @@ class ImageSaver:
         self.right_cam_subs = rospy.Subscriber(
             "/ambf/env/cameras/cameraR/ImageData", Image, self.right_callback
         )
-        self.left_frame = None
+        self.left_frame = np.zeros((640, 480, 3))
         self.left_ts = None
-        self.right_frame = None
+        self.right_frame = np.zeros((640, 480, 3))
         self.right_ts = None
 
         # Wait a until subscribers and publishers are ready
-        rospy.sleep(0.5)
+        rospy.sleep(0.6)
 
     def get_current_frame(self, camera_selector: str) -> np.ndarray:
         if camera_selector == "left":
@@ -212,6 +213,10 @@ class AMBFCamera:
                     columns=["id", "x", "y"],
                 )
             )
+        path = Path(file_path)
+        if not path.parent.exists():
+            path.parent.mkdir()
+
         results_df.to_csv(file_path, index=None)
 
 

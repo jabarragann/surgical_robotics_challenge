@@ -8,12 +8,15 @@ from ambf_client import Client
 import time
 from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D, CirclePoseEstimator
 from autonomy_utils.ambf_utils import AMBFCamera, AMBFStereoRig, ImageSaver, AMBFNeedle
+from autonomy_utils import Frame, Logger
 import rospy
 
-np.set_printoptions(precision=4)
+np.set_printoptions(precision=4, suppress=True)
 
 
 if __name__ == "__main__":
+    log = Logger.Logger("autonomy_utils").log
+
     # Init
     rospy.init_node("image_listener")
     saver = ImageSaver()
@@ -41,21 +44,16 @@ if __name__ == "__main__":
     pt_in_left = PL @ tip_tail_pt
     pt_in_left = pt_in_left / pt_in_left[2]
 
-    print("Debug")
     camera_handle = AMBFCamera(ambf_client=c, camera_selector="right")
     T_CN = needle_handle.get_needle_to_camera_pose(camera_selector="right")
 
-    # print(f"T_CR_W\n{T_CR_W}")
-    # print(f"T_WN\n{needle_handle.get_current_pose()}")
-
-    # print("Final values")
-    # print(f"T_CN\n{T_CN}")
-    # print(f"T_CN2\n{F @ T_CR_W @ needle_handle.get_current_pose()}")
-    # print(tip_tail_pt)
-    print(pt_in_right)
-    # pt_in_right = stereo_rig.camera_right.project_points(T_CR_W, tip_tail_pt)
-    # pt_in_left = stereo_rig.camera_left.project_points(T_CL_W, tip_tail_pt)
-    # Triangulate
+    # Triangulate - requires 2xn arrays, so transpose the points
+    X = cv2.triangulatePoints(PL, PR, pt_in_left[:2, :], pt_in_right[:2, :])
+    X /= X[3]
+    # Debug
+    log.info(f"tip_tail_pt\n{tip_tail_pt}")
+    log.info(f"tip_tail_est\n{X}")
+    log.info(f"error\n{X-tip_tail_pt}")
 
     # Display image
     img_saver = ImageSaver()
@@ -67,3 +65,10 @@ if __name__ == "__main__":
     cv2.imshow("img", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+    """
+    It doesn't make any sense that you need the T_CW to do the triangulation. Ideally you only need the transformation between 
+    the camera right and camera left.
+    
+    Solution: you can set the world in the left image!
+    """

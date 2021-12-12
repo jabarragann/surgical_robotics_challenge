@@ -1,3 +1,7 @@
+"""
+Project needle points into the image and save those points for ellipse parameter estimation
+
+"""
 import cv2
 import numpy as np
 from ambf_client import Client

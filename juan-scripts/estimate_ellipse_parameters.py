@@ -8,12 +8,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 import sympy as sym
 import pickle
+from autonomy_utils.ambf_utils import AMBFCamera
 
 if __name__ == "__main__":
 
-    width = 640
-    height = 480
-    X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt", width, height)
+    width = AMBFCamera.width
+    height = AMBFCamera.height
+    # fmt: off
+    # X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt", width, height)
+    X, Y = Ellipse2D.read_pts_in_file( "./juan-scripts/output/needle_segmentation_pts.txt", width, height)
+    # fmt: on
 
     # Build ellipse
     ellipse = Ellipse2D.from_sample_points(X, Y)

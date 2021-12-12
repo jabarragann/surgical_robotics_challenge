@@ -154,6 +154,8 @@ class AMBFCamera:
     fvg = 1.2
     width = 1920
     height = 1080
+    cx = width / 2
+    cy = height / 2
 
     def __init__(self, ambf_client, camera_selector: str) -> None:
         """AMBF camera handler
@@ -176,9 +178,6 @@ class AMBFCamera:
         self.T_W_C = self.ambf_cam.get_T_c_w()
 
         # Calculate intrinsic
-      
-        self.cx = self.width / 2
-        self.cy = self.height / 2
 
         self.f = self.height / (2 * np.tan(self.fvg / 2))
 

@@ -14,7 +14,7 @@ from autonomy_utils.ambf_utils import ImageSaver, AMBFCamera, AMBFNeedle
 np.set_printoptions(precision=3)
 
 if __name__ == "__main__":
-    camera_selector = "right"
+    camera_selector = "left"
     rospy.init_node("image_listener")
     img_saver = ImageSaver()
     img = img_saver.get_current_frame(camera_selector)

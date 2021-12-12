@@ -110,25 +110,21 @@ class Ellipse2D:
         return Ellipse2D(d["a"], d["b"], d["c"], d["d"], d["e"], d["f"])
 
     @staticmethod
-    def read_pts_in_file(file: str, width: int, height: int) -> Tuple[np.ndarray, np.ndarray]:
+    def read_pts_in_file(file: str) -> Tuple[np.ndarray, np.ndarray]:
         """Read sample points from a txt file and center them using the width and height of the image.
-            Each resulting point will have the form (x-width/2, y-width/2)
+
 
         Args:
             file (str): Path of the file
-            width (int): Image width
-            height (int): Image Height
 
         Returns:
             tuple[np.ndarray, np.ndarray]: two arrays containing the X,Y coordinates of the sample points. Each array
             has a shape (N,1) where the `N` is the number of sample points
         """
-        cx, cy = width / 2, height / 2
-
         df = pd.read_csv(file)
 
-        X = df["x"].values.reshape(-1, 1) - cx
-        Y = df["y"].values.reshape(-1, 1) - cy
+        X = df["x"].values.reshape(-1, 1)
+        Y = df["y"].values.reshape(-1, 1)
 
         return X, Y
 

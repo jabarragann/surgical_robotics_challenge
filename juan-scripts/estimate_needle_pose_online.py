@@ -19,7 +19,7 @@ np.set_printoptions(precision=6)
 
 if __name__ == "__main__":
     # Init
-    camera_selector = "right"
+    camera_selector = "left"
     rospy.init_node("image_listener")
     saver = ImageSaver()
     c = Client("juanclient")

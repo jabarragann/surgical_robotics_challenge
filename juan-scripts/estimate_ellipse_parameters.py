@@ -12,15 +12,15 @@ from autonomy_utils.ambf_utils import AMBFCamera
 
 if __name__ == "__main__":
 
-    width = AMBFCamera.width
-    height = AMBFCamera.height
+    cx = AMBFCamera.cx
+    cy = AMBFCamera.cy
     # fmt: off
-    # X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt", width, height)
-    X, Y = Ellipse2D.read_pts_in_file( "./juan-scripts/output/needle_segmentation_pts.txt", width, height)
+    # X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
+    X, Y = Ellipse2D.read_pts_in_file( "./juan-scripts/output/needle_segmentation_pts.txt")
     # fmt: on
 
     # Build ellipse
-    ellipse = Ellipse2D.from_sample_points(X, Y)
+    ellipse = Ellipse2D.from_sample_points(X - cx, Y - cy)
     # Print the equation of the ellipse
     print(f"The ellipse is given by {ellipse}")
 

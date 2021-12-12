@@ -1,3 +1,8 @@
+"""
+Apply ellipse estimator to get the needle pose. This online script uses the obtains the 
+image from the running simulation 
+
+"""
 import numpy as np
 import pandas as pd
 import cv2
@@ -27,7 +32,7 @@ if __name__ == "__main__":
     needle_salient = needle_handle.get_tip_tail_pose()
 
     # Get needle pose wrt camera - ground truth
-    T_CN = needle_handle.get_current_pose(camera_selector)
+    T_CN = needle_handle.get_needle_to_camera_pose(camera_selector)
     tip_tail_pt = T_CN @ needle_salient.T
     plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 

@@ -1,6 +1,6 @@
 """
-Apply ellipse estimator to get the needle pose. This online script uses the obtains the 
-image from the running simulation 
+Estimate needle pose offline script.
+Online means the ellipse coefficients are calculated from the AMBF image.
 
 """
 import numpy as np

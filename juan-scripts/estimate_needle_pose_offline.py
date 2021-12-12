@@ -1,3 +1,9 @@
+"""
+Estimate needle pose offline script.
+Offline means the ellipse coefficients are read from a txt file.
+Image frame is read directly from AMBF
+"""
+
 import numpy as np
 import pandas as pd
 import cv2

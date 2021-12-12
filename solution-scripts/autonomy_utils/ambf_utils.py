@@ -54,6 +54,16 @@ class ImageSaver:
         except CvBridgeError as e:
             print(e)
 
+    def save_frame(self, camera_selector: str, path: Path):
+        if camera_selector not in ["left", "right"]:
+            ValueError("camera selector error")
+
+        img = self.left_frame if camera_selector == "left" else self.right_frame
+        ts = self.left_ts if camera_selector == "left" else self.right_ts
+        name = camera_selector + "_frame" + ".jpeg"
+        # Save frame
+        cv2.imwrite(str(path / name), img)  ## Opencv does not work with pathlib
+
 
 class AMBFNeedle:
     def __init__(self, ambf_client) -> None:

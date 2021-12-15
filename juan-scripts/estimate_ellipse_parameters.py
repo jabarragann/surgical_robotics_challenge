@@ -15,7 +15,7 @@ if __name__ == "__main__":
     cx = AMBFCamera.cx
     cy = AMBFCamera.cy
     # fmt: off
-    # X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
+    #X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
     X, Y = Ellipse2D.read_pts_in_file( "./juan-scripts/output/needle_segmentation_pts.txt")
     # fmt: on
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     total_error = 0
     N = X.shape[0]
     for i in range(N):
-        b = [X[i, 0], Y[i, 0]]
+        b = [X[i, 0] - cx, Y[i, 0] - cy]
         ans = ellipse.evalf(20, subs={x_sym: b[0], y_sym: b[1]})
         total_error += abs(ans)
         print("Ellipse function evaluated at ({:0.3f},{:0.3f}) is {:0.3f}".format(b[0], b[1], ans))

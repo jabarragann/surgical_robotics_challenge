@@ -64,7 +64,9 @@ if __name__ == "__main__":
         print(circles[k].normal.dot(plane_vect))
 
     # Draw the ellipse
+    df = pd.read_csv("./juan-scripts/output/needle_segmentation_pts.txt")
     df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
+
     X = df["x"].values.reshape(-1, 1)
     Y = df["y"].values.reshape(-1, 1)
 

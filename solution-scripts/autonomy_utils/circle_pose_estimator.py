@@ -5,11 +5,10 @@ from numpy.linalg import norm, inv
 from numpy import cos, sin, pi
 from typing import List, Tuple
 import pandas as pd
-from sympy.logic.boolalg import anf_coeffs
 
 
 class Ellipse2D:
-    def __init__(self, A, B, C, D, E, F):
+    def __init__(self, A, B, C, D, E, F, center=None, rx_axis=None, ry_axis=None, angle_deg=None):
 
         # Ellipse implicit equation: Ax^2 + Bxy + Cy^2 + Dx + Ey + F = 0
         self.a_coeff = A
@@ -18,6 +17,12 @@ class Ellipse2D:
         self.d_coeff = D
         self.e_coeff = E
         self.f_coeff = F
+
+        # Center/axis/angle representation: only if created with Opencv
+        self.center = center
+        self.rx_axis = rx_axis
+        self.ry_axis = ry_axis
+        self.angle_deg = angle_deg
 
         self.parameter_vector = [
             self.a_coeff,
@@ -64,6 +69,19 @@ class Ellipse2D:
         )
         return str_rep
 
+    def plot_ellipse(self, img: np.ndarray) -> np.ndarray:
+        img = cv2.ellipse(
+            img,
+            (int(self.center[0]), int(self.center[1])),
+            (int(self.rx_axis), int(self.ry_axis)),
+            self.angle_deg,
+            0,
+            360,
+            (255, 0, 0),
+            thickness=1,
+        )
+        return img
+
     @classmethod
     def from_sample_points(cls: Ellipse2D, X: np.ndarray, Y: np.ndarray) -> Ellipse2D:
         """Estimate the ellipse coefficients from sample points int the image plane.
@@ -90,6 +108,54 @@ class Ellipse2D:
         x = np.linalg.lstsq(A, b, rcond=None)[0].squeeze()
 
         ellipse = cls(x[0], x[1], x[2], x[3], x[4], -F)
+        return ellipse
+
+    @classmethod
+    def from_sample_points_cv2(cls: Ellipse2D, X: np.ndarray, Y: np.ndarray) -> Ellipse2D:
+        contours = [np.array(np.hstack((X, Y)), dtype=np.int32)]
+        center, (e_width, e_height), angle_deg = cv2.fitEllipse(contours[0])
+        angle_rad = angle_deg * np.pi / 180
+        rx_axis, ry_axis = (
+            e_width / 2,
+            e_height / 2,
+        )  # rx -> axis align with x axis before rotation. The same for ry.
+
+        a_coef = rx_axis ** 2 * np.sin(angle_rad) ** 2 + ry_axis ** 2 * np.cos(angle_rad) ** 2
+        b_coef = 2 * (ry_axis ** 2 - rx_axis ** 2) * np.sin(angle_rad) * np.cos(angle_rad)
+        c_coef = rx_axis ** 2 * np.cos(angle_rad) ** 2 + ry_axis ** 2 * np.sin(angle_rad) ** 2
+        d_coef = -2 * a_coef * center[0] - b_coef * center[1]
+        e_coef = -b_coef * center[0] - 2 * center[1]
+        f_coef = (
+            a_coef * center[0] ** 2
+            + b_coef * center[0] * center[1]
+            + c_coef * center[1] ** 2
+            - rx_axis * 2 * ry_axis ** 2
+        )
+
+        # Scale
+        scale_factor = 1e6 / f_coef
+        a_coef, b_coef, c_coef, d_coef, e_coef, f_coef = (
+            a_coef * scale_factor,
+            b_coef * scale_factor,
+            c_coef * scale_factor,
+            d_coef * scale_factor,
+            e_coef * scale_factor,
+            f_coef * scale_factor,
+        )
+
+        # Create ellipse instance
+        ellipse = cls(
+            a_coef,
+            b_coef,
+            c_coef,
+            d_coef,
+            e_coef,
+            f_coef,
+            center=list(center),
+            rx_axis=rx_axis,
+            ry_axis=ry_axis,
+            angle_deg=angle_deg,
+        )
         return ellipse
 
     @classmethod

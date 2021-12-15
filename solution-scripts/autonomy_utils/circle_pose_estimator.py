@@ -59,13 +59,15 @@ class Ellipse2D:
         self.f_coeff = F
 
     def __str__(self):
-        str_rep = "{0:.6}x^2 +{1:.6}xy + {2:.6}y^2 + {3:.6}x + {4:.6}y + {5:.6} = 0".format(
-            self.a_coeff,
-            self.b_coeff,
-            self.c_coeff,
-            self.d_coeff,
-            self.e_coeff,
-            self.f_coeff,
+        str_rep = (
+            "{:+10.3f}x^2 {:+10.3f}xy {:+10.3f}y^2 {:+10.3f}x {:+10.3f}y {:+10.3f} = 0".format(
+                self.a_coeff,
+                self.b_coeff,
+                self.c_coeff,
+                self.d_coeff,
+                self.e_coeff,
+                self.f_coeff,
+            )
         )
         return str_rep
 
@@ -112,6 +114,17 @@ class Ellipse2D:
 
     @classmethod
     def from_sample_points_cv2(cls: Ellipse2D, X: np.ndarray, Y: np.ndarray) -> Ellipse2D:
+        """Estimate the ellipse coefficients from sample points int the image plane.
+        use Opencv Fit ellipse method. Current implementation not working.
+
+        Args:
+            cls (Ellipse2D): [description]
+            X (np.ndarray): [description]
+            Y (np.ndarray): [description]
+
+        Returns:
+            Ellipse2D: [description]
+        """
         contours = [np.array(np.hstack((X, Y)), dtype=np.int32)]
         center, (e_width, e_height), angle_deg = cv2.fitEllipse(contours[0])
         angle_rad = angle_deg * np.pi / 180

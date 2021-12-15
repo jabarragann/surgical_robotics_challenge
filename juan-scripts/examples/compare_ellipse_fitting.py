@@ -24,11 +24,11 @@ if __name__ == "__main__":
     # fmt: on
 
     # Build ellipse
-    ellipse_1 = Ellipse2D.from_sample_points(X, Y)
-    ellipse_2 = Ellipse2D.from_sample_points_cv2(X, Y)
+    ellipse_1 = Ellipse2D.from_sample_points(X - cx, Y - cy)
+    ellipse_2 = Ellipse2D.from_sample_points_cv2(X - cx, Y - cy)
     # Print the equation of the ellipse
-    print(f"The ellipse is given by {ellipse_1}")
-    print(f"The ellipse is given by {ellipse_2}")
+    print(f"The ellipse1 is given by {ellipse_1}")
+    print(f"The ellipse2 is given by {ellipse_2}")
 
     img = np.zeros((height, width, 3))
     ellipse_2.plot_ellipse(img)

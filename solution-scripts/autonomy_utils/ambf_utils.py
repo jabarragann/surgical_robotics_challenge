@@ -15,6 +15,10 @@ from pathlib import Path
 
 class ImageSaver:
     def __init__(self):
+        """This class will not work unless you initialize a ROS topic
+
+        rospy.init_node("image_listener")
+        """
         self.bridge = CvBridge()
         self.left_cam_subs = rospy.Subscriber(
             "/ambf/env/cameras/cameraL/ImageData", Image, self.left_callback

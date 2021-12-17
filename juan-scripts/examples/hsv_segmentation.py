@@ -73,7 +73,7 @@ if __name__ == "__main__":
     if not dst_path.exists():
         dst_path.mkdir()
 
-    id = 1
+    id = 2
     name_file = f"needle_segmentation_pts{id}.txt"
     name_img = f"needle_segmentation_pts{id}.jpeg"
     cv2.imwrite(str(dst_path / name_img), img)

@@ -10,6 +10,8 @@ import cv2
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from autonomy_utils.ambf_utils import ImageSaver
+import rospy
 
 mouseX, mouseY = None, None
 
@@ -43,8 +45,10 @@ if __name__ == "__main__":
 
     path = Path(__file__).parent
 
-    img = cv2.imread(str(path / "img/left_frame.jpeg"))
-
+    # img = cv2.imread(str(path / "img/left_frame.jpeg"))
+    rospy.init_node("image_listener")
+    img_saver = ImageSaver()
+    img = img_saver.get_current_frame("left")
     # Get roi
     roi = cv2.selectROI(img)
     print(roi)
@@ -63,8 +67,17 @@ if __name__ == "__main__":
                 needle_pts.append([j, i])  # Save x,y positions. Origin in the left top corner
                 img[i, j] = [0, 255, 0]
     needle_pts = np.array(needle_pts)
-    # Save pixels locations
-    save_pts_(path / "needle_segmentation_pts.txt", needle_pts)
+
+    # Save pixels locations and image
+    dst_path = path / "output"
+    if not dst_path.exists():
+        dst_path.mkdir()
+
+    id = 1
+    name_file = f"needle_segmentation_pts{id}.txt"
+    name_img = f"needle_segmentation_pts{id}.jpeg"
+    cv2.imwrite(str(dst_path / name_img), img)
+    save_pts_(dst_path / name_file, needle_pts)
 
     # Show selected points
     w_name = "selected pts"

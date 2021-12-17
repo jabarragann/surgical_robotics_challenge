@@ -1,3 +1,6 @@
+# Surgical Robotics Challenge
+For more information regarding the challenge, please visit https://collaborative-robotics.github.io/surgical-robotics-challenge/challenge-2021.html
+
 # 1. Install AMBF and ROS Prerequisites
 Make sure that the correct version of ROS is installed and sourced on your system. For streaming the image and depth data out of AMBF, please also install the following ROS packages
 - cv_bridge
@@ -59,7 +62,7 @@ Don't forget to build the repo using the instructions on AMBF's Readme
   And this is what the scene should now look like:
 
   <p align="center">
-  <img src=Media/sample_scene.gif width="480"/>
+  <img src=Media/neede_without_thread.gif width="480"/>
   </p>
 
 

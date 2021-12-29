@@ -15,8 +15,9 @@ if __name__ == "__main__":
     cx = AMBFCamera.cx
     cy = AMBFCamera.cy
     # fmt: off
-    X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
-    # X, Y = Ellipse2D.read_pts_in_file( "./juan-scripts/output/needle_segmentation_pts.txt")
+    #X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
+    # X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0.txt")
+    X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0_sift.txt")
     # fmt: on
 
     # Build ellipse

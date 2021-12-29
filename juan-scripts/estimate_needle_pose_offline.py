@@ -37,7 +37,7 @@ if __name__ == "__main__":
     plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 
     # Normalize ellipse coefficients
-    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients.txt")
+    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_ideal.txt")
     estimator = CirclePoseEstimator(
         ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius
     )
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         print(circles[k].normal.dot(plane_vect))
 
     # Draw the ellipse
-    df = pd.read_csv("./juan-scripts/output/needle_segmentation_pts.txt")
+    # df = pd.read_csv("./juan-scripts/output/needle_segmentation_pts.txt")
     df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
 
     X = df["x"].values.reshape(-1, 1)
@@ -75,16 +75,16 @@ if __name__ == "__main__":
         img = saver.left_frame
 
         # Sample 3D circle
-        pts = circles[i].generate_pts(30)
-        df = pd.DataFrame(pts.T, columns=["x", "y", "z"])
-        df.to_csv("./juan-scripts/output/circle{:d}.txt".format(i), index=None)
+        pts = circles[i].generate_pts(40)
+        # df = pd.DataFrame(pts.T, columns=["x", "y", "z"])
+        # df.to_csv("./juan-scripts/output/circle{:d}.txt".format(i), index=None)
 
         # Draw 3D circle
-        img = circles[i].project_pt_to_img(img, camera_handle.mtx, 30)
+        img = circles[i].project_pt_to_img(img, camera_handle.mtx, 30, radius=3)
 
         # #Draw ellipse samples
-        for xp, yp in zip(X.squeeze(), Y.squeeze()):
-            img = cv2.circle(img, (int(xp), int(yp)), radius=2, color=(0, 0, 255), thickness=-1)
+        # for xp, yp in zip(X.squeeze(), Y.squeeze()):
+        #     img = cv2.circle(img, (int(xp), int(yp)), radius=3, color=(0, 0, 255), thickness=-1)
 
         cv2.imshow("img", img)
         cv2.waitKey(0)

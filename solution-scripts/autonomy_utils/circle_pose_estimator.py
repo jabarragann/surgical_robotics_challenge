@@ -241,7 +241,7 @@ class Circle3D:
         pts = pts.T
         return pts
 
-    def project_pt_to_img(self, img, intrinsic, numb_pt):
+    def project_pt_to_img(self, img, intrinsic, numb_pt, radius=2):
         pts = self.generate_pts(numb_pt)
         projected = intrinsic @ pts
         projected[0, :] = projected[0, :] / projected[2, :]
@@ -250,7 +250,9 @@ class Circle3D:
 
         # img = np.zeros((480, 640, 3))
         for xp, yp in zip(projected[0, :], projected[1, :]):
-            img = cv2.circle(img, (int(xp), int(yp)), radius=1, color=(0, 255, 0), thickness=-1)
+            img = cv2.circle(
+                img, (int(xp), int(yp)), radius=radius, color=(0, 255, 0), thickness=-1
+            )
 
         return img
 

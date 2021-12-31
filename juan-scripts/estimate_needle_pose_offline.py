@@ -37,7 +37,7 @@ if __name__ == "__main__":
     plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 
     # Normalize ellipse coefficients
-    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_ideal.txt")
+    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_segm.txt")
     estimator = CirclePoseEstimator(
         ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius
     )

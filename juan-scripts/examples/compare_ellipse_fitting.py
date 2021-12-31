@@ -19,22 +19,27 @@ if __name__ == "__main__":
     height = AMBFCamera.height
 
     # fmt: off
-    X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
+    # X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
     # X, Y = Ellipse2D.read_pts_in_file( "./juan-scripts/output/needle_segmentation_pts.txt")
     # fmt: on
 
     # Build ellipse
-    ellipse_1 = Ellipse2D.from_sample_points(X - cx, Y - cy)
-    ellipse_2 = Ellipse2D.from_sample_points_cv2(X - cx, Y - cy)
+    ellipse_1 = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_ideal.txt")
+    ellipse_2 = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_sift.txt")
+    ellipse_3 = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_segm.txt")
+    # ellipse_4 = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients.txt")
+
     # Print the equation of the ellipse
     print(f"The ellipse1 is given by {ellipse_1}")
     print(f"The ellipse2 is given by {ellipse_2}")
+    print(f"The ellipse3 is given by {ellipse_3}")
+    # print(f"The ellipse4 is given by {ellipse_4}")
 
-    img = np.zeros((height, width, 3))
-    ellipse_2.plot_ellipse(img)
-    for i in range(X.shape[0]):
-        img = cv2.circle(img, (X[i, 0], Y[i, 0]), radius=2, color=(0, 0, 255), thickness=-1)
+    # img = np.zeros((height, width, 3))
+    # ellipse_2.plot_ellipse(img)
+    # for i in range(X.shape[0]):
+    #     img = cv2.circle(img, (X[i, 0], Y[i, 0]), radius=2, color=(0, 0, 255), thickness=-1)
 
-    cv2.imshow("img", img)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    # cv2.imshow("img", img)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()

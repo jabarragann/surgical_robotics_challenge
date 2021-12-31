@@ -14,14 +14,18 @@ if __name__ == "__main__":
 
     cx = AMBFCamera.cx
     cy = AMBFCamera.cy
+    print(cx, cy)
+
     # fmt: off
-    #X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
-    # X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0.txt")
-    X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0_sift.txt")
+    # X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
+    X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0.txt")
+    # X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0_sift.txt")
     # fmt: on
 
     # Build ellipse
-    ellipse = Ellipse2D.from_sample_points(X - cx, Y - cy)
+    # ellipse = Ellipse2D.from_sample_points(X - cx, Y - cy)
+    ellipse = Ellipse2D.from_sample_points_skimage(X - cx, Y - cy)
+
     # Print the equation of the ellipse
     print(f"The ellipse is given by {ellipse}")
 

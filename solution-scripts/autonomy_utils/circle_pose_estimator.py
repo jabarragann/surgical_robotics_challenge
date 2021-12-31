@@ -5,6 +5,7 @@ from numpy.linalg import norm, inv
 from numpy import cos, sin, pi
 from typing import List, Tuple
 import pandas as pd
+from skimage.measure.fit import EllipseModel
 
 
 class Ellipse2D:
@@ -113,6 +114,18 @@ class Ellipse2D:
         return ellipse
 
     @classmethod
+    def from_sample_points_skimage(cls: Ellipse2D, X: np.ndarray, Y: np.ndarray) -> Ellipse2D:
+        xy = np.hstack([X, Y])
+        ellipse = EllipseModel()
+        status = ellipse.estimate(xy)
+        if not status:
+            raise ("Error estimating ellipse")
+
+        x0, y0, a, b, theta = ellipse.params
+
+        return Ellipse2D.from_principal_axis(x0, y0, a, b, theta)
+
+    @classmethod
     def from_sample_points_cv2(cls: Ellipse2D, X: np.ndarray, Y: np.ndarray) -> Ellipse2D:
         """Estimate the ellipse coefficients from sample points int the image plane.
         use Opencv Fit ellipse method. Current implementation not working.
@@ -133,27 +146,8 @@ class Ellipse2D:
             e_height / 2,
         )  # rx -> axis align with x axis before rotation. The same for ry.
 
-        a_coef = rx_axis ** 2 * np.sin(angle_rad) ** 2 + ry_axis ** 2 * np.cos(angle_rad) ** 2
-        b_coef = 2 * (ry_axis ** 2 - rx_axis ** 2) * np.sin(angle_rad) * np.cos(angle_rad)
-        c_coef = rx_axis ** 2 * np.cos(angle_rad) ** 2 + ry_axis ** 2 * np.sin(angle_rad) ** 2
-        d_coef = -2 * a_coef * center[0] - b_coef * center[1]
-        e_coef = -b_coef * center[0] - 2 * center[1]
-        f_coef = (
-            a_coef * center[0] ** 2
-            + b_coef * center[0] * center[1]
-            + c_coef * center[1] ** 2
-            - rx_axis * 2 * ry_axis ** 2
-        )
-
-        # Scale
-        scale_factor = 1e6 / f_coef
-        a_coef, b_coef, c_coef, d_coef, e_coef, f_coef = (
-            a_coef * scale_factor,
-            b_coef * scale_factor,
-            c_coef * scale_factor,
-            d_coef * scale_factor,
-            e_coef * scale_factor,
-            f_coef * scale_factor,
+        a_coef, b_coef, c_coef, d_coef, e_coef, f_coef = Ellipse2D.obtain_implicit_eq(
+            center, rx_axis, ry_axis, angle_rad
         )
 
         # Create ellipse instance
@@ -187,6 +181,43 @@ class Ellipse2D:
                 d[vals[0]] = float(vals[1])
 
         return Ellipse2D(d["a"], d["b"], d["c"], d["d"], d["e"], d["f"])
+
+    @staticmethod
+    def from_principal_axis(x0: float, y0: float, a: float, b: float, theta: float) -> Ellipse2D:
+        """Obtain ellipse from major/minor/principal axis representation.
+
+        Args:
+            x0 (float): center coordinate
+            y0 (float): y center coordinate
+            a (float): principal axis aligned to x axis (rx_axis)
+            b (float): principal axis aligned to y axis (ry_axis)
+            theta (float): axis rotation in rad
+
+        Returns:
+            Ellipse2D: [description]
+        """
+
+        # fmt: off
+        a_coef = a ** 2 * np.sin(theta) ** 2 + b ** 2 * np.cos(theta) ** 2
+        b_coef = 2 * (b ** 2 - a ** 2) * np.sin(theta) * np.cos(theta)
+        c_coef = a ** 2 * np.cos(theta) ** 2 + b ** 2 * np.sin(theta) ** 2
+        d_coef = -2 * a_coef * x0 - b_coef * y0
+        e_coef = -b_coef * x0 - 2 * c_coef * y0
+        f_coef = ( a_coef * x0 ** 2 + b_coef * x0 * y0 + c_coef * y0 ** 2 - a ** 2 * b ** 2)
+        # fmt: on
+
+        # Scale
+        scale_factor = 1e6 / f_coef
+        a_coef, b_coef, c_coef, d_coef, e_coef, f_coef = (
+            a_coef * scale_factor,
+            b_coef * scale_factor,
+            c_coef * scale_factor,
+            d_coef * scale_factor,
+            e_coef * scale_factor,
+            f_coef * scale_factor,
+        )
+
+        return Ellipse2D(a_coef, b_coef, c_coef, d_coef, e_coef, f_coef)
 
     @staticmethod
     def read_pts_in_file(file: str) -> Tuple[np.ndarray, np.ndarray]:

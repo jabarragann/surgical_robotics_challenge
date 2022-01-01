@@ -12,6 +12,7 @@ import time
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
 from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
 import rospy
+from autonomy_utils.Logger import Logger
 
 np.set_printoptions(precision=6)
 
@@ -24,8 +25,10 @@ if __name__ == "__main__":
     c = Client("juanclient")
     c.connect()
     time.sleep(0.3)
-    needle_handle = AMBFNeedle(ambf_client=c)
-    camera_handle = AMBFCamera(c, "left")
+    log = Logger().log
+    needle_handle = AMBFNeedle(ambf_client=c, logger=log)
+    camera_selector = "left"
+    camera_handle = AMBFCamera(c, camera_selector)
 
     # Get 3D position of the tip and tail
     needle_salient = needle_handle.get_tip_tail_pose()
@@ -43,25 +46,51 @@ if __name__ == "__main__":
     )
     circles = estimator.estimate_pose()
 
-    print("algorithm summary")
-    print("camera_matrix")
-    print(camera_handle.mtx)
-    print("focal length {:0.4f}".format(camera_handle.focal_length))
-    print("ellipse c matrix")
-    print(estimator.c_mat)
+    # print("algorithm summary")
+    # print("camera_matrix")
+    # print(camera_handle.mtx)
+    # print("focal length {:0.4f}".format(camera_handle.focal_length))
+    # print("ellipse c matrix")
+    # print(estimator.c_mat)
     # print("eigen values")
     # print(W)
     # print("eigen vectors")
     # print(V)
 
+    # for k in range(2):
+    #     print("solution {:d}".format(k))
+    #     print("pose")
+    #     print(circles[k].center)
+    #     print("normal")
+    #     print(circles[k].normal)
+    #     print("plane vect dot normal")
+    #     print(circles[k].normal.dot(plane_vect))
+
+    # Ground truth
+    needle_center = T_CN[:3, 3]
+    needle_x_axis = T_CN[:3, 0]
+    needle_y_axis = T_CN[:3, 1]
+    needle_normal = T_CN[:3, 2]
+
     for k in range(2):
-        print("solution {:d}".format(k))
-        print("pose")
-        print(circles[k].center)
-        print("normal")
-        print(circles[k].normal)
-        print("plane vect dot normal")
-        print(circles[k].normal.dot(plane_vect))
+        est_center = circles[k].center
+
+        est_normal = circles[k].normal
+        est_normal = est_normal / np.sqrt(est_normal.dot(est_normal))
+        est_x = -(tip_tail_pt[:3, 1] - circles[k].center)
+        est_x = est_x / np.linalg.norm(est_x)
+        est_y = np.cross(est_normal, est_x)
+        est_y = est_y / np.sqrt(est_y.dot(est_y))
+
+        # estimated pose
+        pose_est = np.ones((4, 4))
+        pose_est[:3, 0] = est_x
+        pose_est[:3, 1] = est_y
+        pose_est[:3, 2] = est_normal
+        pose_est[:3, 3] = est_center
+
+        log.info("solution {:d}".format(k))
+        needle_handle.pose_estimate_evaluation(pose_est, camera_selector)
 
     # Draw the ellipse
     # df = pd.read_csv("./juan-scripts/output/needle_segmentation_pts.txt")

@@ -70,9 +70,10 @@ class ImageSaver:
 
 
 class AMBFNeedle:
-    def __init__(self, ambf_client) -> None:
+    def __init__(self, ambf_client, logger) -> None:
 
         self.c = ambf_client
+        self.logger = logger
         self.scene = Scene(self.c)
         self.ambf_cam_l = Camera(self.c, "cameraL")
         self.ambf_cam_r = Camera(self.c, "cameraR")
@@ -152,6 +153,33 @@ class AMBFNeedle:
         theta = np.linspace(np.pi / 3, np.pi, num=N).reshape((-1, 1))
         needle_salient = self.radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0))
         return needle_salient
+
+    def pose_estimate_evaluation(self, pose_est: np.ndarray, camera_selector: str) -> None:
+        T_CN = self.get_needle_to_camera_pose(camera_selector)
+        # Ground truth
+        needle_center = T_CN[:3, 3]
+        needle_x_axis = T_CN[:3, 0]
+        needle_y_axis = T_CN[:3, 1]
+        needle_normal = T_CN[:3, 2]
+
+        # Estimated pose
+        est_x = pose_est[:3, 0]
+        est_y = pose_est[:3, 1]
+        est_normal = pose_est[:3, 2]
+        est_center = pose_est[:3, 3]
+
+
+        x_ang_diff = np.arccos(needle_x_axis.dot(est_x)) * 180 / np.pi
+        y_ang_diff = np.arccos(needle_y_axis.dot(est_y))* 180 / np.pi
+        normal_ang_diff = np.arccos(needle_normal.dot(est_normal))* 180 / np.pi
+
+        # fmt: on
+        self.logger.info("x-axis MSE error:      {:6.4f}".format(x_ang_diff))
+        self.logger.info("y-axis MSE error:      {:6.4f}".format(y_ang_diff))
+        self.logger.info("Normal MSE error:      {:6.4f}".format(normal_ang_diff))
+        self.logger.info("Center MSE error:      {:6.4f}".format(np.linalg.norm(needle_center - est_center)))
+        self.logger.info("plane vect dot normal: {:6.4f}".format(est_normal.dot(needle_x_axis)))
+        # fmt: off
 
 
 class AMBFCamera:

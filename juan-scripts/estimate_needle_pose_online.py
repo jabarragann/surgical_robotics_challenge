@@ -11,6 +11,7 @@ import time
 from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D, CirclePoseEstimator
 from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
 import rospy
+from autonomy_utils.Logger import Logger
 
 np.set_printoptions(precision=6)
 
@@ -23,9 +24,10 @@ if __name__ == "__main__":
     rospy.init_node("image_listener")
     saver = ImageSaver()
     c = Client("juanclient")
+    log = Logger().log 
     c.connect()
     time.sleep(0.3)
-    needle_handle = AMBFNeedle(ambf_client=c)
+    needle_handle = AMBFNeedle(ambf_client=c, logger=log)
     camera_handle = AMBFCamera(c,camera_selector)
 
     # Get 3D position of the tip and tail
@@ -56,18 +58,33 @@ if __name__ == "__main__":
 
     for k in range(2):
         est_center = circles[k].center
+
         est_normal = circles[k].normal
+        est_normal = est_normal/np.sqrt(est_normal.dot(est_normal))
         est_x = -(tip_tail_pt[:3, 1] - circles[k].center)
         est_x = est_x/np.linalg.norm(est_x)
         est_y = np.cross(est_normal,est_x) 
-        print("solution {:d}".format(k))
+        est_y = est_y/np.sqrt(est_y.dot(est_y))
+
+        #estimated pose
+        pose_est = np.ones((4,4))
+        pose_est[:3,0] = est_x
+        pose_est[:3,1] = est_y
+        pose_est[:3,2] = est_normal
+        pose_est[:3,3] = est_center
+        
         # fmt: on
-        print("x-axis MSE error:      {:6.4f}".format(np.linalg.norm(needle_x_axis- est_x)))
-        print("y-axis MSE error:      {:6.4f}".format(np.linalg.norm(needle_y_axis- est_y)))
-        print("Normal MSE error:      {:6.4f}".format(np.linalg.norm(needle_normal- est_normal)))
-        print("Center MSE error:      {:6.4f}".format(np.linalg.norm(needle_center - est_center)))
-        print("plane vect dot normal: {:6.4f}".format(circles[k].normal.dot(plane_vect)))
+        # print("solution {:d}".format(k))
+        # print("x-axis MSE error:      {:6.4f}".format(np.linalg.norm(needle_x_axis- est_x)))
+        # print("y-axis MSE error:      {:6.4f}".format(np.linalg.norm(needle_y_axis- est_y)))
+        # print("Normal MSE error:      {:6.4f}".format(np.linalg.norm(needle_normal- est_normal)))
+        # print("Center MSE error:      {:6.4f}".format(np.linalg.norm(needle_center - est_center)))
+        # print("plane vect dot normal: {:6.4f}".format(circles[k].normal.dot(plane_vect)))
         # fmt: off
+        log.info("solution {:d}".format(k))
+        needle_handle.pose_estimate_evaluation(pose_est,camera_selector)
+    
+    #Show projected ellipses
     for i in range(2):
         img = saver.get_current_frame(camera_selector)
         # Draw 3D circle

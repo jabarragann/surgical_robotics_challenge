@@ -6,7 +6,7 @@ class Logger:
 
     FORMAT = "%(message)s"
 
-    def __init__(self, name: str):
+    def __init__(self, name: str = "autonomy_utils"):
         self.log = logging.getLogger(name)
 
         # File handler

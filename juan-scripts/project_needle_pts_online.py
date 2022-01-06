@@ -10,6 +10,7 @@ import ambf_client
 import rospy
 import pandas as pd
 from autonomy_utils.ambf_utils import ImageSaver, AMBFCamera, AMBFNeedle
+from autonomy_utils.Logger import Logger
 
 np.set_printoptions(precision=3)
 
@@ -20,9 +21,10 @@ if __name__ == "__main__":
     img = img_saver.get_current_frame(camera_selector)
 
     c = Client("juanclient")
+    log = Logger().log
     c.connect()
     time.sleep(0.3)
-    needle_handle = AMBFNeedle(ambf_client=c)
+    needle_handle = AMBFNeedle(ambf_client=c, logger=log)
     camera_handle = AMBFCamera(ambf_client=c, camera_selector=camera_selector)
 
     # Get 3D position of the tip and tail

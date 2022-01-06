@@ -40,31 +40,14 @@ if __name__ == "__main__":
     plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 
     # Normalize ellipse coefficients
-    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_segm.txt")
+    # ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_segm.txt")
+    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_sift.txt")
+    # ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_ideal.txt")
+    log.info(f"Ellipse parameters: {str(ellipse)}")
     estimator = CirclePoseEstimator(
         ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius
     )
     circles = estimator.estimate_pose()
-
-    # print("algorithm summary")
-    # print("camera_matrix")
-    # print(camera_handle.mtx)
-    # print("focal length {:0.4f}".format(camera_handle.focal_length))
-    # print("ellipse c matrix")
-    # print(estimator.c_mat)
-    # print("eigen values")
-    # print(W)
-    # print("eigen vectors")
-    # print(V)
-
-    # for k in range(2):
-    #     print("solution {:d}".format(k))
-    #     print("pose")
-    #     print(circles[k].center)
-    #     print("normal")
-    #     print(circles[k].normal)
-    #     print("plane vect dot normal")
-    #     print(circles[k].normal.dot(plane_vect))
 
     # Ground truth
     needle_center = T_CN[:3, 3]
@@ -74,7 +57,6 @@ if __name__ == "__main__":
 
     for k in range(2):
         est_center = circles[k].center
-
         est_normal = circles[k].normal
         est_normal = est_normal / np.sqrt(est_normal.dot(est_normal))
         est_x = -(tip_tail_pt[:3, 1] - circles[k].center)

@@ -156,6 +156,10 @@ class AMBFNeedle:
 
     def pose_estimate_evaluation(self, pose_est: np.ndarray, camera_selector: str) -> None:
         T_CN = self.get_needle_to_camera_pose(camera_selector)
+
+        #Get salient_points
+        tip_tail_pt =  self.get_tip_tail_pose()
+
         # Ground truth
         needle_center = T_CN[:3, 3]
         needle_x_axis = T_CN[:3, 0]
@@ -168,17 +172,22 @@ class AMBFNeedle:
         est_normal = pose_est[:3, 2]
         est_center = pose_est[:3, 3]
 
-
+        #Metrics
         x_ang_diff = np.arccos(needle_x_axis.dot(est_x)) * 180 / np.pi
         y_ang_diff = np.arccos(needle_y_axis.dot(est_y))* 180 / np.pi
         normal_ang_diff = np.arccos(needle_normal.dot(est_normal))* 180 / np.pi
 
+        tip_tail_true = T_CN @ tip_tail_pt.T
+        tip_tail_est = pose_est @ tip_tail_pt.T
+
         # fmt: on
-        self.logger.info("x-axis MSE error:      {:6.4f}".format(x_ang_diff))
-        self.logger.info("y-axis MSE error:      {:6.4f}".format(y_ang_diff))
-        self.logger.info("Normal MSE error:      {:6.4f}".format(normal_ang_diff))
-        self.logger.info("Center MSE error:      {:6.4f}".format(np.linalg.norm(needle_center - est_center)))
-        self.logger.info("plane vect dot normal: {:6.4f}".format(est_normal.dot(needle_x_axis)))
+        self.logger.info("x-axis angle error (deg):     {:10.2f}".format(x_ang_diff))
+        self.logger.info("y-axis angle error (deg):     {:10.2f}".format(y_ang_diff))
+        self.logger.info("Normal angle error (deg):     {:10.2f}".format(normal_ang_diff))
+        self.logger.info("Center MSE error (cm):        {:10.2f}".format(100*np.linalg.norm(needle_center - est_center)))
+        self.logger.info("tip    MSE error (cm):        {:10.2f}".format(100*np.linalg.norm(tip_tail_true[:,0]-tip_tail_est[:,0])))
+        self.logger.info("tail   MSE error (cm):        {:10.2f}".format(100*np.linalg.norm(tip_tail_true[:,1]-tip_tail_est[:,1])))
+        self.logger.info("plane vect dot normal:        {:10.2f}".format(est_normal.dot(needle_x_axis)))
         # fmt: off
 
 

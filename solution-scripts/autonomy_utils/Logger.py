@@ -23,6 +23,6 @@ class Logger:
 
         # Rich stream handler
         r_handler = RichHandler(rich_tracebacks=True)
-        r_handler.setLevel("INFO")
+        r_handler.setLevel("DEBUG")
         r_handler.setFormatter(logging.Formatter(fmt=Logger.FORMAT, datefmt="[%X]"))
         self.log.addHandler(r_handler)

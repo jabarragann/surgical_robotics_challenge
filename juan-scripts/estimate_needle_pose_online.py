@@ -13,7 +13,7 @@ from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
 import rospy
 from autonomy_utils.Logger import Logger
 
-np.set_printoptions(precision=6)
+np.set_printoptions(precision=3)
 
 """ Estimate needle pose and calculate MSE error
 """
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     X, Y = projected_needle_pts[:, 0].reshape(-1, 1), projected_needle_pts[:, 1].reshape(-1, 1)
 
     # Normalize ellipse coefficients
-    ellipse = Ellipse2D.from_sample_points(X - camera_handle.cx, Y - camera_handle.cy)
+    ellipse = Ellipse2D.from_sample_points_skimage(X - camera_handle.cx, Y - camera_handle.cy)
     log.info(f"Ellipse parameters: {str(ellipse)}")
     estimator = CirclePoseEstimator(
         ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius
@@ -83,8 +83,16 @@ if __name__ == "__main__":
         # print("plane vect dot normal: {:6.4f}".format(circles[k].normal.dot(plane_vect)))
         # fmt: off
         log.info("solution {:d}".format(k))
+        log.info(f"estimated pose \n{pose_est}")
         needle_handle.pose_estimate_evaluation(pose_est,camera_selector)
     
+    #Debug
+    log.info(f"Ground truth TCN \n{T_CN}")
+    for k in range(2):
+        log.info(f"solution {k}")
+        log.info(f"Center \n{circles[k].center}")
+        log.info(f"Normal \n{circles[k].normal}")
+
     #Show projected ellipses
     for i in range(2):
         img = saver.get_current_frame(camera_selector)

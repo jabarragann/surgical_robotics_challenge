@@ -107,7 +107,7 @@ class AMBFNeedle:
 
     def get_needle_to_camera_pose(self, camera_selector: str) -> np.ndarray:
         """Generates the needle current pose with respect to the selected camera coordinate frame. The resulting matrix
-            uses the opencv convention instead of the AMBF convention.
+            uses the opencv convention instead of the Opencv convention.
 
         Args:
             camera_selector (str): either "left" or "right"
@@ -166,7 +166,7 @@ class AMBFNeedle:
         needle_y_axis = T_CN[:3, 1]
         needle_normal = T_CN[:3, 2]
 
-        # Estimated pose
+        # Estimated pose - this is not a rigid transformation!!
         est_x = pose_est[:3, 0]
         est_y = pose_est[:3, 1]
         est_normal = pose_est[:3, 2]
@@ -261,7 +261,7 @@ class AMBFCamera:
             # Save pts
             results_df = results_df.append(
                 pd.DataFrame(
-                    [[i, int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])]],
+                    [[i, img_pt[i, 0, 0], img_pt[i, 0, 1]]],
                     columns=["id", "x", "y"],
                 )
             )

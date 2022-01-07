@@ -14,7 +14,7 @@ from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
 import rospy
 from autonomy_utils.Logger import Logger
 
-np.set_printoptions(precision=6)
+np.set_printoptions(precision=3)
 
 
 if __name__ == "__main__":
@@ -34,15 +34,14 @@ if __name__ == "__main__":
     needle_salient = needle_handle.get_tip_tail_pose()
 
     # Get needle pose wrt camera
-    T_CN = needle_handle.get_current_pose()
-
+    T_CN = needle_handle.get_needle_to_camera_pose(camera_selector)
     tip_tail_pt = T_CN @ needle_salient.T
     plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
 
     # Normalize ellipse coefficients
     # ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_segm.txt")
-    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_sift.txt")
-    # ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_ideal.txt")
+    # ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_sift.txt")
+    ellipse = Ellipse2D.from_coefficients("./juan-scripts/output/ellipse_coefficients_ideal.txt")
     log.info(f"Ellipse parameters: {str(ellipse)}")
     estimator = CirclePoseEstimator(
         ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius
@@ -65,21 +64,28 @@ if __name__ == "__main__":
         est_y = est_y / np.sqrt(est_y.dot(est_y))
 
         # estimated pose
-        pose_est = np.ones((4, 4))
+        pose_est = np.ones((4, 4))  ## the error!!!!!
         pose_est[:3, 0] = est_x
         pose_est[:3, 1] = est_y
         pose_est[:3, 2] = est_normal
         pose_est[:3, 3] = est_center
 
         log.info("solution {:d}".format(k))
+        log.info(f"estimated pose \n{pose_est}")
         needle_handle.pose_estimate_evaluation(pose_est, camera_selector)
 
     # Draw the ellipse
     # df = pd.read_csv("./juan-scripts/output/needle_segmentation_pts.txt")
-    df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
+    # df = pd.read_csv("./juan-scripts/output/sample_ellipse_01.txt")
+    # X = df["x"].values.reshape(-1, 1)
+    # Y = df["y"].values.reshape(-1, 1)
 
-    X = df["x"].values.reshape(-1, 1)
-    Y = df["y"].values.reshape(-1, 1)
+    # Debug
+    log.info(f"Ground truth TCN \n{T_CN}")
+    for k in range(2):
+        log.info(f"solution {k}")
+        log.info(f"Center \n{circles[k].center}")
+        log.info(f"Normal \n{circles[k].normal}")
 
     for i in range(2):
         # img = np.zeros((480, 640, 3))

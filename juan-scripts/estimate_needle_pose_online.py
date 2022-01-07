@@ -68,7 +68,7 @@ if __name__ == "__main__":
         est_y = est_y/np.sqrt(est_y.dot(est_y))
 
         #estimated pose
-        pose_est = np.ones((4,4))
+        pose_est = np.identity(4)
         pose_est[:3,0] = est_x
         pose_est[:3,1] = est_y
         pose_est[:3,2] = est_normal
@@ -82,16 +82,18 @@ if __name__ == "__main__":
         # print("Center MSE error:      {:6.4f}".format(np.linalg.norm(needle_center - est_center)))
         # print("plane vect dot normal: {:6.4f}".format(circles[k].normal.dot(plane_vect)))
         # fmt: off
+        log.info("*"*20)
         log.info("solution {:d}".format(k))
+        log.info("*"*20)
         log.info(f"estimated pose \n{pose_est}")
         needle_handle.pose_estimate_evaluation(pose_est,camera_selector)
     
-    #Debug
-    log.info(f"Ground truth TCN \n{T_CN}")
+    #Debug - statements
+    log.debug(f"Ground truth TCN \n{T_CN}")
     for k in range(2):
-        log.info(f"solution {k}")
-        log.info(f"Center \n{circles[k].center}")
-        log.info(f"Normal \n{circles[k].normal}")
+        log.debug(f"solution {k}")
+        log.debug(f"Center \n{circles[k].center}")
+        log.debug(f"Normal \n{circles[k].normal}")
 
     #Show projected ellipses
     for i in range(2):

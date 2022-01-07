@@ -17,8 +17,8 @@ if __name__ == "__main__":
     print(cx, cy)
 
     # fmt: off
-    X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
-    # X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0.txt")
+    #X, Y = Ellipse2D.read_pts_in_file("./juan-scripts/output/sample_ellipse_01.txt")
+    X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0.txt")
     # X, Y = Ellipse2D.read_pts_in_file( "juan-scripts/examples/output/needle_segmentation_pts0_sift.txt")
     # fmt: on
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(f"The ellipse is given by {ellipse}")
 
     # # Save ellipse parameters
-    parameters_file = "./juan-scripts/output/ellipse_coefficients_ideal.txt"
+    parameters_file = "./juan-scripts/output/ellipse_coefficients_segm.txt"
     ellipse.parameters_to_txt(parameters_file)
 
     x = ellipse.parameter_vector

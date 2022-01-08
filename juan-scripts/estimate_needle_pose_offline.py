@@ -10,7 +10,7 @@ import cv2
 from ambf_client import Client
 import time
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
-from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
+from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle, find_closest_rotation
 import rospy
 from autonomy_utils.Logger import Logger
 
@@ -69,6 +69,8 @@ if __name__ == "__main__":
         pose_est[:3, 1] = est_y
         pose_est[:3, 2] = est_normal
         pose_est[:3, 3] = est_center
+        # re orthoganalize
+        pose_est[:3, :3] = find_closest_rotation(pose_est[:3, :3])
 
         log.info("*" * 20)
         log.info("solution {:d}".format(k))

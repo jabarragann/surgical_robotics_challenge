@@ -6,3 +6,5 @@
 scripts/surgical_robotics_challenge.egg-info/
 .vscode/
 output/
+solution-scripts/autoutils.egg-info/
+.ipynb_checkpoints/

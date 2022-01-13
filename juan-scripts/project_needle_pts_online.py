@@ -6,9 +6,7 @@ import cv2
 import numpy as np
 from ambf_client import Client
 import time
-import ambf_client
 import rospy
-import pandas as pd
 from autonomy_utils.ambf_utils import ImageSaver, AMBFCamera, AMBFNeedle
 from autonomy_utils.Logger import Logger
 

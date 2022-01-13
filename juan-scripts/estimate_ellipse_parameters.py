@@ -5,15 +5,14 @@ Least square solution to estimate the parameters of an ellipse
 from autonomy_utils.circle_pose_estimator import Ellipse2D
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import sympy as sym
-import pickle
 from autonomy_utils.ambf_utils import AMBFCamera
+import matplotlib.pyplot as plt
 
 if __name__ == "__main__":
 
-    cx = AMBFCamera.cx
-    cy = AMBFCamera.cy
+    cx = AMBFCamera.cx  # 1920 / 2
+    cy = AMBFCamera.cy  # 1080 / 2
     print(cx, cy)
 
     # fmt: off

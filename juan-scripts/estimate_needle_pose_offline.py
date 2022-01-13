@@ -14,7 +14,7 @@ from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle, find_c
 import rospy
 from autonomy_utils.Logger import Logger
 
-np.set_printoptions(precision=3)
+np.set_printoptions(precision=3, suppress=True)
 
 
 if __name__ == "__main__":

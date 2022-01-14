@@ -67,7 +67,7 @@ def main():
     w_name = "disp_final"
     cv2.namedWindow(w_name, cv2.WINDOW_NORMAL)
 
-    p = Path("/home/juan1995/research_juan/needle_dataset_/d2")
+    p = Path("/home/juan1995/research_juan/needle_dataset_/d3")
     if not p.exists():
         p.mkdir(parents=True)
 

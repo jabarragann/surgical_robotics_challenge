@@ -8,4 +8,6 @@
 
 # Notes
 
-The `robotstackenv` environment has a problem with matplotlib and PyKDL. If matplotlib is imported first that will create problems. The problem most likely is being caused by having a mixtures of different python interpreters in my computer.
+* The `robotstackenv` environment has a problem with matplotlib and PyKDL. If matplotlib is imported first that will create problems. The problem most likely is being caused by having a mixtures of different python interpreters in my computer.
+
+* If you are having problems with paths in VScode, check that you are running the the scripts from the main project folder.

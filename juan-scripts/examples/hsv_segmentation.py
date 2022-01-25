@@ -59,7 +59,7 @@ if __name__ == "__main__":
     # Threshold the whole image
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     (T, thresh_img) = cv2.threshold(hsv_img[:, :, 1], 60, 255, cv2.THRESH_BINARY)
-    # Get pixels correspoind to the needle
+    # Get pixels corresponding to the needle
     needle_pts = []
     for i in range(roi[1], roi[1] + roi[3]):
         for j in range(roi[0], roi[0] + roi[2]):

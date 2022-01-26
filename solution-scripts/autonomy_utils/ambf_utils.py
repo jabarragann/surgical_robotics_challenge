@@ -144,7 +144,7 @@ class AMBFNeedle:
 
     def get_needle_to_camera_pose(self, camera_selector: str) -> np.ndarray:
         """Generates the needle current pose with respect to the selected camera coordinate frame. The resulting matrix
-            uses the opencv convention instead of the Opencv convention.
+            uses the opencv convention instead of the AMBF convention.
 
         Args:
             camera_selector (str): either "left" or "right"

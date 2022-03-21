@@ -1,6 +1,7 @@
 from re import I
 from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle
-from autonomy_utils import image_segmentation, Logger
+from autonomy_utils import Logger
+from autonomy_utils.image_segmentation import NeedleSegmenter
 import cv2
 import rospy
 import numpy as np
@@ -21,7 +22,6 @@ def save_image(path, l_img, l_seg, r_img, r_seg):
     cv2.imwrite(str(path / f"{ts}_r_img.jpeg"), r_img)
     cv2.imwrite(str(path / f"{ts}_l_seg.jpeg"), l_seg)
     cv2.imwrite(str(path / f"{ts}_r_seg.jpeg"), r_seg)
-    print("images saved ...")
 
 
 def main():
@@ -29,19 +29,26 @@ def main():
     w_name = "disp_final"
     cv2.namedWindow(w_name, cv2.WINDOW_NORMAL)
 
-    p = Path("/home/juan1995/research_juan/needle_dataset_/d4")
+    print(f"Data collection util cmds")
+    print(f"Press 's' to save new images")
+    print(f"Press 'q' to quit")
+
+    p = Path("/home/juan1995/research_juan/needle_dataset_/d6")
     if not p.exists():
         p.mkdir(parents=True)
 
+    needle_seg = NeedleSegmenter(ambf_client=c, log=log)
     camera_selector = "left"
 
+    count = 0
     while True:
         frame_l = image_subs.get_current_frame("left")
         frame_r = image_subs.get_current_frame("right")
-        segmented_l = image_segmentation.segment_needle(frame_l)
-        segmented_r = image_segmentation.segment_needle(frame_r)
+        segmented_l = NeedleSegmenter.segment_needle(frame_l)
+        segmented_r = NeedleSegmenter.segment_needle(frame_r)
+        clean_seg_l = needle_seg.clean_image(segmented_l, "left", ambf_client=c, log=log)
 
-        final = np.hstack((frame_l, segmented_l))
+        final = np.hstack((frame_l, clean_seg_l))
         # log.info(f"T_CN \n {T_CN}")
         # log.info(f"T_WF \n {stereo_rig_handle.get_current_pose()}")
         # stereo_rig = Camera(c, "CameraFrame")
@@ -53,16 +60,13 @@ def main():
         if k == ord("q"):
             break
         elif k == ord("s"):
-            clean_seg_l = image_segmentation.clean_image(
-                segmented_l, "left", ambf_client=c, log=log
-            )
-            clean_seg_r = image_segmentation.clean_image(
-                segmented_r, "right", ambf_client=c, log=log
-            )
+            # clean_seg_l = needle_seg.clean_image(segmented_l, "left", ambf_client=c, log=log)
+            clean_seg_r = needle_seg.clean_image(segmented_r, "right", ambf_client=c, log=log)
 
-            final_2 = np.hstack((clean_seg_l, clean_seg_r))
+            # final_2 = np.hstack((clean_seg_l, clean_seg_r))
+            print(f"image {count} saved ...")
             save_image(p, frame_l, clean_seg_l, frame_r, clean_seg_r)
-
+            count += 1
             # cv2.namedWindow("saved", cv2.WINDOW_NORMAL)
             # cv2.imshow("saved", final_2)
             # cv2.waitKey(0)

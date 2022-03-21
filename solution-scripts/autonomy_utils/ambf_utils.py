@@ -13,6 +13,7 @@ from numpy.linalg import inv, norm
 import pandas as pd
 from pathlib import Path
 
+
 def find_closest_rotation(matrix:np.ndarray) -> np.ndarray:
     """ Find closest rotation to the input matrix
     Algorithm from https://stackoverflow.com/questions/23080791/eigen-re-orthogonalization-of-rotation-matrix/23083722
@@ -159,13 +160,16 @@ class AMBFNeedle:
 
         """
         if camera_selector == "left":
+            self.ambf_cam_l.set_pose_changed()
             T_FC = pm.toMatrix(self.ambf_cam_l.get_T_c_w())  # CamL to CamFrame
         elif camera_selector == "right":
+            self.ambf_cam_r.set_pose_changed()
             T_FC = pm.toMatrix(self.ambf_cam_r.get_T_c_w())  # CamR to CamFrame
         else:
             raise ValueError("camera selector should be either 'left' or 'right'")
 
         T_WN = pm.toMatrix(self.scene.needle_measured_cp())  # Needle to world
+        self.ambf_cam_frame.set_pose_changed()
         T_WF = pm.toMatrix(self.ambf_cam_frame.get_T_c_w())  # CamFrame to world
 
         T_WC = T_WF @ T_FC
@@ -362,3 +366,13 @@ class AMBFStereoRig:
             np.ndarray: [description]
         """
         return pm.toMatrix(self.ambf_cam_frame.get_T_c_w())
+
+    def project_points(self, camera_selector:str, T_CN ,needle_pts:np.ndarray):
+        if camera_selector == "left":
+            img_pt = self.camera_left.project_points(T_CN, needle_pts)
+        elif camera_selector == "right":
+            img_pt = self.camera_right.project_points(T_CN, needle_pts)
+        else:
+            raise Exception("Camera selector must be either 'left' or 'right'")
+
+        return img_pt

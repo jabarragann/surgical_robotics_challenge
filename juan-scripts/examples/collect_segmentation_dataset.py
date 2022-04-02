@@ -48,7 +48,10 @@ def main():
 
     # Calculate the next number
     sub_dirs = [int(x.name) for x in p.glob("*")]
-    next_img = max(sub_dirs) + 1
+    if sub_dirs == 0:
+        next_img = 0
+    else:
+        next_img = max(sub_dirs) + 1
 
     needle_seg = NeedleSegmenter(ambf_client=c, log=log)
     camera_selector = "left"
@@ -84,11 +87,11 @@ def main():
             clean_seg_r = needle_seg.clean_image(segmented_r, "right", ambf_client=c, log=log)
 
             # final_2 = np.hstack((clean_seg_l, clean_seg_r))
+            print(f"saving images {next_img+1:04d} and  {next_img:04d} ...")
             save_image(p, frame_l, clean_seg_l, next_img)
             next_img += 1
             save_image(p, frame_r, clean_seg_r, next_img)
             next_img += 1
-            print(f"images {next_img+1:04d} and  {next_img:04d} saved ...")
             # save_image(p, frame_l, clean_seg_l, frame_r, clean_seg_r)
             count += 1
             # cv2.namedWindow("saved", cv2.WINDOW_NORMAL)

@@ -2,13 +2,14 @@
 Estimate the needle pose from a segmentation mask
 """
 
+from tkinter import Image
 import cv2
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from ambf_client import Client
-from autonomy_utils.ambf_utils import ImageSaver, AMBFCamera, AMBFNeedle, find_closest_rotation
-from autonomy_utils.image_segmentation import segment_needle, clean_image
+from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle, find_closest_rotation
+from autonomy_utils.image_segmentation import NeedleSegmenter
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
 from autonomy_utils import Logger
 import rospy
@@ -18,26 +19,11 @@ import matplotlib.pyplot as plt
 cx = AMBFCamera.cx
 cy = AMBFCamera.cy
 
-if __name__ == "__main__":
 
-    ########################################
-    ## Environment initialization
+def get_points_from_mask(img, segmenter: NeedleSegmenter):
 
-    rospy.init_node("main_node")
-    c = Client("juanclient")
-    log = Logger.Logger().log
-    c.connect()
-    needle_handle = AMBFNeedle(ambf_client=c, logger=log)
-    camera_selector = "left"
-    camera_handle = AMBFCamera(c, camera_selector)
-
-    ########################################
-    ## Read and create mask
-    img_saver = ImageSaver()
-    img = img_saver.get_current_frame("left")
-
-    mask = segment_needle(img)
-    clean_mask_rgb = clean_image(mask, "left", ambf_client=c, log=log)
+    mask = segmenter.segment_needle(img)
+    clean_mask_rgb = segmenter.clean_image(mask, "left", ambf_client=c, log=log)
     clean_mask = cv2.cvtColor(clean_mask_rgb, cv2.COLOR_BGR2GRAY)
 
     ########################################
@@ -60,6 +46,56 @@ if __name__ == "__main__":
     X = needle_pts[:, 0].reshape((-1, 1))
     Y = needle_pts[:, 1].reshape((-1, 1))
 
+    return X, Y
+
+
+class ClickyWindow:
+    def __init__(self):
+        self.X, self.Y = [], []
+
+    def get_pixel_values(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.X.append(x)
+            self.Y.append(y)
+            print(x, y)
+
+    def get_points_from_mouse(self, img):
+        w_name = "clicky_w"
+        cv2.namedWindow(w_name)
+        cv2.setMouseCallback(w_name, self.get_pixel_values)
+        cv2.imshow(w_name, img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+        X = np.array(self.X).reshape((-1, 1))
+        Y = np.array(self.Y).reshape((-1, 1))
+
+        return X, Y
+
+
+if __name__ == "__main__":
+
+    ########################################
+    ## Environment initialization
+
+    rospy.init_node("main_node")
+    c = Client("juanclient")
+    log = Logger.Logger().log
+    c.connect()
+    needle_handle = AMBFNeedle(ambf_client=c, logger=log)
+    camera_selector = "left"
+    camera_handle = AMBFCamera(c, camera_selector)
+    stereo_rig_handle = AMBFStereoRig(ambf_client=c)
+    segmenter_handler = NeedleSegmenter.from_handler(needle_handle, stereo_rig_handle)
+    ########################################
+    ## Read and create mask
+    img_saver = ImageSaver()
+    img = img_saver.get_current_frame("left")
+    # X, Y = get_points_from_mask(img)
+
+    clicky_w = ClickyWindow()
+    X, Y = clicky_w.get_points_from_mouse(img)
+
     ########################################
     ## Estimate ellipse
     ellipse = Ellipse2D.from_sample_points_skimage(X - cx, Y - cy)
@@ -67,9 +103,7 @@ if __name__ == "__main__":
 
     ########################################
     ## Estimate pose
-    estimator = CirclePoseEstimator(
-        ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius
-    )
+    estimator = CirclePoseEstimator(ellipse, camera_handle.mtx, camera_handle.focal_length, needle_handle.radius)
     circles = estimator.estimate_pose()
 
     ########################################

@@ -54,6 +54,7 @@ cameraL:
   #   vertex: shader.vs
   #   fragment: shader.fs
   publish image: True
+  publish image interval: 5
   publish image resolution: {width: 1920, height: 1080}
   publish depth: True
   publish depth resolution: {width: 640, height: 480}
@@ -74,6 +75,7 @@ cameraR:
   #   vertex: shader.vs
   #   fragment: shader.fs
   publish image: True
+  publish image interval: 5
   publish image resolution: {width: 1920, height: 1080}
   publish depth: True
   publish depth resolution: {width: 640, height: 480}

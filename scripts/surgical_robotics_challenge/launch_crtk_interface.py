@@ -48,10 +48,11 @@ import ecm_arm
 import scene
 import time
 from sensor_msgs.msg import JointState
-from geometry_msgs.msg import TransformStamped, Transform, TwistStamped
+from geometry_msgs.msg import PoseStamped, Pose, TwistStamped
 from PyKDL import Rotation, Vector, Frame
 from argparse import ArgumentParser
 from surgical_robotics_challenge.utils.utilities import get_boolean_from_opt
+from enum import Enum
 
 
 def rot_mat_to_quat(cp):
@@ -62,30 +63,30 @@ def rot_mat_to_quat(cp):
     return R.GetQuaternion()
 
 
-def np_mat_to_transform(cp):
-    trans = Transform()
-    trans.translation.x = cp[0, 3]
-    trans.translation.y = cp[1, 3]
-    trans.translation.z = cp[2, 3]
+def np_mat_to_pose(cp):
+    pose = Pose()
+    pose.position.x = cp[0, 3]
+    pose.position.y = cp[1, 3]
+    pose.position.z = cp[2, 3]
 
     Quat = rot_mat_to_quat(cp)
 
-    trans.rotation.x = Quat[0]
-    trans.rotation.y = Quat[1]
-    trans.rotation.z = Quat[2]
-    trans.rotation.w = Quat[3]
-    return trans
+    pose.orientation.x = Quat[0]
+    pose.orientation.y = Quat[1]
+    pose.orientation.z = Quat[2]
+    pose.orientation.w = Quat[3]
+    return pose
 
 
-def transform_to_frame(cp):
+def pose_to_frame(cp):
     frame = Frame()
-    frame.p = Vector(cp.translation.x,
-                     cp.translation.y,
-                     cp.translation.z)
-    frame.M = Rotation.Quaternion(cp.rotation.x,
-                                  cp.rotation.y,
-                                  cp.rotation.z,
-                                  cp.rotation.w)
+    frame.p = Vector(cp.position.x,
+                     cp.position.y,
+                     cp.position.z)
+    frame.M = Rotation.Quaternion(cp.orientation.x,
+                                  cp.orientation.y,
+                                  cp.orientation.z,
+                                  cp.orientation.w)
     return frame
 
 
@@ -109,8 +110,11 @@ class PSMCRTKWrapper:
         self.measured_js_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_js', JointState,
                                                queue_size=1)
 
-        self.measured_cp_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cp', TransformStamped,
+        self.measured_cp_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cp', PoseStamped,
                                                queue_size=1)
+
+        self.T_b_w_pub = rospy.Publisher(namespace + '/' + name + '/' + 'T_b_w', PoseStamped,
+                                         queue_size=1)
 
         self.measured_cv_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cv', TwistStamped,
                                                queue_size=1)
@@ -121,7 +125,7 @@ class PSMCRTKWrapper:
         self.servo_jv_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jv', JointState,
                                              self.servo_jv_cb, queue_size=1)
 
-        self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_cp', TransformStamped,
+        self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_cp', PoseStamped,
                                              self.servo_cp_cb, queue_size=1)
 
         self.servo_jaw_jp_sub = rospy.Subscriber(namespace + '/' + name + '/jaw/' + 'servo_jp', JointState,
@@ -130,12 +134,14 @@ class PSMCRTKWrapper:
         self._measured_js_msg = JointState()
         self._measured_js_msg.name = self.arm.get_joint_names()
 
-        self._measured_cp_msg = TransformStamped()
-        self._measured_cp_msg.header.frame_id = 'baselink'
+        self._measured_cp_msg = PoseStamped()
+        self._measured_cp_msg.header.frame_id = name + '/baselink'
+        self._T_b_w_msg = PoseStamped()
+        self._T_b_w_msg.header.frame_id = 'world'
         self._jaw_angle = 0.5
 
     def servo_cp_cb(self, cp):
-        frame = transform_to_frame(cp.transform)
+        frame = pose_to_frame(cp.pose)
         self.arm.servo_cp(frame)
 
     def servo_jp_cb(self, js):
@@ -148,6 +154,7 @@ class PSMCRTKWrapper:
         self._jaw_angle = jp.position[0]
 
     def publish_js(self):
+        self._measured_js_msg.header.stamp = rospy.Time.now()
         self._measured_js_msg.position = self.arm.measured_jp()
         self._measured_js_msg.velocity = self.arm.measured_jv()
         self.measured_js_pub.publish(self._measured_js_msg)
@@ -157,12 +164,19 @@ class PSMCRTKWrapper:
         self.arm.run_grasp_logic(self._jaw_angle)
 
     def publish_cs(self):
-        self._measured_cp_msg.transform = np_mat_to_transform(self.arm.measured_cp())
+        self._measured_cp_msg.header.stamp = rospy.Time.now()
+        self._measured_cp_msg.pose = np_mat_to_pose(self.arm.measured_cp())
         self.measured_cp_pub.publish(self._measured_cp_msg)
+
+    def publish_T_b_w(self):
+        self._T_b_w_msg.header.stamp = rospy.Time.now()
+        self._T_b_w_msg.pose = np_mat_to_pose(self.arm.get_T_b_w())
+        self.T_b_w_pub.publish(self._T_b_w_msg)
 
     def run(self):
         self.publish_js()
         self.publish_cs()
+        self.publish_T_b_w()
 
 
 class ECMCRTKWrapper:
@@ -176,7 +190,7 @@ class ECMCRTKWrapper:
         self.measured_js_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_js', JointState,
                                                queue_size=1)
 
-        self.measured_cp_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cp', TransformStamped,
+        self.measured_cp_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cp', PoseStamped,
                                                queue_size=1)
 
         self.servo_jp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jp', JointState,
@@ -185,128 +199,81 @@ class ECMCRTKWrapper:
         # self.servo_jv_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jv', JointState,
         #                                      self.servo_jv_cb, queue_size=1)
 
-        # self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_cp', TransformStamped,
+        # self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_cp', PoseStamped,
         #                                      self.servo_cp_cb, queue_size=1)
 
         self._measured_js_msg = JointState()
         self._measured_js_msg.name = ["j0", "j1", "j2", "j3"]
 
-        self._measured_cp_msg = TransformStamped()
-        self._measured_cp_msg.header.frame_id = 'base_link'
+        self._measured_cp_msg = PoseStamped()
+        self._measured_cp_msg.header.frame_id = name + '/baselink'
 
         self._measured_cv_msg = TwistStamped()
         self._measured_cv_msg.header.frame_id = 'world'
 
     # def servo_cp_cb(self, cp):
-    #     frame = transform_to_frame(cp.transform)
+    #     frame = pose_to_frame(cp.pose)
     #     self.arm.servo_cp(frame)
 
     def servo_jp_cb(self, js):
         self._servo_jp_cmd = js.position
+        self.arm.servo_jp(self._servo_jp_cmd)
 
     # def servo_jv_cb(self, js):
     #     self.arm.servo_jv(js.velocity)
 
     def publish_js(self):
+        self._measured_js_msg.header.stamp = rospy.Time.now()
         self._measured_js_msg.position = self.arm.measured_jp()
         self.measured_js_pub.publish(self._measured_js_msg)
 
     def publish_cs(self):
-        self._measured_cp_msg.transform = np_mat_to_transform(self.arm.measured_cp())
+        self._measured_cp_msg.header.stamp = rospy.Time.now()
+        self._measured_cp_msg.pose = np_mat_to_pose(self.arm.measured_cp())
         self.measured_cp_pub.publish(self._measured_cp_msg)
 
     def run(self):
         self.publish_js()
         self.publish_cs()
-        self.arm.servo_jp(self._servo_jp_cmd)
+
+
+class SceneObjectType(Enum):
+    Needle=1
+    Entry1=2
+    Entry2=3
+    Entry3=4
+    Entry4=5
+    Exit1=6
+    Exit2=7
+    Exit3=8
+    Exit4=9
 
 
 class SceneCRTKWrapper:
     def __init__(self, client, namespace):
         self.namespace = namespace
         self.scene = scene.Scene(client)
+        self._scene_object_pubs = dict()
+        self._scene_object_pubs[SceneObjectType.Needle] = [None, self.scene.needle_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Entry1] = [None, self.scene.entry1_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Entry2] = [None, self.scene.entry2_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Entry3] = [None, self.scene.entry3_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Entry4] = [None, self.scene.entry4_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Exit1] = [None, self.scene.exit1_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Exit2] = [None, self.scene.exit2_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Exit3] = [None, self.scene.exit3_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Exit4] = [None, self.scene.exit4_measured_cp, PoseStamped()]
 
-        self.needle_cp_pub = rospy.Publisher(namespace + '/' + 'Needle' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.entry1_cp_pub = rospy.Publisher(namespace + '/' + 'Entry1' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.entry2_cp_pub = rospy.Publisher(namespace + '/' + 'Entry2' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.entry3_cp_pub = rospy.Publisher(namespace + '/' + 'Entry3' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.entry4_cp_pub = rospy.Publisher(namespace + '/' + 'Entry4' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.exit1_cp_pub = rospy.Publisher(namespace + '/' + 'Exit1' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.exit2_cp_pub = rospy.Publisher(namespace + '/' + 'Exit2' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.exit3_cp_pub = rospy.Publisher(namespace + '/' + 'Exit3' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self.exit4_cp_pub = rospy.Publisher(namespace + '/' + 'Exit4' + '/' + 'measured_cp', TransformStamped,
-                                               queue_size=1)
-
-        self._needle_cp_msg = TransformStamped()
-        self._needle_cp_msg.header.frame_id = 'World'
-
-        self._entry1_cp_msg = TransformStamped()
-        self._entry1_cp_msg.header.frame_id = 'World'
-
-        self._entry2_cp_msg = TransformStamped()
-        self._entry2_cp_msg.header.frame_id = 'World'
-
-        self._entry3_cp_msg = TransformStamped()
-        self._entry3_cp_msg.header.frame_id = 'World'
-
-        self._entry4_cp_msg = TransformStamped()
-        self._entry4_cp_msg.header.frame_id = 'World'
-
-        self._exit1_cp_msg = TransformStamped()
-        self._exit1_cp_msg.header.frame_id = 'World'
-
-        self._exit2_cp_msg = TransformStamped()
-        self._exit2_cp_msg.header.frame_id = 'World'
-
-        self._exit3_cp_msg = TransformStamped()
-        self._exit3_cp_msg.header.frame_id = 'World'
-
-        self._exit4_cp_msg = TransformStamped()
-        self._exit4_cp_msg.header.frame_id = 'World'
+        suffix = '/measured_cp'
+        for k, i in self._scene_object_pubs.items():
+            i[0] = rospy.Publisher(namespace + '/' + k.name + suffix, PoseStamped, queue_size=1)
+            i[2].header.frame_id = 'world'
 
     def publish_cs(self):
-        self._needle_cp_msg.transform = np_mat_to_transform(self.scene.needle_measured_cp())
-        self.needle_cp_pub.publish(self._needle_cp_msg)
-
-        self._entry1_cp_msg.transform = np_mat_to_transform(self.scene.entry1_measured_cp())
-        self.entry1_cp_pub.publish(self._entry1_cp_msg)
-
-        self._entry2_cp_msg.transform = np_mat_to_transform(self.scene.entry2_measured_cp())
-        self.entry2_cp_pub.publish(self._entry2_cp_msg)
-
-        self._entry3_cp_msg.transform = np_mat_to_transform(self.scene.entry3_measured_cp())
-        self.entry3_cp_pub.publish(self._entry3_cp_msg)
-
-        self._entry4_cp_msg.transform = np_mat_to_transform(self.scene.entry4_measured_cp())
-        self.entry4_cp_pub.publish(self._entry4_cp_msg)
-
-        self._exit1_cp_msg.transform = np_mat_to_transform(self.scene.exit1_measured_cp())
-        self.exit1_cp_pub.publish(self._exit1_cp_msg)
-
-        self._exit2_cp_msg.transform = np_mat_to_transform(self.scene.exit2_measured_cp())
-        self.exit2_cp_pub.publish(self._exit2_cp_msg)
-
-        self._exit3_cp_msg.transform = np_mat_to_transform(self.scene.exit3_measured_cp())
-        self.exit3_cp_pub.publish(self._exit3_cp_msg)
-
-        self._exit4_cp_msg.transform = np_mat_to_transform(self.scene.exit4_measured_cp())
-        self.exit4_cp_pub.publish(self._exit4_cp_msg)
+        for k, i in self._scene_object_pubs.items():
+            i[2].header.stamp = rospy.Time.now()
+            i[2].pose = np_mat_to_pose(i[1]())
+            i[0].publish(i[2])
 
     def run(self):
         self.publish_cs()
@@ -374,7 +341,3 @@ if __name__ == "__main__":
 
     sceneManager = SceneManager(options)
     sceneManager.run()
-
-
-
-

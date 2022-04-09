@@ -128,7 +128,7 @@ class AMBFNeedle:
             np.ndarray: [description]
         """
         # Get 3D position of the tip and tail
-        theta = np.array([np.pi / 3, np.pi]).reshape((2, 1))
+        theta = np.array([np.pi / 3-2.5*np.pi/180, np.pi+np.pi/180]).reshape((2, 1))
         radius = 0.1018
         needle_salient = radius * np.hstack(
             (np.cos(theta), np.sin(theta), theta * 0, np.ones((2, 1)) / radius)

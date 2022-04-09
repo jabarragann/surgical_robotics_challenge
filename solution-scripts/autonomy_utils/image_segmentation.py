@@ -18,10 +18,17 @@ def timer_func(func):
 
 
 class NeedleSegmenter:
-    def __init__(self, ambf_client=None, log=None) -> None:
+    def __init__(self, ambf_client=None, log=None, needle_handle=None, stereo_rig_handle=None) -> None:
+        if needle_handle is not None and stereo_rig_handle is not None:
+            self.needle_handle = needle_handle
+            self.stereo_rig_handle = stereo_rig_handle
+        else:
+            self.needle_handle = AMBFNeedle(ambf_client=ambf_client, logger=log)
+            self.stereo_rig_handle = AMBFStereoRig(ambf_client=ambf_client)
 
-        self.needle_handle = AMBFNeedle(ambf_client=ambf_client, logger=log)
-        self.stereo_rig_handle = AMBFStereoRig(ambf_client=ambf_client)
+    @classmethod
+    def from_handler(cls, needle_handle, stereo_rig_handle):
+        return NeedleSegmenter(needle_handle=needle_handle, stereo_rig_handle=stereo_rig_handle)
 
     def obtain_needle_pt(self, camera_selector: str):
 

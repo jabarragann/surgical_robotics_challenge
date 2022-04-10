@@ -48,7 +48,7 @@ class ClickyWindow:
 np.set_printoptions(precision=4, suppress=True)
 
 # If true project the ground truth to the image. Else select tip and tail with mouse
-simulator_projections: bool = False
+simulator_projections: bool = True
 
 if __name__ == "__main__":
 
@@ -70,10 +70,10 @@ if __name__ == "__main__":
     # Get world to right camera and projection matrix
     T_CR_W = inv(stereo_rig.get_camera_to_world_pose("right"))
     PR = mtx @ F @ T_CR_W
-    T_CL_W = inv(stereo_rig.get_camera_to_world_pose("left"))
-    PL = mtx @ F @ T_CL_W
     # Get Left camera pose and projection matrix
     T_CL_W = inv(stereo_rig.get_camera_to_world_pose("left"))
+    PL = mtx @ F @ T_CL_W
+
     # Get pixel locations of the tail and tip and project them to the image plane
     tip_tail_pt = needle_handle.get_tip_tail_pose()
     tip_tail_pt = needle_handle.get_current_pose() @ tip_tail_pt.T
@@ -97,12 +97,12 @@ if __name__ == "__main__":
         img = img_saver.get_current_frame("right")
         clicky_w = ClickyWindow()
         X, Y = clicky_w.get_points_from_mouse(img)
-        pt_in_right= np.ones((3, 2))
+        pt_in_right = np.ones((3, 2))
         pt_in_right[0, :] = X.squeeze()
         pt_in_right[1, :] = Y.squeeze()
 
-    camera_handle = AMBFCamera(ambf_client=c, camera_selector="right")
-    T_CN = needle_handle.get_needle_to_camera_pose(camera_selector="right")
+    # camera_handle = AMBFCamera(ambf_client=c, camera_selector="right")
+    # T_CN = needle_handle.get_needle_to_camera_pose(camera_selector="right")
 
     log.info("input to the triangulation algorithm")
     log.info(f"point in left img\n{pt_in_left}")
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     for i in range(img_pt.shape[1]):
         img = cv2.circle(img, (int(img_pt[0, i]), int(img_pt[1, i])), 4, (255, 0, 0), -1)
 
-    # img = cv2.resize(img, (640, 480), interpolation=cv2.INTER_AREA)
+    img = cv2.resize(img, (640, 480), interpolation=cv2.INTER_AREA)
     cv2.imshow("img", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

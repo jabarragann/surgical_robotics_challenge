@@ -39,7 +39,7 @@ class NeedleSegmenter:
         return img_pt
 
     # @timer_func
-    def clean_image(self, frame: np.ndarray, camera_selector: str, ambf_client=None, log=None) -> np.ndarray:
+    def clean_image(self, frame: np.ndarray, camera_selector: str) -> np.ndarray:
         """Clean segmentation mask using the location of the needle w.r.t world coordinates.
 
         Args:

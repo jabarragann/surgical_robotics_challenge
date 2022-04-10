@@ -68,7 +68,7 @@ def main():
         frame_r = image_subs.get_current_frame("right")
         segmented_l = NeedleSegmenter.segment_needle(frame_l)
         segmented_r = NeedleSegmenter.segment_needle(frame_r)
-        clean_seg_l = needle_seg.clean_image(segmented_l, "left", ambf_client=c, log=log)
+        clean_seg_l = needle_seg.clean_image(segmented_l, "left")
 
         # final = np.hstack((frame_l, segmented_l))
         final = np.hstack((frame_l, clean_seg_l))
@@ -84,7 +84,7 @@ def main():
             break
         elif k == ord("s"):
             # clean_seg_l = needle_seg.clean_image(segmented_l, "left", ambf_client=c, log=log)
-            clean_seg_r = needle_seg.clean_image(segmented_r, "right", ambf_client=c, log=log)
+            clean_seg_r = needle_seg.clean_image(segmented_r, "right")
 
             # final_2 = np.hstack((clean_seg_l, clean_seg_r))
             print(f"saving images {next_img:04d} and  {next_img+1:04d} ...")

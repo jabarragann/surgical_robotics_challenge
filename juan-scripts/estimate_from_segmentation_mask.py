@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from ambf_client import Client
 from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle, find_closest_rotation
-from autonomy_utils.image_segmentation import NeedleSegmenter
+from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
 from autonomy_utils import Logger
 import rospy

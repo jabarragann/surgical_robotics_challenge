@@ -2,7 +2,7 @@ import os
 from re import I
 from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle
 from autonomy_utils import Logger
-from autonomy_utils.image_segmentation import NeedleSegmenter
+from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
 import cv2
 import rospy
 import numpy as np

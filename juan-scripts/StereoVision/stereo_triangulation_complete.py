@@ -48,6 +48,7 @@ if __name__ == "__main__":
     # Calculate tip/tail from images
     # ------------------------------------------------------------
     ## TODO: Optimize tip/tail detection algorithm too slow!
+    start = time.time()
     # Left
     tip_tail_pix_l = [(1408, 681), (1204, 816)]
     img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l)
@@ -57,6 +58,7 @@ if __name__ == "__main__":
     img, tip_tail_pix_r, points_along_needle = ImageUtils.locate_points(segmented_r)
     log.info(f"tip/tail in right {tip_tail_pix_r}\n")
 
+    log.info(f"total time {time.time()-start}")
     # TODO: create a matching algorithms. Match the first point in left img
     # TODO: with the closest point in right img.
 

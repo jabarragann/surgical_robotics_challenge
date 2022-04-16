@@ -2,6 +2,7 @@
 Estimate the needle pose from a segmentation mask
 """
 
+import time
 from tkinter import Image
 import cv2
 from pathlib import Path
@@ -12,6 +13,8 @@ from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMB
 from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
 from autonomy_utils import Logger
+from autonomy_utils.vision import ImageUtils
+
 import rospy
 import spatialmath as sm
 import matplotlib.pyplot as plt
@@ -81,20 +84,36 @@ if __name__ == "__main__":
     rospy.init_node("main_node")
     c = Client("juanclient")
     log = Logger.Logger().log
+    img_saver = ImageSaver()
     c.connect()
     needle_handle = AMBFNeedle(ambf_client=c, logger=log)
     camera_selector = "left"
     camera_handle = AMBFCamera(c, camera_selector)
     stereo_rig_handle = AMBFStereoRig(ambf_client=c)
-    segmenter_handler = NeedleSegmenter.from_handler(needle_handle, stereo_rig_handle)
-    ########################################
-    ## Read and create mask
-    img_saver = ImageSaver()
-    img = img_saver.get_current_frame("left")
-    # X, Y = get_points_from_mask(img)
+    # segmenter_handler = NeedleSegmenter.from_handler(needle_handle, stereo_rig_handle)
+    needle_seg = NeedleSegmenter(ambf_client=c, log=log)
 
-    clicky_w = ClickyWindow()
-    X, Y = clicky_w.get_points_from_mouse(img)
+    time.sleep(0.3)
+
+    img = img_saver.get_current_frame(camera_selector)
+    log.info(img.dtype)
+    log.info(img.shape)
+    segmented_l = NeedleSegmenter.segment_needle(img)
+    segmented_l = needle_seg.clean_image(segmented_l, camera_selector=camera_selector)
+
+    ########################################
+    ## Get needle salient point to estimate pose
+    ########################################
+    # Method 1: get points from mask
+    # X, Y = get_points_from_mask(img)
+    # Method 2: Use a clicky window
+    # clicky_w = ClickyWindow()
+    # X, Y = clicky_w.get_points_from_mouse(img)
+    # Method 3: automatic detection
+    img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l)
+    log.info(f"tip/tail in left {tip_tail_pix_l}\n")
+    X = np.array(points_along_needle)[:, 0].reshape(-1, 1)
+    Y = np.array(points_along_needle)[:, 1].reshape(-1, 1)
 
     ########################################
     ## Estimate ellipse

@@ -14,7 +14,7 @@ def lineEnds(P):
 
 
 # Compute the medial axis (skeleton)
-def locate_points(img: np.ndarray):
+def locate_points(img: np.ndarray, pt_along_needle=20):
     # convert to greyscale
     data = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     binary = data > filters.threshold_otsu(data)
@@ -34,5 +34,5 @@ def locate_points(img: np.ndarray):
                 points.append((j, i))
             if result[i, j] == 255:
                 res.append((j, i))
-    points_along_needle = random.sample(points, 10)
+    points_along_needle = random.sample(points, pt_along_needle)
     return data, res, points_along_needle

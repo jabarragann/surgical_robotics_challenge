@@ -64,9 +64,9 @@ class ImageSaver:
         self.right_cam_subs = rospy.Subscriber(
             "/ambf/env/cameras/cameraR/ImageData", Image, self.right_callback
         )
-        self.left_frame = np.zeros((640, 480, 3))
+        self.left_frame = None 
         self.left_ts = None
-        self.right_frame = np.zeros((640, 480, 3))
+        self.right_frame = None 
         self.right_ts = None
 
         # Wait a until subscribers and publishers are ready

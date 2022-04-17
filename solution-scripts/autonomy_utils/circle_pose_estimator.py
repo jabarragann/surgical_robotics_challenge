@@ -1,4 +1,5 @@
 from __future__ import annotations
+from matplotlib.pyplot import close
 import numpy as np
 import cv2
 from numpy.linalg import norm, inv
@@ -60,15 +61,13 @@ class Ellipse2D:
         self.f_coeff = F
 
     def __str__(self):
-        str_rep = (
-            "{:+10.3f}x^2 {:+10.3f}xy {:+10.3f}y^2 {:+10.3f}x {:+10.3f}y {:+10.3f} = 0".format(
-                self.a_coeff,
-                self.b_coeff,
-                self.c_coeff,
-                self.d_coeff,
-                self.e_coeff,
-                self.f_coeff,
-            )
+        str_rep = "{:+10.3f}x^2 {:+10.3f}xy {:+10.3f}y^2 {:+10.3f}x {:+10.3f}y {:+10.3f} = 0".format(
+            self.a_coeff,
+            self.b_coeff,
+            self.c_coeff,
+            self.d_coeff,
+            self.e_coeff,
+            self.f_coeff,
         )
         return str_rep
 
@@ -240,22 +239,27 @@ class Ellipse2D:
 
 
 class Circle3D:
-    def __init__(self, center, normal, radius, intrinsic):
+    def __init__(self, center, normal, radius):
         self.center = center
         self.radius = radius
         self.normal = normal / norm(normal)
-        self.intrinsic = intrinsic
+        # self.intrinsic = intrinsic
         # Orthogonal vectors to n
         s = 0.5
         t = 0.5
-        self.a = t * np.array([-self.normal[2] / self.normal[0], 0, 1]) + s * np.array(
-            [-self.normal[1] / self.normal[0], 1, 0]
-        )
+        if np.isclose(self.normal[0], 0.0):
+            self.a = np.array([0.5, 0.5, -(self.normal[0] * 0.5 + self.normal[1] * 0.5) / self.normal[2]])
+        else:
+            self.a = t * np.array([-self.normal[2] / self.normal[0], 0, 1]) + s * np.array(
+                [-self.normal[1] / self.normal[0], 1, 0]
+            )
         self.a /= norm(self.a)
         self.b = np.cross(self.a, self.normal)
 
         # a is orthogonal to n
         # l = self.normal.dot(self.a)
+        assert np.isclose(abs(np.dot(self.a, self.normal)), 0.0), "a be should orthogonal to normal"
+        assert np.isclose(abs(np.dot(self.b, self.normal)), 0.0), "b be should orthogonal to normal"
 
     def generate_pts(self, N):
         """Generate `N` sample point from the parametric representation of the 3D circle
@@ -281,17 +285,43 @@ class Circle3D:
 
         # img = np.zeros((480, 640, 3))
         for xp, yp in zip(projected[0, :], projected[1, :]):
-            img = cv2.circle(
-                img, (int(xp), int(yp)), radius=radius, color=(0, 255, 0), thickness=-1
-            )
+            img = cv2.circle(img, (int(xp), int(yp)), radius=radius, color=(0, 255, 0), thickness=-1)
 
         return img
 
+    def closest_pt_in_circ_to_pt(self, point: np.ndarray) -> np.ndarray:
+        """Calculate closest point on a circle to another reference point.
+        This point can be used to calculated the
+        distance between the circle and the reference point.
+
+        https://www.geometrictools.com/Documentation/DistanceToCircle3.pdf
+        Args:
+            point (np.ndarray): Reference point
+
+        Returns:
+            np.ndarray: 3d point on the circle.
+        """
+
+        delta = point - self.center
+        dotND = np.dot(self.normal, delta)
+        QmC = delta - dotND * self.normal
+        lengthQmC = np.linalg.norm(QmC)
+        if lengthQmC > 0:
+            # crossND = np.cross(self.normal, delta)
+            # radial = np.linalg.norm(crossND) - self.radius
+            # sqrDistance = dotND*dotND + radial*radial
+            # distance = np.sqrt(sqrDistance)
+            closest_pt = self.center + self.radius * (QmC / lengthQmC)
+        else:
+            # Equidistant points
+            # return any point in the circle
+            closest_pt = self.generate_pts(1)
+
+        return closest_pt
+
 
 class CirclePoseEstimator:
-    def __init__(
-        self, ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float
-    ) -> None:
+    def __init__(self, ellipse: Ellipse2D, mtx: np.ndarray, focal_length: float, radius: float) -> None:
         """[summary]
 
         Args:
@@ -366,8 +396,8 @@ class CirclePoseEstimator:
                 k += 1
 
         return [
-            Circle3D(translations[:, 0], normals[:, 0], self.radius, self.mtx),
-            Circle3D(translations[:, 1], normals[:, 1], self.radius, self.mtx),
+            Circle3D(translations[:, 0], normals[:, 0], self.radius),
+            Circle3D(translations[:, 1], normals[:, 1], self.radius),
         ]
 
 

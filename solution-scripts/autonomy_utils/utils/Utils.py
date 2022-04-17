@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy as np
 
 
@@ -37,3 +38,16 @@ def find_closest_rotation(matrix: np.ndarray) -> np.ndarray:
     assert np.isclose(np.linalg.det(new_matrix), 1.0), "Normalization procedure failed"
 
     return new_matrix
+
+
+def find_correspondent_pt(a: np.ndarray, b: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    a1_b1_dist = np.linalg.norm(a[:, 0] - b[:, 0])
+    a1_b2_dist = np.linalg.norm(a[:, 0] - b[:, 1])
+
+    if a1_b2_dist < a1_b1_dist:  # point in b don't have the same order as in a
+        new_b = np.ones((a.shape[0], 2))
+        new_b[:, 0] = b[:, 1]
+        new_b[:, 1] = b[:, 0]
+        return a, new_b
+    else:
+        return a, b

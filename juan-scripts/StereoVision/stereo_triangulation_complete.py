@@ -11,6 +11,8 @@ from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D, CirclePose
 from autonomy_utils.ambf_utils import AMBFCamera, AMBFStereoRig, ImageSaver, AMBFNeedle
 from autonomy_utils import Frame, Logger
 from autonomy_utils.vision import ImageUtils
+from autonomy_utils.utils.Utils import find_correspondent_pt
+
 import rospy
 
 
@@ -95,10 +97,13 @@ if __name__ == "__main__":
     tip_tail_pt = needle_handle.get_tip_tail_pose()  # In needle frame
     tip_tail_pt = needle_handle.get_current_pose() @ tip_tail_pt.T  # In world frame
 
+    X1, tip_tail_pt = find_correspondent_pt(X1, tip_tail_pt)
     log.info("estimation of the tip and tail")
     log.info(X1)
     log.info("ground truth")
     log.info(tip_tail_pt)
+    log.info(f"Error (m) {np.linalg.norm(X1-tip_tail_pt,axis=0):0.05f}")
+    log.info(f"Error (m) {np.linalg.norm(X1-tip_tail_pt,axis=0).mean():0.05f}")
 
     # ------------------------------------------------------------
     # Show results

@@ -1,4 +1,4 @@
-from re import I
+# from PyKDL import Frame, Rotation, Vector, Twist
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
 from rospy import client
@@ -6,50 +6,16 @@ from sensor_msgs.msg import Image
 import time
 from surgical_robotics_challenge.scene import Scene
 from surgical_robotics_challenge.camera import Camera
+from autonomy_utils.circle_pose_estimator import Circle3D
 import cv2
 import tf_conversions.posemath as pm
 import numpy as np
 from numpy.linalg import inv, norm
 import pandas as pd
 from pathlib import Path
+from spatialmath.base import trnorm
 
 
-def find_closest_rotation(matrix:np.ndarray) -> np.ndarray:
-    """ Find closest rotation to the input matrix
-    Algorithm from https://stackoverflow.com/questions/23080791/eigen-re-orthogonalization-of-rotation-matrix/23083722
-
-    Args:
-        matrix (np.ndarray): (3x3) rotation matrix 
-
-    Returns:
-        np.ndarray: [description]
-    """
-
-    #Method 1
-    # def normalize(x):
-    #     return x/np.sqrt(x.dot(x))
-
-    # x = matrix[:3,0]
-    # y = matrix[:3,1]
-    # z = matrix[:3,2]
-    
-    # error = x.dot(z)
-    # new_x = x-(error/2)*z
-    # new_z = z-(error/2)*x
-    # new_y = np.cross(new_z,new_x) 
-
-    # new_matrix = np.zeros_like(matrix)
-    # new_matrix[:3,0] = normalize(new_x)
-    # new_matrix[:3,1] = normalize(new_y)
-    # new_matrix[:3,2] = normalize(new_z)
-
-    #Method 2
-    u, s, vh = np.linalg.svd(matrix, full_matrices=True)
-    new_matrix = u @ vh
-
-    assert np.isclose(np.linalg.det(new_matrix),1.0), "Normalization procedure failed"
-
-    return new_matrix 
 
 class ImageSaver:
     def __init__(self):
@@ -195,6 +161,28 @@ class AMBFNeedle:
         needle_salient = self.radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0))
         return needle_salient
 
+    @staticmethod 
+    def circle2needlepose(circle:Circle3D, tail:np.ndarray)-> np.ndarray:
+        est_center = circle.center
+        est_normal = circle.normal
+        est_normal = est_normal / np.sqrt(est_normal.dot(est_normal))
+        est_x = -(tail - circle.center)
+        est_x = est_x / np.linalg.norm(est_x)
+        est_y = np.cross(est_normal, est_x)
+        est_y = est_y / np.sqrt(est_y.dot(est_y))
+
+        # Construct matrix
+        pose_est = np.identity(4)
+        pose_est[:3, 0] = est_x
+        pose_est[:3, 1] = est_y
+        pose_est[:3, 2] = est_normal
+        pose_est[:3, 3] = est_center
+
+        # re orthogonalize rotation matrix
+        pose_est[:3, :3] = trnorm(pose_est[:3, :3])
+
+        return pose_est
+
     def pose_estimate_evaluation(self, pose_est: np.ndarray, camera_selector: str) -> None:
         T_CN = self.get_needle_to_camera_pose(camera_selector)
 
@@ -216,7 +204,6 @@ class AMBFNeedle:
         # Check that rotation matrix has determinant of one.
         if not np.isclose(np.linalg.det(pose_est[:3,:3]),1.0):
             self.logger.warning("determinant of the rotation matrix is not 1.")
-
 
         #Metrics
         x_ang_diff = np.arccos(needle_x_axis.dot(est_x)) * 180 / np.pi

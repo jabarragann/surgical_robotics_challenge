@@ -9,7 +9,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from ambf_client import Client
-from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle, find_closest_rotation
+from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle
+from autonomy_utils.utils.Utils import find_closest_rotation
 from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
 from autonomy_utils import Logger
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     # clicky_w = ClickyWindow()
     # X, Y = clicky_w.get_points_from_mouse(img)
     # Method 3: automatic detection
-    img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l)
+    img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l, pt_along_needle=35)
     log.info(f"tip/tail in left {tip_tail_pix_l}\n")
     X = np.array(points_along_needle)[:, 0].reshape(-1, 1)
     Y = np.array(points_along_needle)[:, 1].reshape(-1, 1)
@@ -140,23 +141,8 @@ if __name__ == "__main__":
 
     estimated_solutions = []
     for k in range(2):
-        est_center = circles[k].center
+        pose_est = AMBFNeedle.circle2needlepose(circles[k], tip_tail_pt[:3, 1])
 
-        est_normal = circles[k].normal
-        est_normal = est_normal / np.sqrt(est_normal.dot(est_normal))
-        est_x = -(tip_tail_pt[:3, 1] - circles[k].center)
-        est_x = est_x / np.linalg.norm(est_x)
-        est_y = np.cross(est_normal, est_x)
-        est_y = est_y / np.sqrt(est_y.dot(est_y))
-
-        # estimated pose
-        pose_est = np.identity(4)
-        pose_est[:3, 0] = est_x
-        pose_est[:3, 1] = est_y
-        pose_est[:3, 2] = est_normal
-        pose_est[:3, 3] = est_center
-        # re orthogonalize
-        pose_est[:3, :3] = find_closest_rotation(pose_est[:3, :3])
         estimated_solutions.append(pose_est)
         log.info("*" * 20)
         log.info("solution {:d}".format(k))

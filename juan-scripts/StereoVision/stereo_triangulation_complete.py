@@ -102,7 +102,7 @@ if __name__ == "__main__":
     log.info(X1)
     log.info("ground truth")
     log.info(tip_tail_pt)
-    log.info(f"Error (m) {np.linalg.norm(X1-tip_tail_pt,axis=0):0.05f}")
+    log.info(f"Error (m) {np.linalg.norm(X1-tip_tail_pt,axis=0)}")
     log.info(f"Error (m) {np.linalg.norm(X1-tip_tail_pt,axis=0).mean():0.05f}")
 
     # ------------------------------------------------------------

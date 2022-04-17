@@ -26,3 +26,4 @@ class Logger:
         r_handler.setLevel("DEBUG")
         r_handler.setFormatter(logging.Formatter(fmt=Logger.FORMAT, datefmt="[%X]"))
         self.log.addHandler(r_handler)
+        self.log.setLevel("DEBUG")

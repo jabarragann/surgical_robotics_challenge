@@ -128,15 +128,7 @@ if __name__ == "__main__":
     ########################################
     ## Evaluate
     T_CN = needle_handle.get_needle_to_camera_pose(camera_selector)
-    needle_salient = needle_handle.get_tip_tail_pose()
-    tip_tail_pt = T_CN @ needle_salient.T
-    plane_vect = tip_tail_pt[:3, 0] - tip_tail_pt[:3, 1]
-
-    ## Groudn truth transformation matrx
-    needle_center = T_CN[:3, 3]
-    needle_x_axis = T_CN[:3, 0]
-    needle_y_axis = T_CN[:3, 1]
-    needle_normal = T_CN[:3, 2]
+    tip_tail_pt = T_CN @ needle_handle.get_tip_tail_pose().T
 
     estimated_solutions = []
     for k in range(2):

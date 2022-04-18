@@ -53,11 +53,11 @@ if __name__ == "__main__":
     start = time.time()
     # Left
     tip_tail_pix_l = [(1408, 681), (1204, 816)]
-    img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l)
+    img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points2(segmented_l)
     log.info(f"tip/tail in left {tip_tail_pix_l}\n")
     # Right
     tip_tail_pix_r = [(1435, 686), (1209, 824)]
-    img, tip_tail_pix_r, points_along_needle = ImageUtils.locate_points(segmented_r)
+    img, tip_tail_pix_r, points_along_needle = ImageUtils.locate_points2(segmented_r)
     log.info(f"tip/tail in right {tip_tail_pix_r}\n")
 
     log.info(f"total time {time.time()-start}")

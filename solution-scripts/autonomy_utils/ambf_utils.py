@@ -126,16 +126,16 @@ class AMBFNeedle:
 
         """
         if camera_selector == "left":
-            self.ambf_cam_l.set_pose_changed()
+            #self.ambf_cam_l.set_pose_changed()
             T_FC = pm.toMatrix(self.ambf_cam_l.get_T_c_w())  # CamL to CamFrame
         elif camera_selector == "right":
-            self.ambf_cam_r.set_pose_changed()
+            #self.ambf_cam_r.set_pose_changed()
             T_FC = pm.toMatrix(self.ambf_cam_r.get_T_c_w())  # CamR to CamFrame
         else:
             raise ValueError("camera selector should be either 'left' or 'right'")
 
         T_WN = pm.toMatrix(self.scene.needle_measured_cp())  # Needle to world
-        self.ambf_cam_frame.set_pose_changed()
+        #self.ambf_cam_frame.set_pose_changed()
         T_WF = pm.toMatrix(self.ambf_cam_frame.get_T_c_w())  # CamFrame to world
 
         T_WC = T_WF @ T_FC

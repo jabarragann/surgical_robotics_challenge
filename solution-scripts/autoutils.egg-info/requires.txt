@@ -1,4 +1,4 @@
-numpy
-scipy
-rich
 click
+numpy
+rich
+scipy

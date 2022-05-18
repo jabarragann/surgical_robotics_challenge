@@ -107,13 +107,13 @@ if __name__ == "__main__":
     # Method 1: get points from mask
     # X, Y = get_points_from_mask(img)
     # Method 2: Use a clicky window
-    # clicky_w = ClickyWindow()
-    # X, Y = clicky_w.get_points_from_mouse(img)
+    clicky_w = ClickyWindow()
+    X, Y = clicky_w.get_points_from_mouse(img)
     # Method 3: automatic detection
-    img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l, pt_along_needle=35)
-    log.info(f"tip/tail in left {tip_tail_pix_l}\n")
-    X = np.array(points_along_needle)[:, 0].reshape(-1, 1)
-    Y = np.array(points_along_needle)[:, 1].reshape(-1, 1)
+    # img, tip_tail_pix_l, points_along_needle = ImageUtils.locate_points(segmented_l, pt_along_needle=35)
+    # log.info(f"tip/tail in left {tip_tail_pix_l}\n")
+    # X = np.array(points_along_needle)[:, 0].reshape(-1, 1)
+    # Y = np.array(points_along_needle)[:, 1].reshape(-1, 1)
 
     ########################################
     ## Estimate ellipse

@@ -8,8 +8,8 @@ import pandas as pd
 import cv2
 from ambf_client import Client
 import time
+from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle
 from autonomy_utils.circle_pose_estimator import Circle3D, Ellipse2D, CirclePoseEstimator
-from autonomy_utils.ambf_utils import AMBFCamera, ImageSaver, AMBFNeedle, find_closest_rotation
 import rospy
 from autonomy_utils.Logger import Logger
 
@@ -42,6 +42,7 @@ if __name__ == "__main__":
     needle_pts = needle_handle.sample_3d_pts(8)
     projected_needle_pts = camera_handle.project_points(T_CN, needle_pts).squeeze()
     X, Y = projected_needle_pts[:, 0].reshape(-1, 1), projected_needle_pts[:, 1].reshape(-1, 1)
+    X, Y = X.astype(np.int32),Y.astype(np.int32) 
 
     # Normalize ellipse coefficients
     ellipse = Ellipse2D.from_sample_points_skimage(X - camera_handle.cx, Y - camera_handle.cy)
@@ -58,23 +59,8 @@ if __name__ == "__main__":
     needle_normal = T_CN[:3, 2]
 
     for k in range(2):
-        est_center = circles[k].center
-
-        est_normal = circles[k].normal
-        est_normal = est_normal/np.sqrt(est_normal.dot(est_normal))
-        est_x = -(tip_tail_pt[:3, 1] - circles[k].center)
-        est_x = est_x/np.linalg.norm(est_x)
-        est_y = np.cross(est_normal,est_x) 
-        est_y = est_y/np.sqrt(est_y.dot(est_y))
-
-        #estimated pose
-        pose_est = np.identity(4)
-        pose_est[:3,0] = est_x
-        pose_est[:3,1] = est_y
-        pose_est[:3,2] = est_normal
-        pose_est[:3,3] = est_center
-        #re orthoganalize
-        pose_est[:3, :3] = find_closest_rotation(pose_est[:3, :3])
+        pose_est = AMBFNeedle.circle2needlepose(circles[k], tip_tail_pt[:3, 1])
+        
         # fmt: on
         # print("solution {:d}".format(k))
         # print("x-axis MSE error:      {:6.4f}".format(np.linalg.norm(needle_x_axis- est_x)))

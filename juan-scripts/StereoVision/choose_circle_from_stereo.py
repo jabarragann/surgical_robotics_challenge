@@ -54,12 +54,18 @@ if __name__ == "__main__":
     ## TODO: Optimize tip/tail detection algorithm too slow!
     start = time.time()
     # Left
-    tip_tail_pix_l = [(1408, 681), (1204, 816)]
-    img, tip_tail_pix_l, points_along_needle_l = ImageUtils.locate_points(segmented_l, pt_along_needle=35)
+    # tip_tail_pix_l = [(1408, 681), (1204, 816)]
+    points_along_needle_l, tip_tail_pix_l, cnt, bb = ImageUtils.ImageProcessing.calculate_needle_salient_points(
+        segmented_l
+    )
+    # img, tip_tail_pix_l, points_along_needle_l = ImageUtils.locate_points(segmented_l, pt_along_needle=35)
     log.info(f"tip/tail in left {tip_tail_pix_l}\n")
     # Right
-    tip_tail_pix_r = [(1435, 686), (1209, 824)]
-    img, tip_tail_pix_r, points_along_needle_r = ImageUtils.locate_points(segmented_r, pt_along_needle=35)
+    # tip_tail_pix_r = [(1435, 686), (1209, 824)]
+    points_along_needle_r, tip_tail_pix_r, cnt, bb = ImageUtils.ImageProcessing.calculate_needle_salient_points(
+        segmented_r
+    )
+    # img, tip_tail_pix_r, points_along_needle_r = ImageUtils.locate_points(segmented_r, pt_along_needle=35)
     log.info(f"tip/tail in right {tip_tail_pix_r}\n")
 
     log.info(f"total time {time.time()-start}")
@@ -160,13 +166,13 @@ if __name__ == "__main__":
     # Show results
     # ------------------------------------------------------------
     # Draw tip and tail
-    segmented_l = cv2.circle(segmented_l, tip_tail_pix_l[0], 10, (255, 0, 0), -1)
-    segmented_l = cv2.circle(segmented_l, tip_tail_pix_l[1], 10, (255, 0, 0), -1)
-    segmented_r = cv2.circle(segmented_r, tip_tail_pix_r[0], 10, (255, 0, 0), -1)
-    segmented_r = cv2.circle(segmented_r, tip_tail_pix_r[1], 10, (255, 0, 0), -1)
+    segmented_l = cv2.circle(segmented_l, tuple(tip_tail_pix_l[0]), 10, (255, 0, 0), -1)
+    segmented_l = cv2.circle(segmented_l, tuple(tip_tail_pix_l[1]), 10, (255, 0, 0), -1)
+    segmented_r = cv2.circle(segmented_r, tuple(tip_tail_pix_r[0]), 10, (255, 0, 0), -1)
+    segmented_r = cv2.circle(segmented_r, tuple(tip_tail_pix_r[1]), 10, (255, 0, 0), -1)
     points_along_needle_l = np.array(points_along_needle_l)
     for i in range(points_along_needle_l.shape[0]):
-        segmented_l = cv2.circle(segmented_l, points_along_needle_l[i, :], 3, (0, 255, 0), -1)
+        segmented_l = cv2.circle(segmented_l, tuple(points_along_needle_l[i, :]), 3, (0, 255, 0), -1)
 
     # Combine left and right into a single frame to display
     segmented_l = cv2.resize(segmented_l, (640, 480), interpolation=cv2.INTER_AREA)

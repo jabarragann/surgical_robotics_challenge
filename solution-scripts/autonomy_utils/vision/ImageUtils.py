@@ -127,7 +127,8 @@ class SalientPtLocator:
 
 class ImageProcessing:
     def calculate_needle_salient_points(img: np.ndarray):
-        """Calculate medial axis of the needle and tip and tail location
+        """Calculate medial axis of the needle and tip and tail location. Each point is represented with its x and y
+        coordinates.
 
         Parameters
         ----------
@@ -162,7 +163,11 @@ class ImageProcessing:
         medial_axis = medial_axis + offset
         endpts = endpts + offset
 
-        return medial_axis, endpts, cnt, bb
+        # Change to x,y representation
+        medial_axis[:, :] = medial_axis[:, [1, 0]]
+        endpts[:, :] = endpts[:, [1, 0]]
+
+        return medial_axis.tolist(), endpts.tolist(), cnt, bb
 
     def find_contour(img: np.ndarray):
         """Find the biggest contour in an image
@@ -235,9 +240,9 @@ if __name__ == "__main__":
     medial_axis, endpts, cnt, bb = ImageProcessing.calculate_needle_salient_points(segmented_l_raw)
 
     for pt in medial_axis:
-        segmented_l_raw[pt[0], pt[1], :] = [0, 0, 255]
+        segmented_l_raw[pt[1], pt[0], :] = [0, 0, 255]
     for pt in endpts:
-        segmented_l_raw[pt[0], pt[1], :] = [0, 0, 0]
+        segmented_l_raw[pt[1], pt[0], :] = [0, 0, 0]
 
     x, y, w, h = bb
     segmented_l_cropped = np.copy(segmented_l_raw[y : y + h, x : x + w])

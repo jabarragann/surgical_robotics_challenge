@@ -1,3 +1,4 @@
+from tkinter import Image
 import numpy as np
 from scipy import ndimage as ndi
 from skimage import morphology, filters
@@ -122,3 +123,133 @@ class SalientPtLocator:
         for i in range(self.points_along_needle.shape[0]):
             segmented_l = cv2.circle(segmented_l, self.points_along_needle[i, :], 6, (0, 255, 0), -1)
         return segmented_l
+
+
+class ImageProcessing:
+    def calculate_needle_salient_points(img: np.ndarray):
+        """Calculate medial axis of the needle and tip and tail location
+
+        Parameters
+        ----------
+        imag : np.ndarray
+            _description_
+
+        Returns
+        -------
+        medial_axis: np.ndarray
+            Medial axis of the needle
+        endpts: np.ndarray
+            Tip and tail of the needle
+        contour:
+            Needle contour
+        bb:
+            Opencv bounding box. Tuple containing x,y,w,h.
+        """
+
+        cnt = ImageProcessing.find_contour(img)
+        x, y, w, h = cv2.boundingRect(cnt)
+        p = 15
+        x, y = x - p, y - p
+        w, h = w + p, h + p
+        crop_img = img[y : y + h, x : x + w]
+        bb = (x, y, w, h)
+
+        # Calculate on cropped image
+        medial_axis, skel = ImageProcessing.calculate_medial_axis(crop_img)
+        endpts = ImageProcessing.calculate_medial_endpoints(skel)
+        # Go back to full resolution
+        offset = np.array([y, x]).reshape((1, 2))
+        medial_axis = medial_axis + offset
+        endpts = endpts + offset
+
+        return medial_axis, endpts, cnt, bb
+
+    def find_contour(img: np.ndarray):
+        """Find the biggest contour in an image
+
+        Parameters
+        ----------
+        img : np.ndarray
+            RGB image
+
+        Returns
+        -------
+        contour:
+            Biggest contour in the image.
+        """
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+        cnts, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        # Get only the biggest contour
+        max_area = 0
+        max_cnt = 0
+        for c in cnts:
+            area = cv2.contourArea(c)
+            if area > max_area:
+                max_cnt = c
+                max_are = area
+
+        return max_cnt
+
+    def calculate_medial_axis(segmented_img):
+        """_summary_
+
+        Parameters
+        ----------
+        image : _type_
+            _description_
+        """
+        data = cv2.cvtColor(segmented_img, cv2.COLOR_BGR2GRAY)
+        binary = data > filters.threshold_otsu(data)
+        # do the skeletonization
+        skel = morphology.skeletonize(binary)
+        skel = (skel * 255).astype(np.uint8)
+        pt_along_axis = np.argwhere(skel > 200)
+        return pt_along_axis, skel
+
+    def calculate_medial_endpoints(medial_axis: np.ndarray):
+        """_summary_
+
+        Parameters
+        ----------
+        medial_axis : np.ndarray
+            _description_
+        """
+
+        def lineEnds(P):
+            """find the Central pixel and one ajacent pixel is said to be a line start or line end"""
+            return 255 * ((P[4] == 255) and np.sum(P) == 510)
+
+        tip_tail_result = generic_filter(medial_axis, lineEnds, (3, 3))
+        tip_tail_result = np.argwhere(tip_tail_result > 200)
+
+        return tip_tail_result
+
+
+if __name__ == "__main__":
+
+    segmented_l_raw = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
+
+    print(segmented_l_raw.shape)
+    medial_axis, endpts, cnt, bb = ImageProcessing.calculate_needle_salient_points(segmented_l_raw)
+
+    for pt in medial_axis:
+        segmented_l_raw[pt[0], pt[1], :] = [0, 0, 255]
+    for pt in endpts:
+        segmented_l_raw[pt[0], pt[1], :] = [0, 0, 0]
+
+    x, y, w, h = bb
+    segmented_l_cropped = np.copy(segmented_l_raw[y : y + h, x : x + w])
+    segmented_l_raw = cv2.rectangle(segmented_l_raw, (x, y), (x + w, y + h), (255, 0, 255), 2)
+    segmented_l_raw = cv2.rectangle(np.copy(segmented_l_raw), (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+    w_name = "final"
+    cv2.namedWindow(w_name, cv2.WINDOW_NORMAL)
+    cv2.imshow(w_name, segmented_l_cropped)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    # cv2.imshow(w_name, segmented_l_raw)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()

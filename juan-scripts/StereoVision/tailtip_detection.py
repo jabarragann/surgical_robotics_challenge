@@ -56,13 +56,14 @@ def find_contours(image):
             max_cnt = c
             max_are = area
 
-    return max_cnt
     # Draw max contour
     x, y, w, h = cv2.boundingRect(max_cnt)
     # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
     # cv2.imshow("image", image)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
+
+    return max_cnt
 
 
 if __name__ == "__main__":

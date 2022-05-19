@@ -45,7 +45,7 @@ def find_contours(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
     ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-    cnts, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cnts, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     # Get only the biggest contour
     max_area = 0
@@ -88,15 +88,15 @@ if __name__ == "__main__":
     # segmented_r = NeedleSegmenter.segment_needle(right_img)
     # segmented_r = needle_seg.clean_image(segmented_r, "right")
 
-    segmented_l = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
-    max_contour = find_contours(segmented_l)
+    segmented_l_raw = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
+    max_contour = find_contours(segmented_l_raw)
     x, y, w, h = cv2.boundingRect(max_contour)
     # Expand bb
     x, y = x - 10, y - 10
     w, h = w + 10, h + 10
-    segmented_l = segmented_l[y : y + h, x : x + w]
+    segmented_l = segmented_l_raw[y : y + h, x : x + w]
 
-    pt_locator = SalientPtLocator()
+    # pt_locator = SalientPtLocator()
 
     tic = time.perf_counter()
     data = cv2.cvtColor(segmented_l, cv2.COLOR_BGR2GRAY)
@@ -104,6 +104,7 @@ if __name__ == "__main__":
     # do the skeletonization
     skel = morphology.skeletonize(binary)
     skel = (skel * 255).astype(np.uint8)
+    pt_along_axis = np.argwhere(skel > 200)
     toc = time.perf_counter()
     log.info(f"time for skeletonize {toc-tic:0.4f}")
 
@@ -111,7 +112,6 @@ if __name__ == "__main__":
     # Find salient points
     tip_tail_result = generic_filter(skel, lineEnds, (3, 3))
     tip_tail_result = np.argwhere(tip_tail_result > 200)
-    pt_along_axis = np.argwhere(skel > 200)
     toc = time.perf_counter()
     log.info(f"time for finding the tip/tail {toc-tic:0.4f}")
 
@@ -123,10 +123,18 @@ if __name__ == "__main__":
     skel = cv2.cvtColor(skel, cv2.COLOR_GRAY2BGR)
     for pt in pt_along_axis:
         skel[pt[0], pt[1], :] = [0, 0, 255]
+        segmented_l_raw[pt[0] + y, pt[1] + x, :] = [0, 0, 255]
     for pt in tip_tail_result:
         skel[pt[0], pt[1], :] = [0, 255, 0]
+        segmented_l_raw[pt[0] + y, pt[1] + x, :] = [0, 255, 0]
+
+    segmented_l_raw = cv2.rectangle(segmented_l_raw, (x, y), (x + w, y + h), (255, 0, 255), 3)
 
     cv2.namedWindow(w_name, cv2.WINDOW_NORMAL)
     cv2.imshow(w_name, skel)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+    cv2.imshow(w_name, segmented_l_raw)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

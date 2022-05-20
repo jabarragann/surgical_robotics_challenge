@@ -8,6 +8,7 @@ Identify the tail-tip of the needle and the midline using the following steps:
 
 """
 
+from pathlib import Path
 from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
 import numpy as np
 from numpy.linalg import inv
@@ -89,7 +90,12 @@ if __name__ == "__main__":
     # segmented_r = NeedleSegmenter.segment_needle(right_img)
     # segmented_r = needle_seg.clean_image(segmented_r, "right")
 
-    segmented_l_raw = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
+    img_pt = Path("./Media/test_img/segmented_needle01.jpeg")
+    if not img_pt.exists():
+        log.error("test image not found")
+        exit(0)
+
+    segmented_l_raw = cv2.imread(str(img_pt))
     max_contour = find_contours(segmented_l_raw)
     x, y, w, h = cv2.boundingRect(max_contour)
     # Expand bb

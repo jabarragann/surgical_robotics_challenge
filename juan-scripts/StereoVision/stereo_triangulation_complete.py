@@ -1,7 +1,7 @@
 """Triangulate the tail and tip of the needle from segmentation mask
 """
 
-from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
+from autonomy_utils.vision.ImageSegmenter import NeedleSegmenter
 import numpy as np
 from numpy.linalg import inv
 import cv2

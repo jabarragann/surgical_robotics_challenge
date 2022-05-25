@@ -9,7 +9,7 @@ Identify the tail-tip of the needle and the midline using the following steps:
 """
 
 from pathlib import Path
-from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
+from autonomy_utils.vision.ImageSegmenter import NeedleSegmenter
 import numpy as np
 from numpy.linalg import inv
 import cv2

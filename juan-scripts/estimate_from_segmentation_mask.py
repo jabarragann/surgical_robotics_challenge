@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from ambf_client import Client
 from autonomy_utils.ambf_utils import AMBFStereoRig, ImageSaver, AMBFCamera, AMBFNeedle
-from autonomy_utils.vision.ImageSegmentator import NeedleSegmenter
+from autonomy_utils.vision.ImageSegmenter import NeedleSegmenter
 from autonomy_utils.circle_pose_estimator import Ellipse2D, CirclePoseEstimator
 from autonomy_utils import Logger
 from autonomy_utils.vision import ImageUtils

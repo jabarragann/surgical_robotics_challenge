@@ -49,7 +49,8 @@ class InferencePipe:
         best_model_cp = torch.load(model_path, map_location=device)
         self.model.load_state_dict(best_model_cp["model_state_dict"])
 
-        if self.device == "cuda":
+        if self.device.type == "cuda":
+            log.info("Running model on GPU")
             self.model = self.model.cuda()
 
         self.convert_tensor = test_transform()
@@ -60,7 +61,7 @@ class InferencePipe:
         img = augmented["image"]
 
         with torch.no_grad():
-            if self.device == "cuda":
+            if self.device.type == "cuda":
                 input = torch.autograd.Variable(img.unsqueeze(0)).cuda()
             else:
                 input = torch.autograd.Variable(img.unsqueeze(0))
@@ -97,8 +98,15 @@ if __name__ == "__main__":
 
     test_img = cv2.cvtColor(test_img, cv2.COLOR_BGR2RGB).astype("float32")
 
+    tic = time.time()
     inference_model = InferencePipe(model_path, device="cuda")
+    toc = time.time()
+    log.info(f"Time loading segmentation network {toc-tic}")
+    tic = time.time()
     segmented_img = inference_model.segmented_image(test_img)
+    toc = time.time()
+    log.info(f"Inference time {toc-tic}")
+
     segmented_img = cv2.cvtColor(segmented_img, cv2.COLOR_GRAY2BGR)
 
     # Combine left and right into a single frame to display

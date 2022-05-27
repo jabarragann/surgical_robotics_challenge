@@ -76,6 +76,8 @@ class StereoLocator:
 
 
 if __name__ == "__main__":
+    from autonomy_utils.NeedlePoseConstructor import NeedlePoseConstructor
+
     start_time = time.time()
     # ------------------------------------------------------------
     # Initial setup
@@ -136,20 +138,11 @@ if __name__ == "__main__":
     # ------------------------------------------------------------
     X1 = stereo_locator.locate_tip_tail_3d(tip_tail_pix_l, tip_tail_pix_r)
 
-    # Select circle that minimizes distance to triangulated points.
-    dist_list = []
-    for k in range(2):
-        t_list = []
-        for i in range(2):
-            closest1 = circles[k].closest_pt_in_circ_to_pt(X1[:3, i])
-            dist1 = np.linalg.norm(X1[:3, i] - closest1)
-            t_list.append(dist1)
-        # log.info(t_list)
-        dist_list.append((t_list[0] + t_list[1]) / 2)
-
-    dist_list = np.array(dist_list)
-    selected_circle = np.argmin(dist_list)
-    log.info(f"distance to estimated circles {dist_list}")
+    # ------------------------------------------------------------
+    # Construct pose from circles and triangulated points
+    # ------------------------------------------------------------
+    needle_pose = NeedlePoseConstructor(circles, X1)
+    needle_pose_est = needle_pose.pose
 
     # ------------------------------------------------------------
     # Compare against ground truth
@@ -175,18 +168,13 @@ if __name__ == "__main__":
 
     T_CN = needle_handle.get_needle_to_camera_pose(camera_selector)
     tip_tail_pt = T_CN @ needle_handle.get_tip_tail_pose().T
-    for k in range(2):
 
-        pose_est = AMBFNeedle.circle2needlepose(circles[k], tip_tail_pt[:3, 1])
-
-        log.info("*" * 20)
-        s = "(Best)" if k == selected_circle else ""
-        log.info(f"solution {k:d} {s}")
-        log.info("*" * 20)
-        log.info(f"estimated pose \n{pose_est}")
-        needle_handle.pose_estimate_evaluation(pose_est, camera_selector)
-
-    log.info(f"Time to estimate pose {time.time() - start_time}")
+    log.info("")
+    log.info("*" * 30)
+    log.info(f"Best solution")
+    log.info("*" * 30)
+    log.info(f"estimated pose \n{needle_pose_est}")
+    needle_handle.pose_estimate_evaluation(needle_pose_est, camera_selector)
 
     # ------------------------------------------------------------
     # Show results

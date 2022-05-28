@@ -2,6 +2,9 @@ import numpy as np
 
 
 class NeedleModel:
+
+    radius = 0.1018
+
     def __init__(self) -> None:
         self.radius = 0.1018
 
@@ -15,7 +18,9 @@ class NeedleModel:
         """
         # Get 3D position of the tip and tail
         theta = np.array([np.pi / 3 - 2.5 * np.pi / 180, np.pi + np.pi / 180]).reshape((2, 1))
-        needle_salient = self.radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0, np.ones((2, 1)) / self.radius))
+        needle_salient = self.radius * np.hstack(
+            (np.cos(theta), np.sin(theta), theta * 0, np.ones((2, 1)) / self.radius)
+        )
         return needle_salient
 
     def sample_3d_pts(self, N: int) -> np.ndarray:

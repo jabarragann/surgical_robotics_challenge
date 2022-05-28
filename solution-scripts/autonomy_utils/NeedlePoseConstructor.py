@@ -4,7 +4,7 @@ from autonomy_utils.circle_pose_estimator import Circle3D
 import numpy as np
 from spatialmath.base import trnorm
 from autonomy_utils.utils.Utils import find_correspondent_pt
-from autonomy_utils.NeedleModel import NeedleModel
+from autonomy_utils.Models.NeedleModel import NeedleModel
 
 log = Logger("Pose constructor").log
 

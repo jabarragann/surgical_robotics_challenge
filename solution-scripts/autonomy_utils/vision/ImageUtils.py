@@ -182,7 +182,11 @@ class ImageProcessing:
         contour:
             Biggest contour in the image.
         """
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        if len(img.shape) == 3:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = img
+
         ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
         cnts, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -205,7 +209,11 @@ class ImageProcessing:
         image : _type_
             _description_
         """
-        data = cv2.cvtColor(segmented_img, cv2.COLOR_BGR2GRAY)
+        if len(segmented_img.shape) == 3:
+            data = cv2.cvtColor(segmented_img, cv2.COLOR_BGR2GRAY)
+        else:
+            data = segmented_img
+
         binary = data > filters.threshold_otsu(data)
         # do the skeletonization
         skel = morphology.skeletonize(binary)

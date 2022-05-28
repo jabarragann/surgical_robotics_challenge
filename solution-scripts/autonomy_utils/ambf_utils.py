@@ -217,9 +217,9 @@ class AMBFNeedle:
         self.logger.info("x-axis angle error (deg):     {:10.2f}".format(x_ang_diff))
         self.logger.info("y-axis angle error (deg):     {:10.2f}".format(y_ang_diff))
         self.logger.info("Normal angle error (deg):     {:10.2f}".format(normal_ang_diff))
-        self.logger.info("Center MSE error (cm):        {:10.2f}".format(100*np.linalg.norm(needle_center - est_center)))
-        self.logger.info("tip    MSE error (cm):        {:10.2f}".format(100*np.linalg.norm(tip_tail_true[:,0]-tip_tail_est[:,0])))
-        self.logger.info("tail   MSE error (cm):        {:10.2f}".format(100*np.linalg.norm(tip_tail_true[:,1]-tip_tail_est[:,1])))
+        self.logger.info("Center MSE error (mm):        {:10.2f}".format(1000*np.linalg.norm(needle_center - est_center)))
+        self.logger.info("tip    MSE error (mm):        {:10.2f}".format(1000*np.linalg.norm(tip_tail_true[:,0]-tip_tail_est[:,0])))
+        self.logger.info("tail   MSE error (mm):        {:10.2f}".format(1000*np.linalg.norm(tip_tail_true[:,1]-tip_tail_est[:,1])))
         self.logger.info("plane vect dot normal:        {:10.2f}".format(est_normal.dot(needle_x_axis)))
         # fmt: off
 

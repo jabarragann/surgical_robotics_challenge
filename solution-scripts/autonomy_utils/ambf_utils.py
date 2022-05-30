@@ -5,7 +5,8 @@ from rospy import client
 from sensor_msgs.msg import Image
 import time
 from surgical_robotics_challenge.scene import Scene
-from surgical_robotics_challenge.camera import Camera
+# from surgical_robotics_challenge.camera import Camera
+from surgical_robotics_challenge.ecm_arm import ECM 
 from autonomy_utils.circle_pose_estimator import Circle3D
 import cv2
 import tf_conversions.posemath as pm
@@ -79,9 +80,9 @@ class AMBFNeedle:
         self.c = ambf_client
         self.logger = logger
         self.scene = Scene(self.c)
-        self.ambf_cam_l = Camera(self.c, "cameraL")
-        self.ambf_cam_r = Camera(self.c, "cameraR")
-        self.ambf_cam_frame = Camera(self.c, "CameraFrame")
+        self.ambf_cam_l = ECM(self.c, "cameraL")
+        self.ambf_cam_r = ECM(self.c, "cameraR")
+        self.ambf_cam_frame = ECM(self.c, "CameraFrame")
 
         self.radius = 0.1018
 
@@ -246,7 +247,7 @@ class AMBFCamera:
         self.c = ambf_client
         self.scene = Scene(self.c)
         camera_name = "cameraL" if camera_selector == "left" else "cameraR"
-        self.ambf_cam = Camera(self.c, camera_name)
+        self.ambf_cam = ECM(self.c, camera_name)
 
         # Initialize extrinsic
         self.T_W_C = self.ambf_cam.get_T_c_w()
@@ -314,7 +315,7 @@ class AMBFStereoRig:
         """
         self.camera_left = AMBFCamera(ambf_client, "left")
         self.camera_right = AMBFCamera(ambf_client, "right")
-        self.ambf_cam_frame = Camera(ambf_client, "CameraFrame")
+        self.ambf_cam_frame = ECM(ambf_client, "CameraFrame")
 
     def get_intrinsics(self, camera_selector: str) -> np.ndarray:
         if camera_selector == "left":

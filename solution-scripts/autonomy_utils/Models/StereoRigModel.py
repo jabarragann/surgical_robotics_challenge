@@ -1,4 +1,8 @@
 import numpy as np
+import PyKDL
+
+quaternion = (0.48990610366965426, 0.5098941160547137, 0.5098941160547138, -0.48990610366965437)
+quaternion = (0.48990610366965426, 0.5098941160547137, 0.5098941160547138, -0.48990610366965437)
 
 
 class CameraModel:
@@ -19,8 +23,3 @@ class CameraModel:
     mtx = intrinsic_params
 
     focal_length = (mtx[0, 0] + mtx[1, 1]) / 2
-
-
-    # Transformation from AMBF to Opencv convention
-    T_cv2_ambf = np.array([[0, 1, 0, 0], [0, 0, -1, 0], [-1, 0, 0, 0], [0, 0, 0, 1]])
-    T_ambf_cv2 = np.linalg.inv(T_cv2_ambf)

@@ -1,4 +1,8 @@
+from pathlib import Path
 from tkinter import Image
+from autonomy_utils.DeepModels.InferencePipeline import InferencePipe
+from autonomy_utils.DeepModels.Dice import DiceLoss, DiceScore, DiceBCELoss
+from autonomy_utils.ambf_utils import ImageSaver
 import numpy as np
 from scipy import ndimage as ndi
 from skimage import morphology, filters
@@ -7,6 +11,8 @@ import matplotlib.pyplot as plt
 import cv2
 import time
 import random
+
+import rospy
 
 
 # def lineEnds(P):
@@ -147,7 +153,20 @@ class ImageProcessing:
             Opencv bounding box. Tuple containing x,y,w,h.
         """
 
+        # Find contour
         cnt = ImageProcessing.find_contour(img)
+
+        # fill out holes in the needle
+        # Solution from https://stackoverflow.com/questions/10316057/filling-holes-inside-a-binary-object
+        img2 = np.copy(img)
+        cv2.drawContours(img, [cnt], 0, (255, 0, 255), 1)
+
+        # Remove sharp edges from cropped image
+        # kernel = np.ones((5, 5), np.uint8)
+        # for i in range(1):
+        #     img = cv2.erode(img, kernel, iterations=2)
+        #     img = cv2.dilate(img, kernel, iterations=1)
+
         x, y, w, h = cv2.boundingRect(cnt)
         p = 15
         x, y = x - p, y - p
@@ -166,6 +185,9 @@ class ImageProcessing:
         # Change to x,y representation
         medial_axis[:, :] = medial_axis[:, [1, 0]]
         endpts[:, :] = endpts[:, [1, 0]]
+
+        if endpts.shape[1] > 2:
+            raise Exception("ImageUtils.SalientPointDetector generated more than 2 points.")
 
         return medial_axis.tolist(), endpts.tolist(), cnt, bb
 
@@ -242,10 +264,25 @@ class ImageProcessing:
 
 if __name__ == "__main__":
 
-    segmented_l_raw = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
+    rospy.init_node("image_listener")
+    img_saver = ImageSaver()
+    time.sleep(0.3)
+
+    model_path = Path("./Resources/segmentation_weights/best_model_512.pth")
+    inference_model = InferencePipe(model_path, device="cuda")
+    segmented_l_raw = img_saver.get_current_frame("right")
+    segmented_l_raw = inference_model.segmented_image(segmented_l_raw)
+    segmented_l_raw = cv2.cvtColor(segmented_l_raw, cv2.COLOR_GRAY2BGR)
+
+    # segmented_l_raw = cv2.imread("./Media/test_img/problematic_segmentation.jpeg")
+    # segmented_l_raw = cv2.cvtColor(segmented_l_raw, cv2.COLOR_BGR2RGB)
+    # cv2.imwrite("./Media/test_img/problematic_segmentation.jpeg", segmented_l_raw)
+    # segmented_l_raw = cv2.imread("./Media/test_img/segmented_needle01.jpeg")
+    # segmented_l_raw = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
 
     print(segmented_l_raw.shape)
     medial_axis, endpts, cnt, bb = ImageProcessing.calculate_needle_salient_points(segmented_l_raw)
+    print(endpts)
 
     for pt in medial_axis:
         segmented_l_raw[pt[1], pt[0], :] = [0, 0, 255]
@@ -254,8 +291,8 @@ if __name__ == "__main__":
 
     x, y, w, h = bb
     segmented_l_cropped = np.copy(segmented_l_raw[y : y + h, x : x + w])
-    segmented_l_raw = cv2.rectangle(segmented_l_raw, (x, y), (x + w, y + h), (255, 0, 255), 2)
-    segmented_l_raw = cv2.rectangle(np.copy(segmented_l_raw), (x, y), (x + w, y + h), (255, 0, 0), 2)
+    # segmented_l_raw = cv2.rectangle(segmented_l_raw, (x, y), (x + w, y + h), (255, 0, 255), 2)
+    # segmented_l_raw = cv2.rectangle(np.copy(segmented_l_raw), (x, y), (x + w, y + h), (255, 0, 0), 2)
 
     w_name = "final"
     cv2.namedWindow(w_name, cv2.WINDOW_NORMAL)

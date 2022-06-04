@@ -22,13 +22,13 @@ log = Logger("Complete pipeline").log
 class NeedlePoseEstimator:
     """Needle pose estimator class"""
 
-    def __init__(self, model_path, ambf_client) -> None:
+    def __init__(self, model_path, ambf_client, device: str = "cuda") -> None:
 
         if not model_path.exists():
             log.error("Segmentation model weights not found")
             exit(0)
 
-        self.inference_model = InferencePipe(model_path, device="cuda")
+        self.inference_model = InferencePipe(model_path, device=device)
         self.stereo_locator = StereoLocator(ambf_client)
 
     def estimate_pose(self, left_img, right_img):

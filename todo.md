@@ -4,6 +4,7 @@
 1. Problem with metrics. Inconsistent metrics between online and offline pose estimation versions.
 2. Check if I can compile AMBF with anaconda built-in ros. 
 3. Set automatic connection
+4. Transform hard code transformation from left camera to camera frame to avoid extra dependencies on AMBF python client. Add the code to calculate the transformation matrix from the camera config files. See adnan solution in the discussion section.
 
 
 # Notes

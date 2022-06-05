@@ -36,6 +36,10 @@ class ImageProcessing:
             Opencv bounding box. Tuple containing x,y,w,h.
         """
 
+        if len(img.shape) != 3:
+            # if gray scale transform to BGR
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+
         # Find contour
         cnt = ImageProcessing.find_contour(img)
 
@@ -44,7 +48,7 @@ class ImageProcessing:
         cv2.drawContours(img, [cnt], 0, (255, 255, 255), -1)
 
         # Remove jagged edges from mask
-        # Solution from https://stackoverflow.com/questions/56838217/smoothen-edges-of-pixelated-binary-image-python-code 
+        # Solution from https://stackoverflow.com/questions/56838217/smoothen-edges-of-pixelated-binary-image-python-code
         blur = cv2.medianBlur(img, 9)
         gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
         ret, img = cv2.threshold(gray, 125, 255, cv2.THRESH_BINARY)
@@ -155,7 +159,7 @@ if __name__ == "__main__":
     img_saver = ImageSaver()
     time.sleep(0.3)
 
-    model_path = Path("./Resources/segmentation_weights/best_model_05_30_not_working.pth")
+    model_path = Path("./Resources/segmentation_weights/best_model_512.pth")
     inference_model = InferencePipe(model_path, device="cuda")
     segmented_l_raw = img_saver.get_current_frame("right")
     segmented_l_raw = inference_model.segmented_image(segmented_l_raw)

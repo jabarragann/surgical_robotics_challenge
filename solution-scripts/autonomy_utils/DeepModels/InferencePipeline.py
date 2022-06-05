@@ -89,7 +89,7 @@ if __name__ == "__main__":
     rospy.init_node("main_node")
     img_saver = ImageSaver()
     time.sleep(0.03)
-    test_img = img_saver.get_current_frame("left")
+    test_img = img_saver.get_current_frame("right")
 
     model_path = Path("./Resources/segmentation_weights/best_model_512.pth")
     if not model_path.exists():

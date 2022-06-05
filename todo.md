@@ -5,6 +5,9 @@
 2. Check if I can compile AMBF with anaconda built-in ros. 
 3. Set automatic connection
 4. Transform hard code transformation from left camera to camera frame to avoid extra dependencies on AMBF python client. Add the code to calculate the transformation matrix from the camera config files. See adnan solution in the discussion section.
+5. Fix jagged edges from binary images. (approach apply median filter and rethreshold again.) 
+https://stackoverflow.com/questions/37409811/smoothing-edges-of-a-binary-image
+
 
 
 # Notes

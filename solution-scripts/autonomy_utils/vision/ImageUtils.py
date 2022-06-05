@@ -1,5 +1,4 @@
 from pathlib import Path
-from tkinter import Image
 from autonomy_utils.DeepModels.InferencePipeline import InferencePipe
 from autonomy_utils.DeepModels.Dice import DiceLoss, DiceScore, DiceBCELoss
 from autonomy_utils.ambf_utils import ImageSaver

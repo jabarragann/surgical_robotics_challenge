@@ -41,14 +41,15 @@ class ImageProcessing:
 
         # fill out holes in the needle
         # Solution from https://stackoverflow.com/questions/10316057/filling-holes-inside-a-binary-object
-        # img2 = np.copy(img)
-        # cv2.drawContours(img, [cnt], 0, (255, 255, 255), -1)
+        cv2.drawContours(img, [cnt], 0, (255, 255, 255), -1)
 
-        # Remove sharp edges from cropped image
-        # kernel = np.ones((5, 5), np.uint8)
-        # for i in range(1):
-        #     img = cv2.erode(img, kernel, iterations=2)
-        #     img = cv2.dilate(img, kernel, iterations=1)
+        # Remove jagged edges from mask
+        # Solution from https://stackoverflow.com/questions/56838217/smoothen-edges-of-pixelated-binary-image-python-code 
+        blur = cv2.medianBlur(img, 9)
+        gray = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+        ret, img = cv2.threshold(gray, 125, 255, cv2.THRESH_BINARY)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        img = cv2.morphologyEx(img, cv2.MORPH_CLOSE, kernel, iterations=2)
 
         x, y, w, h = cv2.boundingRect(cnt)
         p = 15
@@ -93,7 +94,7 @@ class ImageProcessing:
             gray = img
 
         ret, thresh = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
-        cnts, hierarchy = cv2.findContours(gray, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cnts, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         # Get only the biggest contour
         max_area = 0
@@ -102,7 +103,7 @@ class ImageProcessing:
             area = cv2.contourArea(c)
             if area > max_area:
                 max_cnt = c
-                max_are = area
+                max_area = area
 
         return max_cnt
 
@@ -120,8 +121,11 @@ class ImageProcessing:
             data = segmented_img
 
         binary = data > filters.threshold_otsu(data)
-        # do the skeletonization
+        # do the skeletonization - different options
         skel = morphology.skeletonize(binary)
+        # skel = morphology.skeletonize(binary, method="lee")
+        # skel = morphology.medial_axis(binary, return_distance=False)
+
         skel = (skel * 255).astype(np.uint8)
         pt_along_axis = np.argwhere(skel > 200)
         return pt_along_axis, skel
@@ -151,17 +155,18 @@ if __name__ == "__main__":
     img_saver = ImageSaver()
     time.sleep(0.3)
 
-    model_path = Path("./Resources/segmentation_weights/best_model_512.pth")
+    model_path = Path("./Resources/segmentation_weights/best_model_05_30_not_working.pth")
     inference_model = InferencePipe(model_path, device="cuda")
     segmented_l_raw = img_saver.get_current_frame("right")
     segmented_l_raw = inference_model.segmented_image(segmented_l_raw)
     segmented_l_raw = cv2.cvtColor(segmented_l_raw, cv2.COLOR_GRAY2BGR)
 
-    # segmented_l_raw = cv2.imread("./Media/test_img/problematic_segmentation.jpeg")
+    # segmented_l_raw = cv2.imread("./Media/test_img/problematic_segmentation2.jpeg")
     # segmented_l_raw = cv2.cvtColor(segmented_l_raw, cv2.COLOR_BGR2RGB)
-    # cv2.imwrite("./Media/test_img/problematic_segmentation.jpeg", segmented_l_raw)
     # segmented_l_raw = cv2.imread("./Media/test_img/segmented_needle01.jpeg")
     # segmented_l_raw = cv2.imread("to_erase/20220113151427_l_seg.jpeg")
+
+    # cv2.imwrite("./Media/test_img/problematic_segmentation2.jpeg", segmented_l_raw)
 
     print(segmented_l_raw.shape)
     medial_axis, endpts, cnt, bb = ImageProcessing.calculate_needle_salient_points(segmented_l_raw)

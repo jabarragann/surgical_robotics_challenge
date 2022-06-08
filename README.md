@@ -1,5 +1,7 @@
-# Surgical Robotics Challenge
-For more information regarding the challenge, please visit https://collaborative-robotics.github.io/surgical-robotics-challenge/challenge-2021.html
+# Surgical Robotics Challenge - Challenge 1 solution JHU team.
+
+For more information regarding the challenge, please visit https://collaborative-robotics.github.io/surgical-robotics-challenge/challenge-2021.html. To run the solution code please refer to the following [instructions](./challenge1_scripts/README.md).
+
 
 # [Discussions Forum](https://github.com/collaborative-robotics/surgical_robotics_challenge/discussions)
 Please checkout the [Discussions Tab](https://github.com/collaborative-robotics/surgical_robotics_challenge/discussions) for asking questions, posting suggestions, connecting with the community and for keeping up to date with the challenge.

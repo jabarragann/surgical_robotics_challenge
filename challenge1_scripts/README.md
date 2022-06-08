@@ -9,7 +9,14 @@ git clone https://github.com/jabarragann/surgical_robotics_challenge.git
 
 Install python dependencies
 ```
-pip install pandas 
+cd solution-scripts
+pip install -r requirements.txt
+```
+
+If prefered dependencies can be manually installed with
+
+```
+pip install albumentations 
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu 
 pip install spatialmath-python
 pip install scikit-image
@@ -28,7 +35,7 @@ python3 challenge1_scripts/Challenge1Solution.py -d cuda -t JhuNeedleTeam
 ```
 
 
-# Docker addiotinal configurations
+# Docker additional configurations
 Configurations needed to run code in new docker image.
 
 Ros packages

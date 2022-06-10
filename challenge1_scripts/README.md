@@ -12,13 +12,13 @@ apt-get install ros-noetic-cv-bridge
 apt-get install python3-tf-conversions
 ```
 
-Install python dependencies
+Install python dependencies with
 ```
 cd solution-scripts
 pip install -r requirements.txt
 ```
 
-or manual install the dependencies with
+or manually install them with
 
 ```
 pip install pandas

@@ -6,6 +6,11 @@ Clone the repository with
 ```
 git clone https://github.com/jabarragann/surgical_robotics_challenge.git
 ```
+Install ros dependencies
+```
+apt-get install ros-noetic-cv-bridge
+apt-get install python3-tf-conversions
+```
 
 Install python dependencies
 ```
@@ -13,7 +18,7 @@ cd solution-scripts
 pip install -r requirements.txt
 ```
 
-If prefered dependencies can be manually installed with
+or manual install the dependencies with
 
 ```
 pip install albumentations 
@@ -42,10 +47,10 @@ Ros packages
 ```
 apt-get update
 apt-get install ros-noetic-cv-bridge
-apt-get install ros-noetic-cv-bridge
 apt-get install python3-tf-conversions
 apt-get install net-tools
 apt-get install iputils-ping
+apt-get install netcat
 ```
 
 Ros global variables

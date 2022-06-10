@@ -21,6 +21,7 @@ pip install -r requirements.txt
 or manual install the dependencies with
 
 ```
+pip install pandas
 pip install albumentations 
 pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cpu 
 pip install spatialmath-python

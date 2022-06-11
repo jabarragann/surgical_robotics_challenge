@@ -65,8 +65,8 @@ python3 challenge1_scripts/Challenge1Solution.py -d cuda -t JhuNeedleTeam
 ```
 
 
-# Docker additional configurations
-Configurations needed to run code in new docker image.
+## Additional configurations if installing code in Docker container
+Configurations needed to install code in a new docker image.
 
 Ros packages
 ```

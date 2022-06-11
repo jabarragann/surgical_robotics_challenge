@@ -1,7 +1,31 @@
 # Instructions to run challenge 1 solution
 
+To run the solution code in this repository, we offer two possibilities. (1) Downloading the ready to use docker image ([docker instructions](#docker-container-instructions)) and (2) installing locally all the necessary dependencies ([local instructions](#local-installation-instructions)).
 
-# Installation
+# Docker container instructions
+
+Download the docker image with
+```
+docker pull jbarrag3/challenge1_solution:latest
+```
+
+Run the docker container
+```
+docker run -ti --name sol01 --rm --network host jbarrag3/challenge1_solution:latest
+```
+
+Within the container terminal run the following instructions to execute the solution script:
+```
+cd root/challenge1_solution/
+python3 challenge1_scripts/Challenge1Solution.py -d cpu -t JhuNeedleTeam
+```
+
+## Troubleshoot docker container
+
+TODO write about the problems with docker desktop.
+
+
+# Local installation instructions
 Clone the repository with 
 ```
 git clone https://github.com/jabarragann/surgical_robotics_challenge.git

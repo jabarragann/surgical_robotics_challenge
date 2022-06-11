@@ -14,15 +14,40 @@ Run the docker container
 docker run -ti --name sol01 --rm --network host jbarrag3/challenge1_solution:latest
 ```
 
-Within the container terminal run the following instructions to execute the solution script:
+Within the container's terminal run the following instructions to execute the solution script
 ```
 cd root/challenge1_solution/
 python3 challenge1_scripts/Challenge1Solution.py -d cpu -t JhuNeedleTeam
 ```
 
-## Troubleshoot docker container
+## Troubleshooting the docker container
 
-TODO write about the problems with docker desktop.
+To run the code, you must ensure the host and the container can communicate using ROS topics. In my experience, it is not enough to see the list of rostopics published by the host in the container. You also need to be able to send and receive data. First, check that you have a network interface on your host machine called `docker0` by executing the `ifconfig` in your terminal.
+
+```
+docker0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        inet 172.17.0.1  netmask 255.255.0.0  broadcast 172.17.255.255
+```
+
+If you don't have this interface, you might want to change from `docker-desktop` to `docker-engine`.
+
+To test the connectivity via ROS, try publishing some data with the host and receive it from the container. You can do this with
+
+On your host's terminal
+```
+rostopic pub /talker std_msgs/String "hello world"
+```
+
+On the container's terminal
+```
+rostopic echo /talker
+```
+
+This will results in the following output on your container
+```
+data: "hello world"
+---
+```
 
 
 # Local installation instructions

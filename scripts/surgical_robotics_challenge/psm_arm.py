@@ -44,12 +44,10 @@
 # //==============================================================================
 import numpy as np
 from surgical_robotics_challenge.kinematics.psmIK import *
-from surgical_robotics_challenge.utils.joint_pos_recorder import JointPosRecorder
 from surgical_robotics_challenge.utils.joint_errors_model import JointErrorsModel
-from PyKDL import Frame, Rotation, Vector
+from surgical_robotics_challenge.utils import coordinate_frames
 import time
 
-jpRecorder = JointPosRecorder()
 
 class PSMJointMapping:
     def __init__(self):
@@ -72,22 +70,23 @@ pjm = PSMJointMapping()
 
 
 class PSM:
-    def __init__(self, client, name, add_joint_errors=True, save_jp=False):
-        self.save_jp = save_jp
-        self.client = client
+    def __init__(self, simulation_manager, name, add_joint_errors=True):
+        self.simulation_manager = simulation_manager
         self.name = name
-        self.base = self.client.get_obj_handle(name + '/baselink')
-        self.target_IK = self.client.get_obj_handle(name + '_target_ik')
-        self.palm_joint_IK = self.client.get_obj_handle(name + '_palm_joint_ik')
-        self.target_FK = self.client.get_obj_handle(name + '_target_fk')
-        self.sensor = self.client.get_obj_handle(name + '/Sensor0')
+        self.base = self.simulation_manager.get_obj_handle(name + '/baselink')
+        self.base.set_joint_types([JointType.REVOLUTE, JointType.REVOLUTE, JointType.PRISMATIC, JointType.REVOLUTE,
+                                   JointType.REVOLUTE, JointType.REVOLUTE, JointType.REVOLUTE, JointType.REVOLUTE])
+        self.target_IK = self.simulation_manager.get_obj_handle(name + '_target_ik')
+        self.palm_joint_IK = self.simulation_manager.get_obj_handle(name + '_palm_joint_ik')
+        self.target_FK = self.simulation_manager.get_obj_handle(name + '_target_fk')
+        self.sensor = self.simulation_manager._client.get_obj_handle(name + '/Sensor0')
         self.actuators = []
-        self.actuators.append(self.client.get_obj_handle(name + '/Actuator0'))
+        self.actuators.append(self.simulation_manager._client.get_obj_handle(name + '/Actuator0'))
         time.sleep(0.5)
         self.grasped = [False, False, False]
         self.graspable_objs_prefix = ["Needle", "Thread", "Puzzle"]
 
-        self.T_t_b_home = Frame(Rotation.RPY(3.14, 0.0, 1.57079), Vector(0.0, 0.0, -1.0))
+        self.T_t_b_home = coordinate_frames.PSM.T_t_b_home
 
         # Transform of Base in World
         self._T_b_w = None
@@ -103,7 +102,7 @@ class PSM:
             max_errors_list = [0.] * self._num_joints  # No error
             max_errors_list[0] = np.deg2rad(5.0) # Max Error Joint 0 -> +-5 deg
             max_errors_list[1] = np.deg2rad(5.0) # Max Error Joint 1 -> +- 5 deg
-            max_errors_list[2] = 0.05 # Max Error Joint 2 -> +- 5 mm or 0.05 Simulation units
+            max_errors_list[2] = 0.005 # Max Error Joint 2 -> +- 5 mm or 0.05 Simulation units
             self._joint_error_model.generate_random_from_max_value(max_errors_list)
 
     def set_home_pose(self, pose):
@@ -128,11 +127,7 @@ class PSM:
 
     def _update_base_pose(self):
         if not self._base_pose_updated:
-            p = self.base.get_pos()
-            q = self.base.get_rot()
-            P_b_w = Vector(p.x, p.y, p.z)
-            R_b_w = Rotation.Quaternion(q.x, q.y, q.z, q.w)
-            self._T_b_w = Frame(R_b_w, P_b_w)
+            self._T_b_w = self.base.get_pose()
             self._T_w_b = self._T_b_w.Inverse()
             self._base_pose_updated = True
 
@@ -165,11 +160,6 @@ class PSM:
         self._ik_solution = enforce_limits(ik_solution)
         self.servo_jp(self._ik_solution)
 
-        ###  save jp
-
-        if self.save_jp:
-            jpRecorder.record(self._ik_solution)  ### record joint angles
-
     def servo_cv(self, twist):
         pass
 
@@ -196,8 +186,8 @@ class PSM:
         self.base.set_joint_vel(5, jv[5])
 
     def set_jaw_angle(self, jaw_angle):
-        self.base.set_joint_pos('toolyawlink-toolgripper1link', jaw_angle)
-        self.base.set_joint_pos('toolyawlink-toolgripper2link', jaw_angle)
+        self.base.set_joint_pos(6, jaw_angle)
+        self.base.set_joint_pos(7, jaw_angle)
         self.run_grasp_logic(jaw_angle)
 
     def measured_cp(self):

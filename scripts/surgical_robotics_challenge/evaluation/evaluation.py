@@ -11,6 +11,7 @@ from collections import deque
 from enum import Enum
 from ambf_client import Client
 from argparse import ArgumentParser
+import surgical_robotics_challenge.units_conversion
 
 
 def frame_to_pose_stamped_msg(frame):
@@ -50,19 +51,10 @@ def pose_msg_to_frame(msg):
     """
     p = Vector(msg.position.x, msg.position.y, msg.position.z)
 
-    R = Rotation.Quaternion(msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w)
+    R = Rotation.Quaternion(
+        msg.orientation.x, msg.orientation.y, msg.orientation.z, msg.orientation.w
+    )
 
-    return Frame(R, p)
-
-
-def ambf_obj_pose_to_frame(obj):
-    """
-
-    :param obj:
-    :return:
-    """
-    p = Vector(obj.get_pos().x, obj.get_pos().y, obj.get_pos().z)
-    R = Rotation.Quaternion(obj.get_rot().x, obj.get_rot().y, obj.get_rot().z, obj.get_rot().w)
     return Frame(R, p)
 
 
@@ -86,7 +78,9 @@ class NeedleKinematics:
 
         :return:
         """
-        self._needle_sub = rospy.Subscriber("/ambf/env/Needle/State", RigidBodyState, self.needle_cb, queue_size=1)
+        self._needle_sub = rospy.Subscriber(
+            "/ambf/env/Needle/State", RigidBodyState, self.needle_cb, queue_size=1
+        )
         # Needle in World
         self._T_nINw = Frame()
 
@@ -154,7 +148,9 @@ class Task_1_Evaluation_Report:
             print("\t Base Error (mm): ", 1000 * self.E_base)
             print("\t Mid Error: (mm)", 1000 * self.E_mid)
             print("\t Tip Error: (mm)", 1000 * self.E_tip)
-            print("\t Task 1 Overall Score (Lower is Better): ", self.E_base + self.E_mid + self.E_tip)
+            print(
+                "\t Task 1 Overall Score (Lower is Better): ", self.E_base + self.E_mid + self.E_tip
+            )
         else:
             print(FAIL_STR("Task Failed: "))
 
@@ -169,7 +165,9 @@ class Task_1_Evaluation:
         """
         self._world = client.get_world_handle()
         self._needle_kinematics = NeedleKinematics()
-        self._ecm_sub = rospy.Subscriber("/ambf/env/CameraFrame/State", RigidBodyState, self._ecm_cb, queue_size=1)
+        self._ecm_sub = rospy.Subscriber(
+            "/ambf/env/CameraFrame/State", RigidBodyState, self._ecm_cb, queue_size=1
+        )
         self._T_ecmINw = Frame()
         self._team_name = team_name
         try:
@@ -178,7 +176,9 @@ class Task_1_Evaluation:
             # Already initialized, so ignore
             done_nothing = True
         prefix = "/surgical_robotics_challenge/completion_report/" + self._team_name
-        self._task_sub = rospy.Subscriber(prefix + "/task1/", PoseStamped, self.task_completion_cb, queue_size=1)
+        self._task_sub = rospy.Subscriber(
+            prefix + "/task1/", PoseStamped, self.task_completion_cb, queue_size=1
+        )
 
         time.sleep(1.0)
         self._start_time = rospy.Time.now().to_sec()
@@ -245,6 +245,18 @@ class Task_2_Evaluation_Report:
         # Cross-sectional distance from the entry hole's center
         self.L_ntINentry_lateral = None
 
+        # Cross-sectional distance from the exit hole's center
+        self.P_max_ntINexit_lateral = None
+
+        # Cross-sectional distance from the entry hole's center
+        self.P_max_ntINentry_lateral = None
+
+        # Cross-sectional distance from the exit hole's center
+        self.P_ntINexit_lateral = None
+
+        # Cross-sectional distance from the entry hole's center
+        self.P_ntINentry_lateral = None
+
         self.entry_exit_idx = None
 
         self.completion_time = None
@@ -261,7 +273,18 @@ class Task_2_Evaluation_Report:
             print(OK_STR("\t Task Successful: "))
             print("\t Completion Time: ", self.completion_time)
             print("\t Targeted Entry/Exit Hole Pair (1 to 4): ", self.entry_exit_idx + 1)
-            print("\t Needle Tip Axial Distance From Exit Hole (Recommended 0.05): ", self.L_ntINexit_axial)
+            print(
+                "\t Needle Tip Axial Distance From Exit Hole (Recommended 0.05): ",
+                self.L_ntINexit_axial,
+            )
+            print(
+                "\t Needle Tip P Exit Hole During Insertion (Lower is Better): ",
+                self.P_ntINexit_lateral,
+            )
+            print(
+                "\t Needle Tip P From Entry Hole During Insertion (Lower is Better): ",
+                self.P_ntINentry_lateral,
+            )
             print(
                 "\t Needle Tip Lateral Distance From Exit Hole During Insertion (Lower is Better): ",
                 self.L_ntINexit_lateral,
@@ -269,6 +292,14 @@ class Task_2_Evaluation_Report:
             print(
                 "\t Needle Tip Lateral Distance From Entry Hole During Insertion (Lower is Better): ",
                 self.L_ntINentry_lateral,
+            )
+            print(
+                "\t Needle Tip Max Lateral Component From Exit Hole During Insertion (Lower is Better): ",
+                self.P_max_ntINexit_lateral,
+            )
+            print(
+                "\t Needle Tip Max Lateral Component From Entry Hole During Insertion (Lower is Better): ",
+                self.P_max_ntINentry_lateral,
             )
         else:
             print(FAIL_STR("Task Failed: "))
@@ -359,7 +390,9 @@ class ContactEventHelper:
                 for e in range(event_count):
                     NE = needle_holes_proximity_events[hole_type][hidx][e]
                     total_events = total_events + 1
-                    if not ContactEventHelper.validate_needle_event(hole_type, hidx, NE, print_output=False):
+                    if not ContactEventHelper.validate_needle_event(
+                        hole_type, hidx, NE, print_output=False
+                    ):
                         incorrect_events = incorrect_events + 1
         print("Total Events: ", total_events, " Incorrect Events: ", incorrect_events)
 
@@ -426,6 +459,17 @@ class ContactEventHelper:
         p[2] = 0.0
         return p.Norm()
 
+    @staticmethod
+    def compute_max_lateral_component_from_hole(T_ntINhole):
+        """
+
+        :return:
+        """
+        p = T_ntINhole.p
+        px = abs(p[0])
+        py = abs(p[1])
+        return max([px, py])
+
 
 class Task_2_Evaluation:
     def __init__(self, client, team_name):
@@ -446,8 +490,12 @@ class Task_2_Evaluation:
 
         self._scene_trajectories = deque()
         self._needle_holes_proximity_events = dict()
-        self._needle_holes_proximity_events[HoleType.ENTRY] = [deque() for _ in range(GlobalParams.hole_count)]
-        self._needle_holes_proximity_events[HoleType.EXIT] = [deque() for _ in range(GlobalParams.hole_count)]
+        self._needle_holes_proximity_events[HoleType.ENTRY] = [
+            deque() for _ in range(GlobalParams.hole_count)
+        ]
+        self._needle_holes_proximity_events[HoleType.EXIT] = [
+            deque() for _ in range(GlobalParams.hole_count)
+        ]
 
         try:
             rospy.init_node("challenge_evaluation_node")
@@ -455,7 +503,9 @@ class Task_2_Evaluation:
             # Already initialized, so ignore
             done_nothing = True
         prefix = "/surgical_robotics_challenge/completion_report/" + team_name
-        self._task_sub = rospy.Subscriber(prefix + "/task2/", Bool, self.task_completion_cb, queue_size=1)
+        self._task_sub = rospy.Subscriber(
+            prefix + "/task2/", Bool, self.task_completion_cb, queue_size=1
+        )
 
         self._done = False
         self._report = Task_2_Evaluation_Report()
@@ -475,7 +525,9 @@ class Task_2_Evaluation:
 
         for hole_type in HoleType:
             for i in range(GlobalParams.hole_count):
-                SKF.T_holesINw[hole_type][i] = ambf_obj_pose_to_frame(self._hole_objs[hole_type][i])
+                SKF.T_holesINw[hole_type][i] = units_conversion.get_pose(
+                    self._hole_objs[hole_type][i]
+                )
 
         self._scene_trajectories.append(SKF)
         return SKF
@@ -543,7 +595,9 @@ class Task_2_Evaluation:
             )
             if len(insertion_events) < 2:
                 # Failed
-                print("Failed Task, Number of hole insertion events = ", len(insertion_events), "/2")
+                print(
+                    "Failed Task, Number of hole insertion events = ", len(insertion_events), "/2"
+                )
             else:
                 event0 = insertion_events[0]
                 event1 = insertion_events[1]
@@ -551,15 +605,27 @@ class Task_2_Evaluation:
                     if event1.hole_type is HoleType.ENTRY and event1.hole_idx == NCE.hole_idx:
                         self._report.success = True
                         self._report.entry_exit_idx = NCE.hole_idx
-                        self._report.L_ntINexit_axial = ContactEventHelper.compute_axial_distance_from_hole(
-                            NCE.T_ntINhole
+                        self._report.L_ntINexit_axial = (
+                            ContactEventHelper.compute_axial_distance_from_hole(NCE.T_ntINhole)
                         )
-                        self._report.L_ntINexit_lateral = ContactEventHelper.compute_lateral_distance_from_hole(
-                            event0.T_ntINhole
+                        self._report.L_ntINexit_lateral = (
+                            ContactEventHelper.compute_lateral_distance_from_hole(event0.T_ntINhole)
                         )
-                        self._report.L_ntINentry_lateral = ContactEventHelper.compute_lateral_distance_from_hole(
-                            event1.T_ntINhole
+                        self._report.L_ntINentry_lateral = (
+                            ContactEventHelper.compute_lateral_distance_from_hole(event1.T_ntINhole)
                         )
+                        self._report.P_max_ntINexit_lateral = (
+                            ContactEventHelper.compute_max_lateral_component_from_hole(
+                                event0.T_ntINhole
+                            )
+                        )
+                        self._report.P_max_ntINentry_lateral = (
+                            ContactEventHelper.compute_max_lateral_component_from_hole(
+                                event1.T_ntINhole
+                            )
+                        )
+                        self._report.P_ntINexit_lateral = event0.T_ntINhole.p
+                        self._report.P_ntINentry_lateral = event1.T_ntINhole.p
                     else:
                         # Failed
                         print("Failed Task, Entry hole type / idx mismatch from closest type / idx")
@@ -571,7 +637,10 @@ class Task_2_Evaluation:
                     print("Closest Type: ", NCE.hole_type, " Idx: ", NCE.hole_idx)
                     print("Event0 Type: ", event0.hole_type, " Idx: ", event0.hole_idx)
         else:
-            print("Failed Task, The closest hole to needle tip and report completion is not of type ", HoleType.EXIT)
+            print(
+                "Failed Task, The closest hole to needle tip and report completion is not of type ",
+                HoleType.EXIT,
+            )
 
         self._report.print_report()
 
@@ -605,7 +674,10 @@ class Task_3_Evaluation_Report:
         if self.success:
             print(OK_STR("\t Task Successful: "))
             print("\t Completion Time: ", self.completion_time)
-            print("\t Needle Tip Axial Distance From Exit Hole (4/4) (Recommended 0.05): ", self.L_ntINexit_axial)
+            print(
+                "\t Needle Tip Axial Distance From Exit Hole (4/4) (Recommended 0.05): ",
+                self.L_ntINexit_axial,
+            )
             for hidx in range(GlobalParams.hole_count):
                 print("--------------------------------------------")
                 print("\t Hole Number: ", hidx + 1, "/", GlobalParams.hole_count)
@@ -640,8 +712,12 @@ class Task_3_Evaluation:
 
         self._scene_trajectories = deque()
         self._needle_holes_proximity_events = dict()
-        self._needle_holes_proximity_events[HoleType.ENTRY] = [deque() for _ in range(GlobalParams.hole_count)]
-        self._needle_holes_proximity_events[HoleType.EXIT] = [deque() for _ in range(GlobalParams.hole_count)]
+        self._needle_holes_proximity_events[HoleType.ENTRY] = [
+            deque() for _ in range(GlobalParams.hole_count)
+        ]
+        self._needle_holes_proximity_events[HoleType.EXIT] = [
+            deque() for _ in range(GlobalParams.hole_count)
+        ]
 
         try:
             rospy.init_node("challenge_evaluation_node")
@@ -649,7 +725,9 @@ class Task_3_Evaluation:
             # Already initialized, so ignore
             done_nothing = True
         prefix = "/surgical_robotics_challenge/completion_report/" + team_name
-        self._task_sub = rospy.Subscriber(prefix + "/task3/", Bool, self.task_completion_cb, queue_size=1)
+        self._task_sub = rospy.Subscriber(
+            prefix + "/task3/", Bool, self.task_completion_cb, queue_size=1
+        )
 
         self._done = False
         self._report = Task_3_Evaluation_Report()
@@ -669,7 +747,9 @@ class Task_3_Evaluation:
 
         for hole_type in HoleType:
             for i in range(GlobalParams.hole_count):
-                SKF.T_holesINw[hole_type][i] = ambf_obj_pose_to_frame(self._hole_objs[hole_type][i])
+                SKF.T_holesINw[hole_type][i] = units_conversion.get_pose(
+                    self._hole_objs[hole_type][i]
+                )
 
         self._scene_trajectories.append(SKF)
         return SKF
@@ -737,11 +817,17 @@ class Task_3_Evaluation:
             )
             if len(insertion_events) < 8:
                 # Failed
-                print("Failed Task, Number of hole insertion events =", len(insertion_events), "out of 8")
+                print(
+                    "Failed Task, Number of hole insertion events =",
+                    len(insertion_events),
+                    "out of 8",
+                )
                 for ie in insertion_events:
                     print("\t Successful insertion into", ie.hole_type, ie.hole_idx)
             else:
-                self._report.L_ntINexit_axial = ContactEventHelper.compute_axial_distance_from_hole(NCE.T_ntINhole)
+                self._report.L_ntINexit_axial = ContactEventHelper.compute_axial_distance_from_hole(
+                    NCE.T_ntINhole
+                )
                 self._report.success = True
                 correct_idx = GlobalParams.hole_count
                 for hidx in range(GlobalParams.hole_count):
@@ -752,13 +838,19 @@ class Task_3_Evaluation:
                         if event1.hole_type is HoleType.ENTRY and event1.hole_idx == correct_idx:
                             self._report.L_ntINexit_lateral[
                                 hidx
-                            ] = ContactEventHelper.compute_lateral_distance_from_hole(event0.T_ntINhole)
+                            ] = ContactEventHelper.compute_lateral_distance_from_hole(
+                                event0.T_ntINhole
+                            )
                             self._report.L_ntINentry_lateral[
                                 hidx
-                            ] = ContactEventHelper.compute_lateral_distance_from_hole(event1.T_ntINhole)
+                            ] = ContactEventHelper.compute_lateral_distance_from_hole(
+                                event1.T_ntINhole
+                            )
                         else:
                             # Failed
-                            print("Failed Task, Entry hole type / idx mismatch from closest type / idx")
+                            print(
+                                "Failed Task, Entry hole type / idx mismatch from closest type / idx"
+                            )
                             print("Closest Type: ", NCE.hole_type, " Idx: ", correct_idx)
                             print("Event1 Type: ", event1.hole_type, " Idx: ", event1.hole_idx)
                             self._report.success = False
@@ -770,15 +862,22 @@ class Task_3_Evaluation:
                         self._report.success = False
 
         else:
-            print("Failed Task, The closest hole to needle tip and report completion is not of type ", HoleType.EXIT)
+            print(
+                "Failed Task, The closest hole to needle tip and report completion is not of type ",
+                HoleType.EXIT,
+            )
 
         self._report.print_report()
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument("-t", action="store", dest="team_name", help="Team Name", default="test_team")
-    parser.add_argument("-e", action="store", dest="task_evaluation", help="Task to evaluate (1,2 or 3)")
+    parser.add_argument(
+        "-t", action="store", dest="team_name", help="Team Name", default="test_team"
+    )
+    parser.add_argument(
+        "-e", action="store", dest="task_evaluation", help="Task to evaluate (1,2 or 3)"
+    )
 
     parsed_args = parser.parse_args()
     print("Specified Arguments")

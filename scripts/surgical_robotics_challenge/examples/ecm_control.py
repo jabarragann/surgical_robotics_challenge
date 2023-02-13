@@ -45,17 +45,18 @@
 
 from surgical_robotics_challenge.ecm_arm import ECM
 import time
-from ambf_client import Client
+from surgical_robotics_challenge.simulation_manager import SimulationManager
 from surgical_robotics_challenge.utils.jnt_control_gui import JointGUI
 import rospy
 
 
-c = Client('ecm_test')
-c.connect()
+simulation_manager = SimulationManager('ecm_test')
+
 time.sleep(0.5)
 
-ecm = ECM(c, 'CameraFrame')
-gui = JointGUI("ECM JOINTS", 4, ["j0", "j1", "j2", "j3"], resolution=0.00001)
+ecm = ECM(simulation_manager, 'CameraFrame')
+gui = JointGUI("ECM JOINTS", 4, ["j0", "j1", "j2", "j3"], resolution=0.00001, lower_lims=ecm.get_lower_limits(),
+               upper_lims=ecm.get_upper_limits())
 dt = 0.005
 while not rospy.is_shutdown():
     gui.App.update()

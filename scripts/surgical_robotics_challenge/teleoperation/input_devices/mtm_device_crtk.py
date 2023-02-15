@@ -17,10 +17,10 @@
 #     * Redistributions in binary form must reproduce the above
 #     copyright notice, this list of conditions and the following
 #     disclaimer in the documentation and/or other materials provided
-#     with the distribution.
-
-#     * Neither the name of authors nor the names of its contributors may
-#     be used to endorse or promote products derived from this software
+#     with the distribution.n
+                            
+#     * Neither the name of nauthors nor the names of its contributors may
+#     be used to endorse or npromote products derived from this software
 #     without specific prior written permission.
 
 #     THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -114,15 +114,15 @@ def kdl_wrench_to_wrench_msg(kdl_wrench):
 
 
 def pose_msg_to_kdl_frame(msg_pose):
-    pose = msg_pose.transform
+    pose = msg_pose.pose
     f = Frame()
-    f.p[0] = pose.translation.x
-    f.p[1] = pose.translation.y
-    f.p[2] = pose.translation.z
-    f.M = Rotation.Quaternion(pose.rotation.x,
-                              pose.rotation.y,
-                              pose.rotation.z,
-                              pose.rotation.w)
+    f.p[0] = pose.position.x
+    f.p[1] = pose.position.y
+    f.p[2] = pose.position.z
+    f.M = Rotation.Quaternion(pose.orientation.x,
+                              pose.orientation.y,
+                              pose.orientation.z,
+                              pose.orientation.w)
 
     return f
 
@@ -175,7 +175,7 @@ class MTM:
         self._jf = []
 
         self._pose_sub = rospy.Subscriber(
-            pose_sub_topic_name, TransformStamped, self.pose_cb, queue_size=1)
+            pose_sub_topic_name, PoseStamped, self.pose_cb, queue_size=1)
         self._state_sub = rospy.Subscriber(
             joint_state_sub_topic_name, JointState, self.state_cb, queue_size=1)
         self._gripper_sub = rospy.Subscriber(
@@ -188,7 +188,7 @@ class MTM:
             coag_topic_name, Joy, self.coag_buttons_cb, queue_size=1)
 
         self._pos_pub = rospy.Publisher(
-            pose_pub_topic_name, TransformStamped, queue_size=1)
+            pose_pub_topic_name, PoseStamped, queue_size=1)
         self._wrench_pub = rospy.Publisher(
             wrench_pub_topic_name, WrenchStamped, queue_size=1)
         self._effort_pub = rospy.Publisher(
@@ -315,11 +315,9 @@ class MTM:
 
     def servo_cp(self, pose):
         if type(pose) == PyKDL.Frame:
-            transform_msg = kdl_frame_to_transform_msg(pose)
+            transform_msg = kdl_frame_to_pose_msg(pose)
         elif type(pose) == PoseStamped:
-            transform_msg = pose_stamped_to_transform_stamped(pose)
-        elif type(pose) == TransformStamped:
-            transform_msg = pose
+            transform_msg = pose#pose_stamped_to_transform_stamped(pose)
         else:
             raise TypeError
 

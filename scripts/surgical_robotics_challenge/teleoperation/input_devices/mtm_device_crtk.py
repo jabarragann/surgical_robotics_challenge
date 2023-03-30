@@ -18,7 +18,7 @@
 #     copyright notice, this list of conditions and the following
 #     disclaimer in the documentation and/or other materials provided
 #     with the distribution.n
-                            
+
 #     * Neither the name of nauthors nor the names of its contributors may
 #     be used to endorse or npromote products derived from this software
 #     without specific prior written permission.
@@ -45,16 +45,23 @@
 
 import PyKDL
 from PyKDL import Frame, Rotation, Vector
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, TwistStamped, WrenchStamped, Wrench
+from geometry_msgs.msg import (
+    Pose,
+    PoseStamped,
+    TransformStamped,
+    TwistStamped,
+    WrenchStamped,
+    Wrench,
+)
 from sensor_msgs.msg import Joy, JointState
 from std_msgs.msg import Bool
-import rospy
+import rospy, rostopic
 import time
 import numpy as np
 
 
 # Utilities
-def kdl_frame_to_pose_msg(kdl_pose):
+def kdl_frame_to_pose_stamped_msg(kdl_pose):
     ps = PoseStamped()
     p = ps.pose
     p.position.x = kdl_pose.p[0]
@@ -69,7 +76,7 @@ def kdl_frame_to_pose_msg(kdl_pose):
     return ps
 
 
-def kdl_frame_to_transform_msg(kdl_pose):
+def kdl_frame_to_transform_stamped_msg(kdl_pose):
     ps = TransformStamped()
     p = ps.transform
     p.translation.x = kdl_pose.p[0]
@@ -119,10 +126,22 @@ def pose_msg_to_kdl_frame(msg_pose):
     f.p[0] = pose.position.x
     f.p[1] = pose.position.y
     f.p[2] = pose.position.z
-    f.M = Rotation.Quaternion(pose.orientation.x,
-                              pose.orientation.y,
-                              pose.orientation.z,
-                              pose.orientation.w)
+    f.M = Rotation.Quaternion(
+        pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+    )
+
+    return f
+
+
+def transform_msg_to_kdl_frame(msg_pose):
+    pose = msg_pose.transform
+    f = Frame()
+    f.p[0] = pose.position.x
+    f.p[1] = pose.position.y
+    f.p[2] = pose.position.z
+    f.M = Rotation.Quaternion(
+        pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+    )
 
     return f
 
@@ -133,21 +152,34 @@ def vector_to_effort_msg(effort):
     return msg
 
 
+def get_crtk_cp_msg_type_from_str(msg_type_str):
+    if msg_type_str == "geometry_msgs/PoseStamped":
+        return PoseStamped
+    elif msg_type_str == "geometry_msgs/TransformStamped":
+        return TransformStamped
+    else:
+        print(
+            "Exception! Message Type: %s CRTK CP MESSAGE TYPE IS NEITHER PoseStamped or TransformStamped",
+            msg_type_str,
+        )
+        raise TypeError
+
+
 # Init everything related to Geomagic
 class MTM:
     # The name should include the full qualified prefix. I.e. '/Geomagic/', or '/omniR_' etc.
     def __init__(self, name):
-        pose_sub_topic_name = name + 'measured_cp'
-        twist_topic_name = name + 'measured_cv'
-        joint_state_sub_topic_name = name + 'measured_js'
-        gripper_topic_name = name + 'gripper/measured_js'
-        clutch_topic_name = '/footpedals/clutch'
-        coag_topic_name = '/console/operator_present'
+        pose_sub_topic_name = name + "measured_cp"
+        twist_topic_name = name + "measured_cv"
+        joint_state_sub_topic_name = name + "measured_js"
+        gripper_topic_name = name + "gripper/measured_js"
+        clutch_topic_name = "/footpedals/clutch"
+        coag_topic_name = "/console/operator_present"
 
-        pose_pub_topic_name = name + 'servo_cp'
-        wrench_pub_topic_name = name + 'body/servo_cf'
-        effort_pub_topic_name = name + 'servo_jf'
-        grav_comp_topic_name = name + 'use_gravity_compensation'
+        pose_pub_topic_name = name + "servo_cp"
+        wrench_pub_topic_name = name + "body/servo_cf"
+        effort_pub_topic_name = name + "servo_jf"
+        grav_comp_topic_name = name + "use_gravity_compensation"
 
         self.cur_pos_msg = None
         self.pre_coag_pose_msg = None
@@ -174,29 +206,42 @@ class MTM:
         self._jv = []
         self._jf = []
 
+        print(rostopic.get_topic_type(pose_sub_topic_name))
+        print(rostopic.get_topic_type(pose_pub_topic_name))
+        self.MEASURED_CP_MESSAGE_TYPE = get_crtk_cp_msg_type_from_str(
+            rostopic.get_topic_type(pose_sub_topic_name)[0]
+        )
+        self.SERVO_CP_MESSAGE_TYPE = get_crtk_cp_msg_type_from_str(
+            rostopic.get_topic_type(pose_pub_topic_name)[0]
+        )
+
         self._pose_sub = rospy.Subscriber(
-            pose_sub_topic_name, PoseStamped, self.pose_cb, queue_size=1)
+            pose_sub_topic_name, self.MEASURED_CP_MESSAGE_TYPE, self.pose_cb, queue_size=1
+        )
         self._state_sub = rospy.Subscriber(
-            joint_state_sub_topic_name, JointState, self.state_cb, queue_size=1)
+            joint_state_sub_topic_name, JointState, self.state_cb, queue_size=1
+        )
         self._gripper_sub = rospy.Subscriber(
-            gripper_topic_name, JointState, self.gripper_cb, queue_size=1)
+            gripper_topic_name, JointState, self.gripper_cb, queue_size=1
+        )
         self._twist_sub = rospy.Subscriber(
-            twist_topic_name, TwistStamped, self.twist_cb, queue_size=1)
+            twist_topic_name, TwistStamped, self.twist_cb, queue_size=1
+        )
         self._clutch_button_sub = rospy.Subscriber(
-            clutch_topic_name, Joy, self.clutch_buttons_cb, queue_size=1)
+            clutch_topic_name, Joy, self.clutch_buttons_cb, queue_size=1
+        )
         self._coag_button_sub = rospy.Subscriber(
-            coag_topic_name, Joy, self.coag_buttons_cb, queue_size=1)
+            coag_topic_name, Joy, self.coag_buttons_cb, queue_size=1
+        )
 
         self._pos_pub = rospy.Publisher(
-            pose_pub_topic_name, PoseStamped, queue_size=1)
-        self._wrench_pub = rospy.Publisher(
-            wrench_pub_topic_name, WrenchStamped, queue_size=1)
-        self._effort_pub = rospy.Publisher(
-            effort_pub_topic_name, JointState, queue_size=1)
-        self._gravity_comp_pub = rospy.Publisher(
-            grav_comp_topic_name, Bool, queue_size=1)
+            pose_pub_topic_name, self.SERVO_CP_MESSAGE_TYPE, queue_size=1
+        )
+        self._wrench_pub = rospy.Publisher(wrench_pub_topic_name, WrenchStamped, queue_size=1)
+        self._effort_pub = rospy.Publisher(effort_pub_topic_name, JointState, queue_size=1)
+        self._gravity_comp_pub = rospy.Publisher(grav_comp_topic_name, Bool, queue_size=1)
 
-        print('Creating MTM Device Named: ', name, ' From ROS Topics')
+        print("Creating MTM Device Named: ", name, " From ROS Topics")
         self._msg_counter = 0
 
     def set_base_frame(self, frame):
@@ -231,7 +276,7 @@ class MTM:
             normalized_val = (qs[4] - b_lim_5) / range
             centerd_val = normalized_val - 0.5
             sign = -centerd_val * 2
-            print('MID VAL:', sign)
+            print("MID VAL:", sign)
             # sign = 0
         else:
             sign = -1
@@ -243,7 +288,7 @@ class MTM:
         tau_6 = -Kp_6 * qs[5] - Kd_6 * vs[5]
         tau_6 = np.clip(tau_6, -lim_6, lim_6)
 
-        js_cmd = [0.0]*7
+        js_cmd = [0.0] * 7
         js_cmd[3] = tau_4
         js_cmd[5] = tau_6
         self.servo_jf(js_cmd)
@@ -262,7 +307,10 @@ class MTM:
         self.cur_pos_msg = msg
         if self.pre_coag_pose_msg is None:
             self.pre_coag_pose_msg = self.cur_pos_msg
-        cur_frame = pose_msg_to_kdl_frame(msg)
+        if type(msg) == PoseStamped:
+            cur_frame = pose_msg_to_kdl_frame(msg)
+        elif type(msg) == TransformStamped:
+            cur_frame = transform_msg_to_kdl_frame(msg)
         cur_frame.p = cur_frame.p * self._scale
         self.pose = self._T_baseoffset_inverse * cur_frame * self._T_tipoffset
         # Mark active as soon as first message comes through
@@ -302,7 +350,7 @@ class MTM:
         if self.clutch_button_pressed:
             time_diff = rospy.Time.now() - self._button_msg_time
             if time_diff.to_sec() < self._switch_psm_duration.to_sec():
-                print('Allow PSM Switch')
+                print("Allow PSM Switch")
                 self.switch_psm = True
             self._button_msg_time = rospy.Time.now()
 
@@ -314,14 +362,29 @@ class MTM:
         pass
 
     def servo_cp(self, pose):
-        if type(pose) == PyKDL.Frame:
-            transform_msg = kdl_frame_to_pose_msg(pose)
-        elif type(pose) == PoseStamped:
-            transform_msg = pose#pose_stamped_to_transform_stamped(pose)
+        if self.SERVO_CP_MESSAGE_TYPE == PoseStamped:
+            if type(pose) == PyKDL.Frame:
+                servo_cp_msg = kdl_frame_to_pose_stamped_msg(pose)
+            elif type(pose) == PoseStamped:
+                servo_cp_msg = pose
+            elif type(pose) == TransformStamped:
+                servo_cp_msg = pose
+            else:
+                raise TypeError
+        elif self.SERVO_CP_MESSAGE_TYPE == TransformStamped:
+            if type(pose) == PyKDL.Frame:
+                servo_cp_msg = kdl_frame_to_transform_stamped_msg(pose)
+            elif type(pose) == PoseStamped:
+                servo_cp_msg = pose_stamped_to_transform_stamped(pose)
+            elif type(pose) == TransformStamped:
+                servo_cp_msg = pose
+            else:
+                raise TypeError
         else:
+            print(self.SERVO_CP_MESSAGE_TYPE)
             raise TypeError
 
-        self._pos_pub.publish(transform_msg)
+        self._pos_pub.publish(servo_cp_msg)
 
     def servo_cf(self, wrench):
         wrench = self._T_baseoffset_inverse * wrench
@@ -355,10 +418,10 @@ class MTM:
 
 
 def test():
-    rospy.init_node('test_mtm')
+    rospy.init_node("test_mtm")
 
-    d = MTM('/dvrk/MTMR/')
-    d.set_base_frame(Frame(Rotation.RPY(np.pi/2, 0, 0), Vector()))
+    d = MTM("/dvrk/MTMR/")
+    d.set_base_frame(Frame(Rotation.RPY(np.pi / 2, 0, 0), Vector()))
     # rot_offset = Rotation.RPY(np.pi, np.pi/2, 0).Inverse()
     # tip_offset = Frame(rot_offset, Vector(0, 0, 0))
     # d.set_tip_frame(tip_offset)
@@ -379,5 +442,5 @@ def test():
         time.sleep(0.05)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

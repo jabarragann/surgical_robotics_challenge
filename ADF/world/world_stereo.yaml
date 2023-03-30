@@ -76,6 +76,7 @@ cameraL2:
     vertex: shader.vs
     fragment: shader.fs
   publish image: True
+  visible: False
   publish image interval: 5
   # publish image resolution: { width: 1920, height: 1080 }
   publish image resolution: { width: 640, height: 480 }

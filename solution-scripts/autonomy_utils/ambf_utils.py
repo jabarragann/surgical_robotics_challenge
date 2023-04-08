@@ -24,6 +24,12 @@ class ImageSaver:
 
         rospy.init_node("image_listener")
         """
+        
+        if not rospy.get_node_uri():
+            rospy.init_node('image_saver_node', anonymous = True, log_level = rospy.WARN)
+        else:
+            rospy.logdebug(rospy.get_caller_id() + ' -> ROS already initialized')
+
         self.bridge = CvBridge()
         self.left_cam_subs = rospy.Subscriber(
             "/ambf/env/cameras/cameraL/ImageData", Image, self.left_callback

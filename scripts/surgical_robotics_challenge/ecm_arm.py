@@ -42,8 +42,14 @@
 #     \version   1.0
 # */
 # //==============================================================================
-from surgical_robotics_challenge.kinematics.ecmFK import *
-from surgical_robotics_challenge.utils.utilities import cartesian_interpolate_step
+
+from typing import List
+import numpy as np
+from surgical_robotics_challenge.kinematics.ecmFK import kinematics_data, compute_FK
+from surgical_robotics_challenge.utils.utilities import (
+    cartesian_interpolate_step,
+    convert_mat_to_frame,
+)
 from PyKDL import Frame, Rotation, Vector, Twist
 import time
 import rospy
@@ -65,7 +71,7 @@ class ECM:
         self._num_joints = 5
         self._update_camera_pose()
         self._T_c_w_init = self._T_c_w
-        self._measured_jp = np.array([.0, .0, .0, .0])
+        self._measured_jp = np.array([0.0, 0.0, 0.0, 0.0])
         self._measured_cp = None
         self._max_vel = 0.002
         self._T_cmd = Frame()
@@ -85,7 +91,9 @@ class ECM:
                 if self._force_exit_thread:
                     break
 
-                T_step, done = cartesian_interpolate_step(self._measured_cp, self._T_c_w_cmd, self._max_vel)
+                T_step, done = cartesian_interpolate_step(
+                    self._measured_cp, self._T_c_w_cmd, self._max_vel
+                )
                 self._T_cmd.p = self._measured_cp.p + T_step.p
                 self._T_cmd.M = self._measured_cp.M * T_step.M
                 self._measured_cp = self._T_cmd
@@ -149,6 +157,16 @@ class ECM:
 
         self._pose_changed = True
 
+    def servo_cp_no_interpolate(self, T_c_w):
+        if type(T_c_w) in [np.matrix, np.array]:
+            T_c_w = convert_mat_to_frame(T_c_w)
+
+        if self._measured_cp is None:
+            self._measured_cp = self.measured_cp()
+
+        self.camera_handle.set_pose(T_c_w)
+        self._pose_changed = True
+
     def servo_cv(self, twist, dt):
         if type(twist) in [np.array, np.ndarray]:
             v = Vector(twist[0], twist[1], twist[2]) * dt
@@ -162,20 +180,44 @@ class ECM:
         T_c_w = self.get_T_c_w()
         T_cmd = Frame(Rotation.RPY(w[0], w[1], w[2]), v)
         self.servo_cp(T_c_w * T_cmd)
-        pass
 
-    def servo_jp(self, jp):
+    def servo_jp(self, jp: List[float], interpolate: bool = True):
+
+        jp = self.enforce_joint_limits(jp)
+        self._measured_jp = np.array(jp)
+
         j0 = jp[0]
         j1 = jp[1]
         j2 = jp[2]
         j3 = jp[3]
         cmd = [j0, j1, j2, j3, 0.0]
-        T_t_c = convert_mat_to_frame(compute_FK(cmd, 5)) # Tip if camera frame
-        self.servo_cp(self._T_c_w_init * T_t_c)
+
+        T_t_c = convert_mat_to_frame(compute_FK(cmd, 5))  # Tip if camera frame
+
+        if interpolate:  # Used for position control
+            self.servo_cp(self._T_c_w_init * T_t_c)
+        else:  # Used for velocity control - with spacenav
+            self.servo_cp_no_interpolate(self._T_c_w_init * T_t_c)
+
+    def servo_jv(self, jv, dt):
+        if type(jv) is list:
+            jv = np.array(jv)
+        delta_jp = jv * dt
+        current_jp = self.measured_jp()
+
+        self.servo_jp(current_jp + delta_jp, interpolate=False)
+
+    def enforce_joint_limits(self, jp: List[float]):
+        jp = np.array(jp)
+        upper = np.array(self._kd.upper_limits)
+        lower = np.array(self._kd.lower_limits)
+
+        jp[jp > upper] = upper[jp > upper]
+        jp[jp < lower] = lower[jp < lower]
+        return jp.tolist()
 
     def measured_cp(self):
         return self.get_T_c_w()
 
     def measured_jp(self):
         return self._measured_jp
-

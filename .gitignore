@@ -11,3 +11,4 @@ solution-scripts/autoutils.egg-info/
 to_erase
 *.pth
 __pycache__
+*.egg-info

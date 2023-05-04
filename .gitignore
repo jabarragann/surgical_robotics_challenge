@@ -12,3 +12,4 @@ to_erase
 *.pth
 __pycache__
 *.egg-info
+build

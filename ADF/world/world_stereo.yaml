@@ -91,6 +91,9 @@ cameraL2:
         filename: "libprepropressing_shader_config.so",
       },
     ]
+  preprocessing_shaders_config:
+    - needle: [0, 0, 0]
+    - psm: [1, 1, 0]
 
 cameraR:
   namespace: cameras/

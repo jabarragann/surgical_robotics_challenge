@@ -24,6 +24,8 @@ int afCameraHMD::init(const afBaseObjectPtr a_afObjectPtr, const afBaseObjectAtt
     m_world_ptr = m_camera->m_afWorld;
     afRigidBodyVec rigid_bodies_vec = m_world_ptr->getRigidBodies();
 
+    m_camera->setOverrideRendering(true);
+
     cout << "\n\n\n\n\n";
     cout << "Shaders config plugin initialized" << endl;
     cout << "camera name:   " << m_camera->getName() << endl;
@@ -38,59 +40,119 @@ int afCameraHMD::init(const afBaseObjectPtr a_afObjectPtr, const afBaseObjectAtt
 
 void afCameraHMD::graphicsUpdate()
 {
+
+    //    if (m_camera->getVisibleFlag()){
+
+    //        // set current display context
+    //        glfwMakeContextCurrent(m_camera->m_window);
+
+    //        // get width and height of window
+    //        glfwGetFramebufferSize(m_camera->m_window, &m_camera->m_width, &m_camera->m_height);
+
+    //        // Update the Labels in a separate sub-routine
+    ////        if (options.m_updateLabels && !m_publishDepth && !m_publishImage){
+    ////            updateLabels(options);
+    ////        }
+
+    ////        renderSkyBox();
+
+    //        // render world
+    //        m_camera->m_camera->renderView(m_width, m_height);
+
+    //        // swap buffers
+    //        glfwSwapBuffers(m_camera->m_window);
+
+    //        //    cerr << "Time Stamp Error: " << m_renderTimeStamp - getTimeStamp() << endl;
+
+    //        // Only set the window_closed if the condition is met
+    //        // otherwise a non-closed window will set the variable back
+    //        // to false
+    //        if (glfwWindowShouldClose(m_camera->m_window)){
+    //            options.m_windowClosed = true;
+    //        }
+    //    }
+
+    //    if (m_camera->m_publishImage || m_camera->m_publishDepth){
+
+    //        activatePreProcessingShaders();
+
+    //        m_camera->m_frameBuffer->renderView();
+    //        m_camera->m_frameBuffer->copyImageBuffer(m_bufferColorImage);
+
+    //        deactivatePreProcessingShaders();
+    //    }
+
+    //    m_camera->m_sceneUpdateCounter++;
+
     static bool first_time = true;
-    if (first_time)
-    {
-        cout << "first time in the graphics update" << endl;
-        cout << "World name:    " << m_world_ptr->getName() << endl;
+    //    if (first_time)
+    //    {
+    //        cout << "first time in the graphics update" << endl;
+    //        cout << "World name:    " << m_world_ptr->getName() << endl;
 
-        afBaseObjectMap *rigid_bodies_map = m_world_ptr->getRigidBodyMap();
-        cout << "Number of objects in simulation:"
-             << rigid_bodies_map->size() << endl;
+    afBaseObjectMap *rigid_bodies_map = m_world_ptr->getRigidBodyMap();
+    //        cout << "Number of objects in simulation:"
+    //             << rigid_bodies_map->size() << endl;
 
-        afBaseObjectMap::iterator it = rigid_bodies_map->begin();
-        // std::pair<std::string, afBaseObjectPtr> pair;
+    afBaseObjectMap::iterator it = rigid_bodies_map->begin();
+    // std::pair<std::string, afBaseObjectPtr> pair;
 
-        for (std::pair<std::string, afBaseObjectPtr> pair : *rigid_bodies_map)
-        {
-            cout << "Object name: " << pair.first << endl;
-        }
+    //        for (std::pair<std::string, afBaseObjectPtr> pair : *rigid_bodies_map)
+    //        {
+    //            cout << "Object name: " << pair.first << endl;
+    //        }
 
-        string needle_name = "/ambf/env/BODY Needle";
-        afRigidBodyPtr needle_ptr = dynamic_cast<afRigidBody *>(rigid_bodies_map->at(needle_name));
-        afRigidBodyAttributes *needle_attr = dynamic_cast<afRigidBodyAttributes *>(needle_ptr->getAttributes());
+    string needle_name = "/ambf/env/BODY Needle";
+    afRigidBodyPtr needle_ptr = dynamic_cast<afRigidBody *>(rigid_bodies_map->at(needle_name));
+    afRigidBodyAttributes *needle_attr = dynamic_cast<afRigidBodyAttributes *>(needle_ptr->getAttributes());
 
-        // m_visualAttribs m_colorAttribs  m_diffuse
-        needle_diffuse = needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse;
-        double r, g, b;
-        needle_diffuse.getXYZ(r, g, b);
-        needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse.set(0.0, g, 0.0);
+    cMaterial newMat;
 
-        cout << "Needle diffuse color: " << endl;
-        needle_diffuse.print();
+    // m_visualAttribs m_colorAttribs  m_diffuse
+    needle_diffuse = needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse;
+    double r, g, b;
+    g = sin(m_world_ptr->getSimulationTime());
+    newMat.m_diffuse.set(r, g, b, 1.0);
+    //        needle_diffuse.getXYZ(r, g, b);
+    //        needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse.set(0.0, g, 0.0);
 
-        //  << m_diffuse[0] << ", "
-        //  << m_diffuse[1] << ", "
-        //  << m_diffuse[2] << ", " << endl;
+    cout << "Needle diffuse color: " << g << endl;
+    //        needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse.print();
 
-        // afRigidBodyVec rigid_bodies_vec = m_world_ptr->getRigidBodies();
-        // cout << "Number of objects in simulation:"
-        //      << m_world_ptr->getRigidBodies().size() << endl;
+    needle_ptr->m_visualMesh->backupMaterialColors(true);
+    needle_ptr->m_visualMesh->setMaterial(newMat);
+    needle_ptr->m_visualMesh->m_material->setModificationFlags(true);
 
-        // afRigidBodyVec::iterator it = rigid_bodies_vec.begin();
-        // for (it; it != rigid_bodies_vec.end(); it++)
-        // {
-        //     cout << "Object name: " << (*it)->getName() << endl;
+    afRenderOptions ro;
+    ro.m_updateLabels = false;
+    m_camera->render(ro);
 
-        //     if ((*it)->getName() == "Needle")
-        //     {
-        //         cout << "Found the needle" << endl;
-        //     }
-        // }
-        // cout << "First object" << rigid_bodies_vec[0]->getName() << endl;
+    needle_ptr->m_visualMesh->restoreMaterialColors(true);
 
-        first_time = false;
-    }
+    //     needle_diffuse.print();
+
+    //      << m_diffuse[0] << ", "
+    //      << m_diffuse[1] << ", "
+    //      << m_diffuse[2] << ", " << endl;
+
+    //     afRigidBodyVec rigid_bodies_vec = m_world_ptr->getRigidBodies();
+    //     cout << "Number of objects in simulation:"
+    //          << m_world_ptr->getRigidBodies().size() << endl;
+
+    //     afRigidBodyVec::iterator it = rigid_bodies_vec.begin();
+    //     for (it; it != rigid_bodies_vec.end(); it++)
+    //     {
+    //         cout << "Object name: " << (*it)->getName() << endl;
+
+    //         if ((*it)->getName() == "Needle")
+    //         {
+    //             cout << "Found the needle" << endl;
+    //         }
+    //     }
+    //     cout << "First object" << rigid_bodies_vec[0]->getName() << endl;
+
+    first_time = false;
+    //        }
 }
 
 void afCameraHMD::physicsUpdate(double dt)

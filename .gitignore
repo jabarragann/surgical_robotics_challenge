@@ -13,3 +13,4 @@ to_erase
 __pycache__
 *.egg-info
 build
+*.txt.user

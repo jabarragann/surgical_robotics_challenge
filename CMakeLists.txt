@@ -21,3 +21,11 @@ add_library(prepropressing_shader_config SHARED
 
 target_link_libraries(prepropressing_shader_config ${Boost_LIBRARIES} ${AMBF_LIBRARIES})
 set_property(TARGET prepropressing_shader_config PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+# Test yaml-cpp
+find_package(yaml-cpp REQUIRED)
+include_directories(${YAML_INCLUDE_DIRS})
+
+set(yaml_prefix "plugins/yaml_test")
+add_executable(yaml_test ${yaml_prefix}/read_yaml.cpp)
+target_link_libraries(yaml_test ${YAML_CPP_LIBRARIES})

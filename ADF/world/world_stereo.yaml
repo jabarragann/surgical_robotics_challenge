@@ -92,8 +92,8 @@ cameraL2:
       },
     ]
   preprocessing_shaders_config:
-    - psm: { "namespace": "/ambf/env/psm1/", "rgb": [0, 0, 0] }
-    - rgb: { "namespace": "/ambf/env/", "rgb": [1, 1, 0] }
+    - psm: { namespace: "/ambf/env/psm1/", rgb: [0, 0, 0] }
+    - rgb: { namespace: "/ambf/env/", rgb: [1, 1, 0] }
 
 cameraR:
   namespace: cameras/

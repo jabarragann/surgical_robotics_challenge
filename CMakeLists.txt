@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.1)
-project(volumetric_plugin)
+project(shader_plugin)
 
 set(CMAKE_CXX_STANDARD 11)
 

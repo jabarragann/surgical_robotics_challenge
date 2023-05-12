@@ -1,4 +1,5 @@
 #include "shaders_config.h"
+#include <yaml-cpp/yaml.h>
 
 using namespace std;
 
@@ -91,16 +92,19 @@ void afCameraHMD::graphicsUpdate()
     //        cout << "World name:    " << m_world_ptr->getName() << endl;
 
     afBaseObjectMap *rigid_bodies_map = m_world_ptr->getRigidBodyMap();
-    //        cout << "Number of objects in simulation:"
-    //             << rigid_bodies_map->size() << endl;
+    if (first_time)
+    {
+        cout << "Number of objects in simulation:"
+             << rigid_bodies_map->size() << endl;
 
-    afBaseObjectMap::iterator it = rigid_bodies_map->begin();
-    // std::pair<std::string, afBaseObjectPtr> pair;
+        afBaseObjectMap::iterator it = rigid_bodies_map->begin();
+        std::pair<std::string, afBaseObjectPtr> pair;
 
-    //        for (std::pair<std::string, afBaseObjectPtr> pair : *rigid_bodies_map)
-    //        {
-    //            cout << "Object name: " << pair.first << endl;
-    //        }
+        for (std::pair<std::string, afBaseObjectPtr> pair : *rigid_bodies_map)
+        {
+            cout << "Object name: " << pair.first << endl;
+        }
+    }
 
     string needle_name = "/ambf/env/BODY Needle";
     afRigidBodyPtr needle_ptr = dynamic_cast<afRigidBody *>(rigid_bodies_map->at(needle_name));
@@ -116,7 +120,8 @@ void afCameraHMD::graphicsUpdate()
     //        needle_diffuse.getXYZ(r, g, b);
     //        needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse.set(0.0, g, 0.0);
 
-    cout << "Needle diffuse color: " << g << endl;
+    // cout << "Needle diffuse color: " << g << endl;
+
     //        needle_attr->m_visualAttribs.m_colorAttribs.m_diffuse.print();
 
     needle_ptr->m_visualMesh->backupMaterialColors(true);
@@ -128,6 +133,26 @@ void afCameraHMD::graphicsUpdate()
     m_camera->render(ro);
 
     needle_ptr->m_visualMesh->restoreMaterialColors(true);
+
+    // READ config
+    YAML::Node camera_yaml_specs;
+
+    camera_yaml_specs = YAML::Load(needle_attr->getSpecificationData().m_rawData);
+    // YAML::Node yaml_node = specificationDataNode["preprocessing_shaders_config"];
+    // YAML::Node yaml_node = specificationDataNode["monitor"];
+    // cout << yaml_node[0] << endl;
+    // cout << yaml_node.as<std::string>() << endl;
+
+    if (first_time)
+    {
+        YAML::Node::const_iterator it = camera_yaml_specs.begin();
+        for (it; it != camera_yaml_specs.end(); ++it)
+        {
+            cout << "key: " << it->first.as<string>() << endl;
+            // cout << "value: " << it->second.as<string>() << endl;
+        }
+        cout << "Name: " << camera_yaml_specs["name"].as<string>() << endl;
+    }
 
     //     needle_diffuse.print();
 

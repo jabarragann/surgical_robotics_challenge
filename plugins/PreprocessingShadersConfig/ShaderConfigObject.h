@@ -30,6 +30,7 @@ public:
 
     void print_namespaces();
     int get_namespace_idx(string ns);
+    vector<int> get_rgb_at(int idx) { return shader_config_objects[idx].rgb; };
 
 private:
     vector<ShaderConfigObject> shader_config_objects;

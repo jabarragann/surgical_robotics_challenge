@@ -98,12 +98,12 @@ cameraL2:
     Needle:
       rgb: [255, 0, 0] # If namespace is empty, defaults to "/ambf/env/"
 
-    # - tool roll link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
-    # - tool pitch link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
-    # - tool yaw link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
-    # - tool gripper1 link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
-    # - tool gripper2 link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
-    # - needle: { namespace: "/ambf/env/", rgb: [1, 1, 0] }
+  # - tool roll link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
+  # - tool pitch link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
+  # - tool yaw link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
+  # - tool gripper1 link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
+  # - tool gripper2 link: { namespace: "/ambf/env/psm1/", rgb: [0, 255, 0] }
+  # - needle: { namespace: "/ambf/env/", rgb: [1, 1, 0] }
 
 cameraR:
   namespace: cameras/

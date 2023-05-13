@@ -26,17 +26,19 @@ void afProcessingShaderConfig::graphicsUpdate()
 {
     if (first_graphics_update) // Obtain pointers to scene objects
     {
-        rigid_bodies_map_ptr = m_world_ptr->getRigidBodyMap();
         first_graphics_update = false;
-
+        fill_rigid_bodies_map();
         fill_new_materials_map();
-        cout << "first graphics update" << endl;
     }
+
+    load_shader_materials();
 
     // Manually render camera
     afRenderOptions ro;
     ro.m_updateLabels = false;
     m_camera->render(ro);
+
+    restore_original_materials();
 }
 
 void afProcessingShaderConfig::physicsUpdate(double dt)
@@ -87,17 +89,62 @@ vector<ShaderConfigObject> afProcessingShaderConfig::parse_camera_config()
 
 void afProcessingShaderConfig::fill_new_materials_map()
 {
-    afBaseObjectMap::const_iterator it = rigid_bodies_map_ptr->begin();
+    afRigidBodyMap::const_iterator it = rigid_bodies_map.begin();
 
     cout << "Number of objects in simulation:"
-         << rigid_bodies_map_ptr->size() << endl;
+         << rigid_bodies_map.size() << endl;
 
-    for (pair<string, afBaseObjectPtr> kv : *rigid_bodies_map_ptr)
+    for (pair<string, afBaseObjectPtr> kv : rigid_bodies_map)
     {
         int idx = shader_config_objects.get_namespace_idx(kv.first);
         if (idx != -1)
         {
+
+            vector<int> rgb = shader_config_objects.get_rgb_at(idx);
+            unique_ptr<cMaterial> newMat(new cMaterial());
+            newMat->m_diffuse.set(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1.0);
+            new_materials_map[kv.first] = move(newMat); // WHY MOVE?
+
             cout << "Reconfiguring" << kv.first << endl;
         }
+        else // Default material - black
+        {
+            unique_ptr<cMaterial> newMat(new cMaterial());
+            newMat->m_diffuse.set(0.0, 0.0, 0.0, 1.0);
+            new_materials_map[kv.first] = move(newMat); // WHY MOVE?
+        }
+    }
+}
+
+void afProcessingShaderConfig::fill_rigid_bodies_map()
+{
+    afBaseObjectMap *obj_map = m_world_ptr->getRigidBodyMap();
+    afBaseObjectMap::const_iterator it = obj_map->begin();
+
+    for (pair<string, afBaseObjectPtr> kv : *obj_map)
+    {
+        rigid_bodies_map[kv.first] = dynamic_cast<afRigidBody *>(obj_map->at(kv.first));
+    }
+}
+
+void afProcessingShaderConfig::load_shader_materials()
+{
+    afRigidBodyMap::const_iterator it = rigid_bodies_map.begin();
+
+    for (pair<string, afRigidBodyPtr> kv : rigid_bodies_map)
+    {
+        kv.second->m_visualMesh->backupMaterialColors(true);
+        kv.second->m_visualMesh->setMaterial(move(new_materials_map[kv.first]));
+        kv.second->m_visualMesh->m_material->setModificationFlags(true);
+    }
+}
+
+void afProcessingShaderConfig::restore_original_materials()
+{
+    afRigidBodyMap::const_iterator it = rigid_bodies_map.begin();
+
+    for (pair<string, afRigidBodyPtr> kv : rigid_bodies_map)
+    {
+        kv.second->m_visualMesh->restoreMaterialColors(true);
     }
 }

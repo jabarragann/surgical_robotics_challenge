@@ -3,6 +3,7 @@
 #include <afAttributes.h>
 #include <yaml-cpp/yaml.h>
 #include <map>
+#include <memory>
 #include "ShaderConfigObject.h"
 
 using namespace std;
@@ -23,13 +24,17 @@ protected:
     afCameraPtr m_camera;
     afWorldPtr m_world_ptr;
     afVector3d needle_diffuse;
-    afBaseObjectMap *rigid_bodies_map_ptr;
-    map<string, cMaterial> new_materials_map;
+    // afBaseObjectMap *rigid_bodies_map_ptr;
+    afRigidBodyMap rigid_bodies_map;
+    map<string, unique_ptr<cMaterial>> new_materials_map;
     ShaderConfigObjectVector shader_config_objects;
 
 protected:
     vector<ShaderConfigObject> parse_camera_config();
     void fill_new_materials_map();
+    void fill_rigid_bodies_map();
+    void load_shader_materials();
+    void restore_original_materials();
 };
 
 AF_REGISTER_OBJECT_PLUGIN(afProcessingShaderConfig)

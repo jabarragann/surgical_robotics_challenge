@@ -101,17 +101,17 @@ void afProcessingShaderConfig::fill_new_materials_map()
         {
 
             vector<int> rgb = shader_config_objects.get_rgb_at(idx);
-            unique_ptr<cMaterial> newMat(new cMaterial());
+            cMaterial *newMat = new cMaterial();
             newMat->m_diffuse.set(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1.0);
-            new_materials_map[kv.first] = move(newMat); // WHY MOVE?
+            new_materials_map[kv.first] = newMat;
 
             cout << "Reconfiguring" << kv.first << endl;
         }
         else // Default material - black
         {
-            unique_ptr<cMaterial> newMat(new cMaterial());
+            cMaterial *newMat = new cMaterial();
             newMat->m_diffuse.set(0.0, 0.0, 0.0, 1.0);
-            new_materials_map[kv.first] = move(newMat); // WHY MOVE?
+            new_materials_map[kv.first] = newMat;
         }
     }
 }
@@ -134,7 +134,7 @@ void afProcessingShaderConfig::load_shader_materials()
     for (pair<string, afRigidBodyPtr> kv : rigid_bodies_map)
     {
         kv.second->m_visualMesh->backupMaterialColors(true);
-        kv.second->m_visualMesh->setMaterial(move(new_materials_map[kv.first]));
+        kv.second->m_visualMesh->setMaterial(*new_materials_map[kv.first]);
         kv.second->m_visualMesh->m_material->setModificationFlags(true);
     }
 }

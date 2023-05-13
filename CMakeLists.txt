@@ -16,6 +16,8 @@ add_definitions(${AMBF_DEFINITIONS})
 set(shaders_plugin_prefix "plugins/PreprocessingShadersConfig")
 
 add_library(prepropressing_shader_config SHARED
+    ${shaders_plugin_prefix}/ShaderConfigObject.cpp
+    ${shaders_plugin_prefix}/ShaderConfigObject.h
     ${shaders_plugin_prefix}/shaders_config.cpp
     ${shaders_plugin_prefix}/shaders_config.h)
 

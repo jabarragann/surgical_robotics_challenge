@@ -2,6 +2,7 @@
 #include <afFramework.h>
 #include <afAttributes.h>
 #include <yaml-cpp/yaml.h>
+#include "ShaderConfigObject.h"
 
 using namespace std;
 using namespace ambf;
@@ -21,9 +22,12 @@ protected:
     afCameraPtr m_camera;
     afWorldPtr m_world_ptr;
     afVector3d needle_diffuse;
+    afBaseObjectMap *rigid_bodies_map;
+    // vector<ShaderConfigObject> shader_config_objects;
+    ShaderConfigObjectVector shader_config_objects;
 
 protected:
-    bool parse_camera_config();
+    vector<ShaderConfigObject> parse_camera_config();
 };
 
 AF_REGISTER_OBJECT_PLUGIN(afProcessingShaderConfig)

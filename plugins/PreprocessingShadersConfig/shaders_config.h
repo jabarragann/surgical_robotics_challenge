@@ -26,6 +26,7 @@ protected:
     afVector3d needle_diffuse;
     // afBaseObjectMap *rigid_bodies_map_ptr;
     afRigidBodyMap rigid_bodies_map;
+    // Todo: Use smart pointers to store shader materials or deallocated the materials at the end.
     map<string, cMaterial *> new_materials_map;
     ShaderConfigObjectVector shader_config_objects;
 

@@ -29,6 +29,7 @@ public:
     size_t size() { return shader_config_objects.size(); };
 
     void print_namespaces();
+    int get_namespace_idx(string ns);
 
 private:
     vector<ShaderConfigObject> shader_config_objects;

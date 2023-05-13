@@ -26,9 +26,11 @@ void afProcessingShaderConfig::graphicsUpdate()
 {
     if (first_graphics_update) // Obtain pointers to scene objects
     {
-
-        afBaseObjectMap *rigid_bodies_map = m_world_ptr->getRigidBodyMap();
+        rigid_bodies_map_ptr = m_world_ptr->getRigidBodyMap();
         first_graphics_update = false;
+
+        fill_new_materials_map();
+        cout << "first graphics update" << endl;
     }
 
     // Manually render camera
@@ -76,8 +78,26 @@ vector<ShaderConfigObject> afProcessingShaderConfig::parse_camera_config()
     }
     else
     {
-        cout << "INFO! No 'preprocessing shaders config' field found in yaml" << endl;
+        cout << "INFO! PREPROCESSING SHADER PLUGIN "
+             << "No 'preprocessing shaders config' field found in yaml" << endl;
     }
 
     return shader_config_objects;
+}
+
+void afProcessingShaderConfig::fill_new_materials_map()
+{
+    afBaseObjectMap::const_iterator it = rigid_bodies_map_ptr->begin();
+
+    cout << "Number of objects in simulation:"
+         << rigid_bodies_map_ptr->size() << endl;
+
+    for (pair<string, afBaseObjectPtr> kv : *rigid_bodies_map_ptr)
+    {
+        int idx = shader_config_objects.get_namespace_idx(kv.first);
+        if (idx != -1)
+        {
+            cout << "Reconfiguring" << kv.first << endl;
+        }
+    }
 }

@@ -41,3 +41,16 @@ void ShaderConfigObjectVector::print_namespaces()
         cout << ns << endl;
     }
 }
+
+int ShaderConfigObjectVector::get_namespace_idx(string ns)
+{
+    vector<string>::iterator it;
+    it = find(config_objects_namespaces.begin(), config_objects_namespaces.end(), ns);
+
+    if (it != config_objects_namespaces.end())
+        return it - config_objects_namespaces.begin();
+    else
+        return -1;
+
+    return 0;
+}

@@ -2,9 +2,11 @@
 
 For more information regarding the challenge, please visit https://collaborative-robotics.github.io/surgical-robotics-challenge/challenge-2021.html. To run the solution code please refer to the following [instructions](./challenge1_scripts/README.md).
 
+# Surgical Robotics Challenge
+For more information regarding the challenge, please visit [Surgical Robotics Challenge 2021-2022](https://surgical-robotics-ai.github.io/surgical-robotics-challenge/challenge-2021.html) or [Surgical Robotics Challenge 2023-2024](https://surgical-robotics-ai.github.io/surgical-robotics-challenge-2023/challenge-2023.html).
 
-# [Discussions Forum](https://github.com/collaborative-robotics/surgical_robotics_challenge/discussions)
-Please checkout the [Discussions Tab](https://github.com/collaborative-robotics/surgical_robotics_challenge/discussions) for asking questions, posting suggestions, connecting with the community and for keeping up to date with the challenge.
+# [Discussions Forum](https://github.com/surgical-robotics-ai/surgical_robotics_challenge/discussions)
+Please checkout the [Discussions Tab](https://github.com/surgical-robotics-ai/surgical_robotics_challenge/discussions) for asking questions, posting suggestions, connecting with the community and for keeping up to date with the challenge.
 
 # 1. Install AMBF and ROS Prerequisites
 Make sure that the correct version of ROS is installed and sourced on your system. For streaming the image and depth data out of AMBF, please also install the following ROS packages
@@ -42,7 +44,7 @@ Don't forget to build the repo using the instructions on AMBF's Readme
 
   You can alternatively use Dockerfiles to create Docker images by following the instructions here:
 
-  https://github.com/collaborative-robotics/docker_surgical_robotics_challenge
+  https://github.com/surgical-robotics-ai/docker_surgical_robotics_challenge
 
 
 # 3. Running the simulation

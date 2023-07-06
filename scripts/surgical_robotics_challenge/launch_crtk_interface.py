@@ -50,44 +50,9 @@ from sensor_msgs.msg import JointState
 from geometry_msgs.msg import PoseStamped, Pose, TwistStamped
 from PyKDL import Rotation, Vector, Frame
 from argparse import ArgumentParser
-from surgical_robotics_challenge.utils.utilities import get_boolean_from_opt
+from surgical_robotics_challenge.utils.utilities import *
 from simulation_manager import SimulationManager
 from enum import Enum
-
-
-def rot_mat_to_quat(cp):
-    R = Rotation(cp[0, 0], cp[0, 1], cp[0, 2],
-                 cp[1, 0], cp[1, 1], cp[1, 2],
-                 cp[2, 0], cp[2, 1], cp[2, 2])
-
-    return R.GetQuaternion()
-
-
-def np_mat_to_pose(cp):
-    pose = Pose()
-    pose.position.x = cp[0, 3]
-    pose.position.y = cp[1, 3]
-    pose.position.z = cp[2, 3]
-
-    Quat = rot_mat_to_quat(cp)
-
-    pose.orientation.x = Quat[0]
-    pose.orientation.y = Quat[1]
-    pose.orientation.z = Quat[2]
-    pose.orientation.w = Quat[3]
-    return pose
-
-
-def pose_to_frame(cp):
-    frame = Frame()
-    frame.p = Vector(cp.position.x,
-                     cp.position.y,
-                     cp.position.z)
-    frame.M = Rotation.Quaternion(cp.orientation.x,
-                                  cp.orientation.y,
-                                  cp.orientation.z,
-                                  cp.orientation.w)
-    return frame
 
 
 class Options:
@@ -122,11 +87,17 @@ class PSMCRTKWrapper:
         self.servo_jp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jp', JointState,
                                              self.servo_jp_cb, queue_size=1)
 
+        self.servo_jp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'move_jp', JointState,
+                                             self.move_jp_cb, queue_size=1)
+
         self.servo_jv_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jv', JointState,
                                              self.servo_jv_cb, queue_size=1)
 
         self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_cp', PoseStamped,
                                              self.servo_cp_cb, queue_size=1)
+
+        self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'move_cp', PoseStamped,
+                                             self.move_cp_cb, queue_size=1)
 
         self.servo_jaw_jp_sub = rospy.Subscriber(namespace + '/' + name + '/jaw/' + 'servo_jp', JointState,
                                                  self.servo_jaw_jp_cb, queue_size=1)
@@ -144,8 +115,15 @@ class PSMCRTKWrapper:
         frame = pose_to_frame(cp.pose)
         self.arm.servo_cp(frame)
 
+    def move_cp_cb(self, cp):
+        frame = pose_to_frame(cp.pose)
+        self.arm.move_cp(frame)
+
     def servo_jp_cb(self, js):
         self.arm.servo_jp(js.position)
+
+    def move_jp_cb(self, js):
+        self.arm.move_jp(js.position)
 
     def servo_jv_cb(self, js):
         self.arm.servo_jv(js.velocity)

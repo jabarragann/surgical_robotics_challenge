@@ -9,6 +9,7 @@ import numpy as np
 from std_msgs.msg import Empty
 from sensor_msgs.msg import Image
 from surgical_robotics_challenge.task_completion_report import TaskCompletionReport
+from surgical_robotics_challenge.utils.utilities import *
 
 
 def add_break(s):
@@ -31,21 +32,6 @@ class ArmType(Enum):
     ECM=3
 
 
-def frame_to_pose_stamped_msg(frame):
-    msg = PoseStamped()
-    msg.header.stamp = rospy.Time.now()
-    msg.pose.position.x = frame.p[0]
-    msg.pose.position.y = frame.p[1]
-    msg.pose.position.z = frame.p[2]
-
-    msg.pose.orientation.x = frame.M.GetQuaternion()[0]
-    msg.pose.orientation.y = frame.M.GetQuaternion()[1]
-    msg.pose.orientation.z = frame.M.GetQuaternion()[2]
-    msg.pose.orientation.w = frame.M.GetQuaternion()[3]
-
-    return msg
-
-
 def list_to_sensor_msg_position(jp_list):
     msg = JointState()
     msg.position = jp_list
@@ -65,7 +51,7 @@ class ARMInterface:
 
         self._cp_sub = rospy.Subscriber(arm_name + "/measured_cp", PoseStamped, self.cp_cb, queue_size=1)
         self._T_b_w_sub = rospy.Subscriber(arm_name + "/T_b_w", PoseStamped, self.T_b_w_cb, queue_size=1)
-        self._jp_sub = rospy.Subscriber(arm_name + "/measured_cp", JointState, self.jp_cb, queue_size=1)
+        self._jp_sub = rospy.Subscriber(arm_name + "/measured_js", JointState, self.jp_cb, queue_size=1)
         self.cp_pub = rospy.Publisher(arm_name + "/servo_cp", PoseStamped, queue_size=1)
         self.jp_pub = rospy.Publisher(arm_name + "/servo_jp", JointState, queue_size=1)
         self.jaw_jp_pub = rospy.Publisher(arm_name + '/jaw/' + 'servo_jp', JointState, queue_size=1)
@@ -94,7 +80,7 @@ class ARMInterface:
 
     def servo_cp(self, pose):
         if type(pose) == Frame:
-            msg = frame_to_pose_stamped_msg(pose)
+            msg = frame_to_pose_stamped(pose)
         else:
             msg = pose
         self.cp_pub.publish(msg)

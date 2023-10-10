@@ -14,9 +14,11 @@ def get_pos(ambf_obj):
 
 
 def get_rotation(ambf_obj):
-    return Rotation.RPY(ambf_obj.get_rpy()[0] / SimToSI.angular_factor,
-                        ambf_obj.get_rpy()[1] / SimToSI.angular_factor,
-                        ambf_obj.get_rpy()[2] / SimToSI.angular_factor)
+    return Rotation.RPY(
+        ambf_obj.get_rpy()[0] / SimToSI.angular_factor,
+        ambf_obj.get_rpy()[1] / SimToSI.angular_factor,
+        ambf_obj.get_rpy()[2] / SimToSI.angular_factor,
+    )
 
 
 def get_pose(ambf_obj):
@@ -41,7 +43,7 @@ def get_joint_factor(joint_type):
     elif joint_type == JointType.REVOLUTE:
         factor = SimToSI.angular_factor
     else:
-        raise 'ERROR! JOINT TYPE INVALID'
+        raise "ERROR! JOINT TYPE INVALID"
     return factor
 
 

@@ -150,7 +150,7 @@ BODY BlackGround:
     linear: 0.5
   visible: true
   collision groups: []
-  use material: true
+  use material: false 
   color components:
     ambient:
       level: 1.0

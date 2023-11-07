@@ -67,9 +67,10 @@ class PSMKinematicData:
     def __init__(self):
         self.num_links = 7
 
-        self.L_rcc = 0.4389  # From dVRK documentation x 10
-        self.L_tool = 0.416  # From dVRK documentation x 10
-        self.L_pitch2yaw = 0.009  # Fixed length from the palm joint to the pinch joint
+        # self.L_rcc = 0.4389  # From dVRK documentation x 10 (Old value)
+        self.L_rcc = 0.4318 # From dVRK documentation x 10 
+        self.L_tool = 0.4162  # From dVRK documentation x 10
+        self.L_pitch2yaw = 0.0091  # Fixed length from the palm joint to the pinch joint
         self.L_yaw2ctrlpnt = 0.0  # Fixed length from the pinch joint to the pinch tip
         self.L_tool2rcm_offset = 0.0229 # Distance between tool tip and the Remote Center of Motion at Home Pose
 

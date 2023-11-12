@@ -72,7 +72,7 @@ class PSMKinematicData:
         self.L_tool = 0.4162  # From dVRK documentation x 10
         self.L_pitch2yaw = 0.0091  # Fixed length from the palm joint to the pinch joint
         self.L_yaw2ctrlpnt = 0.0  # Fixed length from the pinch joint to the pinch tip
-        self.L_tool2rcm_offset = 0.0229 # Distance between tool tip and the Remote Center of Motion at Home Pose
+        self.L_tool2rcm_offset = self.L_rcc - self.L_tool # Distance between tool tip and the Remote Center of Motion at Home Pose
 
         # PSM DH Params
         # alpha | a | theta | d | offset | type

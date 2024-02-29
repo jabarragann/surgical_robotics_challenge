@@ -412,7 +412,7 @@ BODY tool pitch link:
       r: 0
       p: 0
       y: 0
-  passive: true
+  passive: false 
   publish children names: false
   publish joint names: false
   publish joint positions: false

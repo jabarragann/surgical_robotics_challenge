@@ -102,6 +102,7 @@ class PSM:
         self._joint_error_model = JointErrorsModel(self.name, self._num_joints)
         self.interpolater = Interpolation()
         self._force_exit_thread = False
+        self.executing_trajectory = False
         self._thread_lock = Lock()
         if add_joint_errors:
             max_errors_list = [0.] * self._num_joints  # No error
@@ -211,6 +212,7 @@ class PSM:
     
     def _execute_trajectory(self, trajectory_gen, execute_time, control_rate):
         self._thread_lock.acquire()
+        self.executing_trajectory = True
         self._force_exit_thread = False
         init_time = rospy.Time.now().to_sec()
         control_rate = rospy.Rate(control_rate)
@@ -221,6 +223,8 @@ class PSM:
             val = trajectory_gen.get_interpolated_x(np.array(cur_time, dtype=np.float32))
             self.servo_jp(val)
             control_rate.sleep()
+        
+        self.executing_trajectory = False
         self._thread_lock.release()
 
     def servo_jv(self, jv):
@@ -264,3 +268,45 @@ class PSM:
 
     def get_joint_names(self):
         return self.base.get_joint_names()
+
+class PSMBlocking(PSM):
+    def __init__(self, simulation_manager, name, add_joint_errors=True):
+        super().__init__(simulation_manager, name, add_joint_errors)
+
+        self.__setpoint_jp_arr = None
+        self.__setpoint_cp_arr = None
+        
+    def move_jp(self, jp_cmd, execute_time=0.5, control_rate=120):
+        self.__setpoint_jp_arr = jp_cmd
+        self.__setpoint_cp_arr = compute_FK(jp_cmd, 7)
+
+        super().move_jp(jp_cmd, execute_time, control_rate)
+        return self
+
+    def measured_jp(self):
+        return super().measured_jp()
+    
+    def measured_cp(self):
+        __measured_cp_arr = super().measured_cp()
+        return convert_mat_to_frame(__measured_cp_arr)
+    
+    def wait(self):
+        while self.executing_trajectory:
+            time.sleep(0.05)
+    
+    def setpoint_jp(self):
+        return np.array(self.__setpoint_jp_arr)
+        
+    def setpoint_cp(self):
+        return convert_mat_to_frame(self.__setpoint_cp_arr)
+
+if __name__ == "__main__":
+    from surgical_robotics_challenge.simulation_manager import SimulationManager
+    from surgical_robotics_challenge.psm_arm import PSMBlocking
+
+    simulation_manager = SimulationManager('my_example_client')
+    psm1 = PSMBlocking(simulation_manager, 'psm1')
+    psm1.move_jp([-0.3, -0.3, 0.120, 0.2, 0.3, -0.8]).wait()
+
+    print(psm1.measured_cp())
+

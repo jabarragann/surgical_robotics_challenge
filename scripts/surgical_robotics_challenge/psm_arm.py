@@ -71,7 +71,7 @@ class PSMJointMapping:
 pjm = PSMJointMapping()
 
 class PSM:
-    def __init__(self, simulation_manager, name, add_joint_errors=True):
+    def __init__(self, simulation_manager, name, add_joint_errors=False):
         self.simulation_manager = simulation_manager
         self.name = name
         self.base = self.simulation_manager.get_obj_handle(name + '/baselink')

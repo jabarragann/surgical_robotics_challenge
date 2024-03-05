@@ -102,7 +102,7 @@ void afProcessingShaderConfig::fill_new_materials_map()
 
             vector<int> rgb = shader_config_objects.get_rgb_at(idx);
             cMaterial *newMat = new cMaterial();
-            newMat->m_diffuse.set(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255, 1.0);
+            newMat->m_diffuse.set(rgb[0] / 255.0, rgb[1] / 255.0, rgb[2] / 255.0, 1.0);
             new_materials_map[kv.first] = newMat;
 
             cout << "Reconfiguring" << kv.first << endl;

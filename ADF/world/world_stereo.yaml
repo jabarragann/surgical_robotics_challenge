@@ -91,36 +91,27 @@ cameraL2:
   publish depth: False
   publish depth resolution: { width: 640, height: 480 }
   ## multipass: True
-  # plugins:
-  #   [
-  #     {
-  #       name: shader_plugin,
-  #       path: "../../build/",
-  #       filename: "libprepropressing_shader_config.so",
-  #     },
-  #   ]
-  # preprocessing shaders config:
-  #   main insertion link:
-  #     namespace: "/ambf/env/psm1/"
-  #     rgb: [0, 255, 0]
-  #   tool roll link:
-  #     namespace: "/ambf/env/psm1/"
-  #     rgb: [0, 255, 0]
-  #   tool pitch link:
-  #     namespace: "/ambf/env/psm1/"
-  #     rgb: [0, 255, 0]
-  #   tool yaw link:
-  #     namespace: "/ambf/env/psm1/"
-  #     rgb: [0, 255, 0]
-  #   tool gripper1 link:
-  #     namespace: "/ambf/env/psm1/"
-  #     rgb: [0, 255, 0]
-  #   tool gripper2 link:
-  #     namespace: "/ambf/env/psm1/"
-  #     rgb: [0, 255, 0]
-  #   Needle:
-  #     rgb: [255, 0, 0] # If namespace is empty, defaults to "/ambf/env/"
-  #   # Might be better to have the namespace grouping all the links together
+  plugins:
+    [
+      {
+        name: shader_plugin,
+        path: "../../build/",
+        filename: "libprepropressing_shader_config.so",
+      },
+    ]
+  preprocessing shaders config:
+    /ambf/env/psm2/: 
+      tool roll link: [0, 255, 0]
+      tool pitch link: [0, 245, 0]
+      tool gripper1 link: [0, 235, 0]
+      tool gripper2 link:  [0, 235, 0]
+    /ambf/env/psm1/:
+      tool roll link: [0, 225, 0]
+      tool pitch link: [0, 215, 0]
+      tool gripper1 link: [0, 195, 0]
+      tool gripper2 link: [0, 195, 0]
+    /ambf/env/:
+      Needle: [255, 0, 0] # If namespace is empty, defaults to "/ambf/env/"
 
 cameraR:
   namespace: cameras/

@@ -34,22 +34,32 @@ int main()
 
         for (it; it != shaders_config.end(); it++)
         {
-            string element = it->first.as<string>();
-            cout << "key: " << element << endl;
+            string ambf_namespace = it->first.as<string>();
+            cout << "namespace: " << ambf_namespace << endl;
 
-            vector<int> rgb_vals = shaders_config[element]["rgb"].as<vector<int>>();
-            if (shaders_config[element]["namespace"].IsDefined())
-            {
-                string af_namespace = shaders_config[element]["namespace"].as<string>();
-                cout << "namespace: " << af_namespace << endl;
-            }
+            YAML::Node objs_config = shaders_config[ambf_namespace];
+            YAML::Node::const_iterator obj_it = objs_config.begin();
 
-            // printing
-            for (std::size_t i = 0; i < rgb_vals.size(); ++i)
+            for (obj_it; obj_it != objs_config.end(); obj_it++)
             {
-                std::cout << rgb_vals[i] << " ";
+                string obj_name = obj_it->first.as<string>();
+                cout << "obj_name: " << obj_name << " ";
+
+                vector<int> rgb_vals = objs_config[obj_name].as<vector<int>>();
+
+                // if (shaders_config[element]["namespace"].IsDefined())
+                // {
+                //     string af_namespace = shaders_config[element]["namespace"].as<string>();
+                //     cout << "namespace: " << af_namespace << endl;
+                // }
+
+                // printing
+                for (std::size_t i = 0; i < rgb_vals.size(); ++i)
+                {
+                    std::cout << rgb_vals[i] << " ";
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
         }
         cout << "Map!" << endl;
     }

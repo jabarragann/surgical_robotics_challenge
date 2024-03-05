@@ -67,15 +67,19 @@ vector<ShaderConfigObject> afProcessingShaderConfig::parse_camera_config()
         YAML::Node shaders_config = camera_yaml_specs["preprocessing shaders config"];
         YAML::Node::const_iterator it = shaders_config.begin();
 
-        string body_name;
-        string body_namespace;
-        vector<int> rgb;
-
         for (it; it != shaders_config.end(); it++)
         {
-            body_name = it->first.as<string>();
-            ShaderConfigObject config_obj(body_name, shaders_config[body_name]);
-            shader_config_objects.push_back(config_obj);
+            string body_namespace = it->first.as<string>();
+            YAML::Node objs_config = shaders_config[body_namespace];
+            YAML::Node::const_iterator obj_it = objs_config.begin();
+
+            for (obj_it; obj_it != objs_config.end(); obj_it++)
+            {
+                string body_name = obj_it->first.as<string>();
+                vector<int> rgb = objs_config[body_name].as<vector<int>>();
+                ShaderConfigObject config_obj(body_namespace, body_name, rgb);
+                shader_config_objects.push_back(config_obj);
+            }
         }
     }
     else

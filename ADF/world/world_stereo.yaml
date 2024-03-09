@@ -85,7 +85,7 @@ cameraL2: #Segmentation camera
   publish image resolution: *cam_common_pub_img_res
   publish depth: False
   publish depth resolution: *cam_common_pub_depth_res
-  ## multipass: True
+  # multipass: True
   plugins:
     [
       {
@@ -118,10 +118,6 @@ cameraR:
   field view angle: *cam_common_fov 
   monitor: 2
   parent: BODY CameraFrame
-  # preprocessing shaders:
-  #   path: ../../ambf_shaders/preprocessing
-  #   vertex: shader.vs
-  #   fragment: shader.fs
   publish image: False
   publish image interval: 5
   publish image resolution: *cam_common_pub_img_res

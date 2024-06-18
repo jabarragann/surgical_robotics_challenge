@@ -216,7 +216,7 @@ class Task_1_Evaluation:
         """
         while not self._done:
             time.sleep(1.0)
-            print("[", time.time(), "] Waiting for task 1 completion report")
+            print('[', time.time(), '] Waiting for task completion report')
 
         T_nINw = self._needle_kinematics.get_pose()
 
@@ -567,7 +567,7 @@ class Task_2_Evaluation:
             self.compute_needle_hole_proximity_event(SKF)
             t = t + 0.01
             if t % 1.0 >= 0.99:
-                print(time.time(), " ) Waiting for task 2 completion report")
+                print(time.time(), ' ) Waiting for task completion report')
 
         # Record the final trajectories
         SKF = self.capture_scene_kinematics()
@@ -782,7 +782,7 @@ class Task_3_Evaluation:
             self.compute_needle_hole_proximity_event(SKF)
             t = t + 0.01
             if t % 1.0 >= 0.99:
-                print(time.time(), " ) Waiting for task 3 completion report")
+                print(time.time(), ' ) Waiting for task completion report')
 
         # Record the final trajectories
         SKF = self.capture_scene_kinematics()
@@ -852,24 +852,12 @@ class Task_3_Evaluation:
         self._report.print_report()
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument(
-        "-t", action="store", dest="team_name", help="Team Name", default="test_team"
-    )
-    parser.add_argument(
-        "-e", action="store", dest="task_evaluation", help="Task to evaluate (1,2 or 3)"
-    )
-
-    parsed_args = parser.parse_args()
-    print("Specified Arguments")
-    print(parsed_args)
-
-    client = Client("surgical_robotics_task_evaluation")
+def evaluate(args):
+    client = Client('surgical_robotics_task_evaluation')
     client.connect()
 
-    team_name = parsed_args.team_name
-    task_to_evaluate = int(parsed_args.task_evaluation)
+    team_name = args.team_name
+    task_to_evaluate = int(args.task_evaluation)
     if task_to_evaluate not in [1, 2, 3]:
         raise Exception("ERROR! Acceptable task evaluation options (-e option) are 1, 2 or 3")
 
@@ -882,4 +870,16 @@ if __name__ == "__main__":
         task_eval = Task_3_Evaluation(client, team_name)
 
     task_eval.evaluate()
-    print(OK_STR("GOOD BYE"))
+    print(OK_STR('GOOD BYE'))
+
+
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    parser.add_argument('-t', action='store', dest='team_name', help='Team Name', default='test_team')
+    parser.add_argument('-e', action='store', dest='task_evaluation', help='Task to evaluate (1,2 or 3)')
+
+    parsed_args = parser.parse_args()
+    print('Specified Arguments')
+    print(parsed_args)
+    evaluate(parsed_args)
+

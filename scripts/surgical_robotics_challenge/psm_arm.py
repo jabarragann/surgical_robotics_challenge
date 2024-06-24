@@ -273,44 +273,44 @@ class PSM:
         return self.base.get_joint_names()
 
 ## This class probably is not working with latest codebase changes
-class PSMBlocking(PSM):
-    def __init__(self, simulation_manager, name, add_joint_errors=True):
-        super().__init__(simulation_manager, name, add_joint_errors)
+# class PSMBlocking(PSM):
+#     def __init__(self, simulation_manager, name, add_joint_errors=True):
+#         super().__init__(simulation_manager, name, add_joint_errors)
 
-        self.__setpoint_jp_arr = None
-        self.__setpoint_cp_arr = None
+#         self.__setpoint_jp_arr = None
+#         self.__setpoint_cp_arr = None
         
-    def move_jp(self, jp_cmd, execute_time=0.5, control_rate=120):
-        self.__setpoint_jp_arr = jp_cmd
-        self.__setpoint_cp_arr = compute_FK(jp_cmd, 7)
+#     def move_jp(self, jp_cmd, execute_time=0.5, control_rate=120):
+#         self.__setpoint_jp_arr = jp_cmd
+#         self.__setpoint_cp_arr = compute_FK(jp_cmd, 7)
 
-        super().move_jp(jp_cmd, execute_time, control_rate)
-        return self
+#         super().move_jp(jp_cmd, execute_time, control_rate)
+#         return self
 
-    def measured_jp(self):
-        return super().measured_jp()
+#     def measured_jp(self):
+#         return super().measured_jp()
     
-    def measured_cp(self):
-        __measured_cp_arr = super().measured_cp()
-        return convert_mat_to_frame(__measured_cp_arr)
+#     def measured_cp(self):
+#         __measured_cp_arr = super().measured_cp()
+#         return convert_mat_to_frame(__measured_cp_arr)
     
-    def wait(self):
-        while self.executing_trajectory:
-            time.sleep(0.05)
+#     def wait(self):
+#         while self.executing_trajectory:
+#             time.sleep(0.05)
     
-    def setpoint_jp(self):
-        return np.array(self.__setpoint_jp_arr)
+#     def setpoint_jp(self):
+#         return np.array(self.__setpoint_jp_arr)
         
-    def setpoint_cp(self):
-        return convert_mat_to_frame(self.__setpoint_cp_arr)
+#     def setpoint_cp(self):
+#         return convert_mat_to_frame(self.__setpoint_cp_arr)
 
-if __name__ == "__main__":
-    from surgical_robotics_challenge.simulation_manager import SimulationManager
-    from surgical_robotics_challenge.psm_arm import PSMBlocking
+# if __name__ == "__main__":
+#     from surgical_robotics_challenge.simulation_manager import SimulationManager
+#     from surgical_robotics_challenge.psm_arm import PSMBlocking
 
-    simulation_manager = SimulationManager('my_example_client')
-    psm1 = PSMBlocking(simulation_manager, 'psm1')
-    psm1.move_jp([-0.3, -0.3, 0.120, 0.2, 0.3, -0.8]).wait()
+#     simulation_manager = SimulationManager('my_example_client')
+#     psm1 = PSMBlocking(simulation_manager, 'psm1')
+#     psm1.move_jp([-0.3, -0.3, 0.120, 0.2, 0.3, -0.8]).wait()
 
-    print(psm1.measured_cp())
+#     print(psm1.measured_cp())
 

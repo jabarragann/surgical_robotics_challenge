@@ -108,7 +108,7 @@ if __name__ == "__main__":
     theta = np.linspace(np.pi / 3, np.pi, num=8).reshape((-1, 1))
 
     # Scale salient points to match unit conversion in simulation manager
-    radius = 0.01018 / SimToSI.linear_factor
+    radius = 0.0115 / SimToSI.linear_factor
     needle_salient = radius * np.hstack((np.cos(theta), np.sin(theta), theta * 0))
 
     # Project points
@@ -132,7 +132,9 @@ if __name__ == "__main__":
 
     # Display image
     for i in range(img_pt.shape[0]):
-        img = cv2.circle(img, (int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])), 3, (255, 0, 0), -1)
+        img = cv2.circle(
+            img, (int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])), 3, (255, 0, 0), -1
+        )
 
     cv2.imshow("img", img)
     cv2.waitKey(0)

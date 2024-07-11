@@ -1,11 +1,16 @@
+from typing import Union
 from ambf_client import Client
+from ambf_base_object import BaseObject
+from ambf_actuator import Actuator
+from ambf_rigid_body import RigidBody
+from ambf_ghost_object import GhostObject
 import surgical_robotics_challenge.units_conversion as units_conversion
 
 
 class SimulationObject:
-    def __init__(self, ambf_object):
+    def __init__(self, ambf_object: RigidBody):
         self._object = ambf_object
-        self._joint_type = None # To distinguish between revolute and prismatic joints
+        self._joint_type = None  # To distinguish between revolute and prismatic joints
 
     def set_joint_types(self, joint_types):
         self._joint_type = joint_types
@@ -18,8 +23,8 @@ class SimulationObject:
 
     def get_pose(self):
         return units_conversion.get_pose(self._object)
-    
-    def get_ros_name(self)->str:
+
+    def get_ros_name(self) -> str:
         return self._object._name
 
     def set_pos(self, pos):
@@ -63,16 +68,52 @@ class SimulationManager:
         self._client = Client(name)
         self._client.connect()
 
-    def get_obj_handle(self, name, required: bool= False)->SimulationObject:
+    def _get_obj_handle(self, name, required: bool = False) -> Union[BaseObject, None]:
         ambf_object = self._client.get_obj_handle(name)
-        
-        if required and ambf_object is None:
-            raise RuntimeError(f"SimulationObject {name} is required not found in the simulation")
 
-        if ambf_object:
+        if required and ambf_object is None:
+            raise RuntimeError(
+                f"Object {name} is required but was not found in the simulation"
+            )
+
+        return ambf_object
+
+    def get_obj_handle(self, name, required: bool = False) -> SimulationObject:
+        ambf_object = self._get_obj_handle(name, required)
+
+        if isinstance(ambf_object, RigidBody):
             return SimulationObject(ambf_object)
-        else:
+        elif ambf_object is None and not required:
             return None
+        else:
+            raise RuntimeError(
+                f"Object {name} should be a RigidBody but is instead a {type(ambf_object)}"
+            )
+
+    def get_simulation_actuator(self, name, required: bool = False) -> Actuator:
+        ambf_object = self._get_obj_handle(name, required)
+
+        if isinstance(ambf_object, Actuator):
+            return ambf_object 
+        elif ambf_object is None and not required:
+            return None
+        else:
+            raise RuntimeError(
+                f"Object {name} should be a RigidBody but is instead a {type(ambf_object)}"
+            )
+
+
+    def get_simulation_ghost(self, name, required: bool = False) -> GhostObject:
+        ambf_object = self._get_obj_handle(name, required)
+
+        if isinstance(ambf_object, GhostObject):
+            return ambf_object 
+        elif ambf_object is None and not required:
+            return None
+        else:
+            raise RuntimeError(
+                f"Object {name} should be a GhostObject but is instead a {type(ambf_object)}"
+            )
 
     def get_world_handle(self):
         return self._client.get_world_handle()

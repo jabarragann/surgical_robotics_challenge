@@ -94,10 +94,10 @@ class PSM:
         self.palm_joint_IK = self.simulation_manager.get_obj_handle(name + '_palm_joint_ik')
         self.target_FK = self.simulation_manager.get_obj_handle(name + '_target_fk')
 
-        self.left_finger_ghost = self.simulation_manager._client.get_obj_handle(name + '/left_finger_ghost')
-        self.right_finger_ghost = self.simulation_manager._client.get_obj_handle(name + '/right_finger_ghost')
+        self.left_finger_ghost = self.simulation_manager.get_simulation_ghost(name + '/left_finger_ghost', required=True)
+        self.right_finger_ghost = self.simulation_manager.get_simulation_ghost(name + '/right_finger_ghost', required=True)
         self.actuators = []
-        self.actuators.append(self.simulation_manager._client.get_obj_handle(name + '/Actuator0'))
+        self.actuators.append(self.simulation_manager.get_simulation_actuator(name + '/Actuator0', required=True))
         time.sleep(0.5)
         self.grasped = [False, False, False]
         self.graspable_objs_prefix = ["Needle", "Thread", "Puzzle"]

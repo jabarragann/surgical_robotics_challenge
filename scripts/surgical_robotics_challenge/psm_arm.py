@@ -46,7 +46,7 @@
 from surgical_robotics_challenge.kinematics.psmKinematics import *
 from surgical_robotics_challenge.utils.joint_errors_model import JointErrorsModel
 from surgical_robotics_challenge.utils import coordinate_frames
-import rospy
+# import rospy
 import time
 from threading import Thread, Lock
 from surgical_robotics_challenge.utils.interpolation import Interpolation
@@ -76,7 +76,7 @@ class PSM:
     def __init__(self, simulation_manager:SimulationManager, name, add_joint_errors=False, detect_tool_id=True, tool_id=PSM_TYPE_DEFAULT):
         self.simulation_manager = simulation_manager
         self.name = name
-        self.base = self.simulation_manager.get_obj_handle(self.name + '/baselink', required=True) 
+        self.base = self.simulation_manager.get_obj_handle(self.name + '/baselink', required=True)
         self.tool_id_body = self.simulation_manager.get_obj_handle(name + '/tool_id', required=True)
 
         if detect_tool_id:
@@ -131,11 +131,11 @@ class PSM:
 
     def get_rostopic_name(self):
         return self.base.get_ros_name()
-    
+
     def get_tool_id(self) -> int:
         # Assuming the rostopic name is in the format /ambf/env/psm1/tool_id/420006
         rostopic_name = self.tool_id_body.get_ros_name()
-        tool_id = int(rostopic_name.split('/')[-1])
+        tool_id = '420006' # int(rostopic_name.split('/')[-1])
         return tool_id
 
     def validate_tool_id(self):
@@ -180,7 +180,9 @@ class PSM:
     def run_grasp_logic(self, jaw_angle):
         if len(self.actuators) == 0:
             return
-        
+
+        return True
+
         if jaw_angle < self.grasp_actuation_jaw_angle:
             if not self.grasped[0]:
                 # if self.left_finger_ghost is not None and self.right_finger_ghost is not None:
@@ -242,20 +244,21 @@ class PSM:
         trajectory_execute_thread = Thread(target=self._execute_trajectory, args=(self.interpolater, execute_time, control_rate,))
         self._force_exit_thread = True
         trajectory_execute_thread.start()
-    
+
     def _execute_trajectory(self, trajectory_gen, execute_time, control_rate):
-        self._thread_lock.acquire()
-        self._force_exit_thread = False
-        init_time = rospy.Time.now().to_sec()
-        control_rate = rospy.Rate(control_rate)
-        while not rospy.is_shutdown() and not self._force_exit_thread:
-            cur_time = rospy.Time.now().to_sec() - init_time
-            if cur_time > execute_time:
-                break
-            val = trajectory_gen.get_interpolated_x(np.array(cur_time, dtype=np.float32))
-            self.servo_jp(val)
-            control_rate.sleep()
-        self._thread_lock.release()
+        # self._thread_lock.acquire()
+        # self._force_exit_thread = False
+        # init_time = rospy.Time.now().to_sec()
+        # control_rate = rospy.Rate(control_rate)
+        # while not rospy.is_shutdown() and not self._force_exit_thread:
+        #     cur_time = rospy.Time.now().to_sec() - init_time
+        #     if cur_time > execute_time:
+        #         break
+        #     val = trajectory_gen.get_interpolated_x(np.array(cur_time, dtype=np.float32))
+        #     self.servo_jp(val)
+        #     control_rate.sleep()
+        # self._thread_lock.release()
+        return
 
     def servo_jv(self, jv):
         print("Setting Joint Vel", jv)

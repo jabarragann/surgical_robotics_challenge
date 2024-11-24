@@ -172,7 +172,7 @@ if __name__ == "__main__":
         print('Exiting')
 
     else:
-        while True: # rospy.is_shutdown():
+        while not simulation_manager.ral.is_shutdown(): 
             for cont in controllers:
                 cont.run()
             time.sleep(0.005)

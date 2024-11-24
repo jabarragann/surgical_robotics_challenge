@@ -1,12 +1,14 @@
-
 from abc import ABC, abstractmethod
-
 
 
 class RAL_Abstract(ABC):
 
     @abstractmethod
-    def identify(self)->str:
+    def __init__(self, node):
+        pass
+
+    @abstractmethod
+    def identify(self) -> str:
         """
         Return either ROS1 or ROS2
         """

@@ -1,11 +1,12 @@
 from ambf_client import Client
 import surgical_robotics_challenge.units_conversion as units_conversion
+from surgical_robotics_challenge import ral
 
 
 class SimulationObject:
     def __init__(self, ambf_object):
         self._object = ambf_object
-        self._joint_type = None # To distinguish between revolute and prismatic joints
+        self._joint_type = None  # To distinguish between revolute and prismatic joints
 
     def set_joint_types(self, joint_types):
         self._joint_type = joint_types
@@ -18,8 +19,8 @@ class SimulationObject:
 
     def get_pose(self):
         return units_conversion.get_pose(self._object)
-    
-    def get_ros_name(self)->str:
+
+    def get_ros_name(self) -> str:
         return self._object._name
 
     def set_pos(self, pos):
@@ -59,15 +60,26 @@ class SimulationObject:
 
 
 class SimulationManager:
+    """
+    Class interfacing with AMBF Client.
+    """
+
     def __init__(self, name):
         self._client = Client(name)
         self._client.connect()
 
-    def get_obj_handle(self, name, required: bool= False)->SimulationObject:
+        # Either a rclpy.node (ROS2) or None (ROS1)
+        self._node = self._client._node
+
+        self.ral = ral(node=self._node)
+
+    def get_obj_handle(self, name, required: bool = False) -> SimulationObject:
         ambf_object = self._client.get_obj_handle(name)
-        
+
         if required and ambf_object is None:
-            raise RuntimeError(f"SimulationObject {name} is required not found in the simulation")
+            raise RuntimeError(
+                f"SimulationObject {name} is required not found in the simulation"
+            )
 
         if ambf_object:
             return SimulationObject(ambf_object)
@@ -76,3 +88,6 @@ class SimulationManager:
 
     def get_world_handle(self):
         return self._client.get_world_handle()
+
+    def get_client_handle(self):
+        return self._node

@@ -21,4 +21,4 @@ class RAL_ROS1(RAL_Abstract):
         return rospy.Rate(rate_hz)
 
     def now(self):
-        return rospy.Time.now()
+        return rospy.Time.now().to_sec()

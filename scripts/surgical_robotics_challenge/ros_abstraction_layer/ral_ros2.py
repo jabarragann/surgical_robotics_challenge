@@ -20,6 +20,8 @@ class RAL_ROS2(RAL_Abstract):
     def create_rate(self, rate_hz):
         return self.node.create_rate(rate_hz)
 
-    def now(self):
+    def now(self) -> float:
         clock = self.node.get_clock()
-        return clock.now()
+        time = clock.now().seconds_nanoseconds()
+        time = time[0] + time[1] * 1e-9
+        return time

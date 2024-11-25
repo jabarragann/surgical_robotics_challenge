@@ -49,10 +49,11 @@ import time
 
 # import rospy
 from threading import Thread
+from surgical_robotics_challenge import SimulationManager
 
 
 class ECM:
-    def __init__(self, simulation_manager, name):
+    def __init__(self, simulation_manager: SimulationManager, name):
         self.simulation_manager = simulation_manager
         self.name = name
         self.camera_handle = self.simulation_manager.get_obj_handle(name)
@@ -98,8 +99,9 @@ class ECM:
                     pos_goal_reached = True
                     rot_goal_reached = True
 
-                # if rospy.is_shutdown():
-                #    self._force_exit_thread = True
+                if self.simulation_manager.ral.is_shutdown():
+                    self._force_exit_thread = True
+
                 time.sleep(0.01)
             self._thread_busy = False
         except:

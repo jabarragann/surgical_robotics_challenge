@@ -27,5 +27,8 @@ class RAL_Abstract(ABC):
         pass
 
     @abstractmethod
-    def now(self):
+    def now(self) -> float:
+        """
+        Return time in seconds
+        """
         pass

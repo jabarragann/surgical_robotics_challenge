@@ -152,14 +152,8 @@ class PSM:
         self._num_joints = 6
         self._ik_solution = np.zeros([self._num_joints])
         self._last_jp = np.zeros([self._num_joints])
-        self._joints_error_mask = [
-            1,
-            1,
-            1,
-            0,
-            0,
-            0,
-        ]  # Only apply error to joints with 1's
+
+        self._joints_error_mask = [ 1, 1, 1, 0, 0, 0]  # fmt: skip # Only apply error to joints with 1's
         self._joint_error_model = JointErrorsModel(self.name, self._num_joints)
         self.interpolater = Interpolation()
         self._force_exit_thread = False
@@ -230,6 +224,7 @@ class PSM:
         if len(self.actuators) == 0:
             return
 
+        ## Disable grasping logic as AMBF-ros2 as contact grasping hasn't been migrated yet.
         return True
 
         if jaw_angle < self.grasp_actuation_jaw_angle:
@@ -310,23 +305,34 @@ class PSM:
         self._force_exit_thread = True
         trajectory_execute_thread.start()
 
-    def _execute_trajectory(self, trajectory_gen, execute_time, control_rate):
-        # self._thread_lock.acquire()
-        # self._force_exit_thread = False
-        # init_time = rospy.Time.now().to_sec()
-        # control_rate = rospy.Rate(control_rate)
-        # while not rospy.is_shutdown() and not self._force_exit_thread:
-        #     cur_time = rospy.Time.now().to_sec() - init_time
-        #     if cur_time > execute_time:
-        #         break
-        #     val = trajectory_gen.get_interpolated_x(np.array(cur_time, dtype=np.float32))
-        #     self.servo_jp(val)
-        #     control_rate.sleep()
-        # self._thread_lock.release()
+    def _execute_trajectory(
+        self, trajectory_gen: Interpolation, execute_time, control_rate: float
+    ):
+        self._thread_lock.acquire()
+        self._force_exit_thread = False
+        init_time = self.simulation_manager.ral.now()
+        control_rate_handle = self.simulation_manager.ral.create_rate(control_rate)
+
+        while (
+            not self.simulation_manager.ral.is_shutdown()
+            and not self._force_exit_thread
+        ):
+            cur_time = self.simulation_manager.ral.now() - init_time
+
+            if cur_time > execute_time:
+                break
+
+            val = trajectory_gen.get_interpolated_x(
+                np.array(cur_time, dtype=np.float32)
+            )
+            self.servo_jp(val)
+            control_rate_handle.sleep()
+
+        self._thread_lock.release()
+
         return
 
     def servo_jv(self, jv):
-        print("Setting Joint Vel", jv)
         self.base.set_joint_vel(0, jv[0])
         self.base.set_joint_vel(1, jv[1])
         self.base.set_joint_vel(2, jv[2])

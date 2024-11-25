@@ -176,6 +176,8 @@ class PSM:
     def get_tool_id(self) -> int:
         # Assuming the rostopic name is in the format /ambf/env/psm1/tool_id/420006
         rostopic_name = self.tool_id_body.get_ros_name()
+
+        ## TODO: tool_id is hard coded right now, need to fix this
         tool_id = "420006"  # int(rostopic_name.split('/')[-1])
         return tool_id
 
@@ -224,6 +226,7 @@ class PSM:
         if len(self.actuators) == 0:
             return
 
+        ## TODO: Add grasping logic here
         ## Disable grasping logic as AMBF-ros2 as contact grasping hasn't been migrated yet.
         return True
 

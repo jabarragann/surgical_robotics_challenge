@@ -2,8 +2,6 @@ import os
 
 __all__ = []
 
-print("ral importing")
-
 try:
     __ros_version_string = os.environ["ROS_VERSION"]
 except:

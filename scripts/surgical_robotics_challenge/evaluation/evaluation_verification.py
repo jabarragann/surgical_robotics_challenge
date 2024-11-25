@@ -15,11 +15,11 @@ import math
 from argparse import ArgumentParser
 
 
-evaluation_prefix = '/surgical_robotics_challenge/completion_report/'
+evaluation_prefix = "/surgical_robotics_challenge/completion_report/"
 
 pi_2 = math.pi / 2.0
 
-first_last_lin_hole_offset = Frame(Rotation.RPY(0, 0, 0), Vector(0., 0., 0.04))
+first_last_lin_hole_offset = Frame(Rotation.RPY(0, 0, 0), Vector(0.0, 0.0, 0.04))
 entry_hole_offset = Frame(Rotation.RPY(-pi_2, pi_2, 0), Vector(0, 0, 0))
 exit_hole_offset = Frame(Rotation.RPY(0, -pi_2, -pi_2), Vector(0, 0, 0))
 
@@ -27,8 +27,8 @@ exit_hole_offset = Frame(Rotation.RPY(0, -pi_2, -pi_2), Vector(0, 0, 0))
 def task_1_verification(simulaiton_manager, team_name):
     time.sleep(0.5)
     report = task_completion_report.TaskCompletionReport(team_name)
-    n = simulaiton_manager.get_obj_handle('Needle')
-    e = simulaiton_manager.get_obj_handle('CameraFrame')
+    n = simulaiton_manager.get_obj_handle("Needle")
+    e = simulaiton_manager.get_obj_handle("CameraFrame")
     time.sleep(0.5)
     T_n_w = n.get_pose()
     T_e_w = e.get_pose()
@@ -41,12 +41,12 @@ def task_1_verification(simulaiton_manager, team_name):
 
 def move_needle_through_holes(simulation_manager, num_holes):
     world = simulation_manager.get_world_handle()
-    needle = simulation_manager.get_obj_handle('Needle')
+    needle = simulation_manager.get_obj_handle("Needle")
     entry_holes = []
     exit_holes = []
     for i in range(num_holes):
-        entry_holes.append(simulation_manager.get_obj_handle('Entry' + str(i + 1)))
-        exit_holes.append(simulation_manager.get_obj_handle('Exit' + str(i + 1)))
+        entry_holes.append(simulation_manager.get_obj_handle("Entry" + str(i + 1)))
+        exit_holes.append(simulation_manager.get_obj_handle("Exit" + str(i + 1)))
 
     time.sleep(0.3)
     world.reset_bodies()
@@ -55,10 +55,14 @@ def move_needle_through_holes(simulation_manager, num_holes):
     start_pose = needle.get_pose()
     pose_control_points = [start_pose]
     for i in range(num_holes):
-        pose_control_points.append(entry_holes[i].get_pose() * first_last_lin_hole_offset * entry_hole_offset)
+        pose_control_points.append(
+            entry_holes[i].get_pose() * first_last_lin_hole_offset * entry_hole_offset
+        )
         pose_control_points.append(entry_holes[i].get_pose() * entry_hole_offset)
         pose_control_points.append(exit_holes[i].get_pose() * exit_hole_offset)
-        pose_control_points.append(exit_holes[i].get_pose() * first_last_lin_hole_offset * exit_hole_offset)
+        pose_control_points.append(
+            exit_holes[i].get_pose() * first_last_lin_hole_offset * exit_hole_offset
+        )
 
     interpolater = Interpolation()
 
@@ -71,11 +75,11 @@ def move_needle_through_holes(simulation_manager, num_holes):
         v2 = [0, 0, 0, 0, 0, 0]
         a1 = [0, 0, 0, 0, 0, 0]
         a2 = [0, 0, 0, 0, 0, 0]
-        t1 = 0.
-        t2 = 1.
+        t1 = 0.0
+        t2 = 1.0
         interpolater.compute_interpolation_params(p1, p2, v1, v2, a1, a2, t1, t2)
         start_time = time.time()
-        delta_t = 0.
+        delta_t = 0.0
         while delta_t < t2:
             delta_t = time.time() - start_time
             if delta_t >= t2:
@@ -103,17 +107,18 @@ def frame_to_pose_vec(F):
 
 
 def pose_vec_to_frame(v):
-    return Frame(Rotation.RPY(v[3], v[4], v[5]),
-                 Vector(v[0], v[1], v[2]))
+    return Frame(Rotation.RPY(v[3], v[4], v[5]), Vector(v[0], v[1], v[2]))
 
 
 def verification(args):
-    simulation_manager = SimulationManager('surgical_robotics_challenge_verification')
+    simulation_manager = SimulationManager("surgical_robotics_challenge_verification")
 
     team_name = args.team_name
     task_to_evaluate = int(args.task_evaluation)
     if task_to_evaluate not in [1, 2, 3]:
-        raise Exception('ERROR! Acceptable task evaluation options (-e option) are 1, 2 or 3')
+        raise Exception(
+            "ERROR! Acceptable task evaluation options (-e option) are 1, 2 or 3"
+        )
 
     if task_to_evaluate == 1:
         task_1_verification(simulation_manager, team_name)
@@ -122,15 +127,19 @@ def verification(args):
     elif task_to_evaluate == 3:
         tast_3_verification(simulation_manager, team_name)
 
-    print(OK_STR('GOOD BYE'))
+    print(OK_STR("GOOD BYE"))
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('-t', action='store', dest='team_name', help='Team Name', default='test_team')
-    parser.add_argument('-e', action='store', dest='task_evaluation', help='Task to evaluate (1 or 2)')
+    parser.add_argument(
+        "-t", action="store", dest="team_name", help="Team Name", default="test_team"
+    )
+    parser.add_argument(
+        "-e", action="store", dest="task_evaluation", help="Task to evaluate (1 or 2)"
+    )
 
     parsed_args = parser.parse_args()
-    print('Specified Arguments')
+    print("Specified Arguments")
     print(parsed_args)
     verification(parsed_args)

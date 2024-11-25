@@ -65,8 +65,13 @@ class ControllerInterface:
             self.active_psm = next(self.psm_arms)
         else:
             self.active_psm = self.psm_arms.next()
-        self.gui = JointGUI('ECM JP', 4, ["ecm j0", "ecm j1", "ecm j2", "ecm j3"], lower_lims=cam.get_lower_limits(),
-                            upper_lims=cam.get_upper_limits())
+        self.gui = JointGUI(
+            "ECM JP",
+            4,
+            ["ecm j0", "ecm j1", "ecm j2", "ecm j3"],
+            lower_lims=cam.get_lower_limits(),
+            upper_lims=cam.get_upper_limits(),
+        )
 
         self.cmd_xyz = self.active_psm.T_t_b_home.p
         self.cmd_rpy = None
@@ -81,7 +86,7 @@ class ControllerInterface:
     def switch_psm(self):
         self._update_T_c_b = True
         self.active_psm = self.psm_arms.next()
-        print('Switching Control of Next PSM Arm: ', self.active_psm.name)
+        print("Switching Control of Next PSM Arm: ", self.active_psm.name)
 
     def update_T_b_c(self):
         if self._update_T_c_b or self._ecm.has_pose_changed():
@@ -139,42 +144,70 @@ class ControllerInterface:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('-c', action='store', dest='client_name', help='Client Name', default='mtm_sim_teleop')
-    parser.add_argument('-t', action='store', dest='tool_id', help='Surgical Instrument Serial Number', default='400006')
-    parser.add_argument('--one', action='store', dest='run_psm_one', help='Control PSM1', default=True)
-    parser.add_argument('--two', action='store', dest='run_psm_two', help='Control PSM2', default=True)
-    parser.add_argument('--three', action='store', dest='run_psm_three', help='Control PSM3', default=False)
-    parser.add_argument('--mtm', action='store', dest='mtm_name', help='Name of MTM to Bind', default='/dvrk/MTMR/')
+    parser.add_argument(
+        "-c",
+        action="store",
+        dest="client_name",
+        help="Client Name",
+        default="mtm_sim_teleop",
+    )
+    parser.add_argument(
+        "-t",
+        action="store",
+        dest="tool_id",
+        help="Surgical Instrument Serial Number",
+        default="400006",
+    )
+    parser.add_argument(
+        "--one", action="store", dest="run_psm_one", help="Control PSM1", default=True
+    )
+    parser.add_argument(
+        "--two", action="store", dest="run_psm_two", help="Control PSM2", default=True
+    )
+    parser.add_argument(
+        "--three",
+        action="store",
+        dest="run_psm_three",
+        help="Control PSM3",
+        default=False,
+    )
+    parser.add_argument(
+        "--mtm",
+        action="store",
+        dest="mtm_name",
+        help="Name of MTM to Bind",
+        default="/dvrk/MTMR/",
+    )
 
     parsed_args = parser.parse_args()
-    print('Specified Arguments')
+    print("Specified Arguments")
     print(parsed_args)
 
-    mtm_valid_list = ['/MTMR/, /MTML/', '/dvrk/MTMR/', '/dvrk/MTML/', 'MTMR', 'MTML']
+    mtm_valid_list = ["/MTMR/, /MTML/", "/dvrk/MTMR/", "/dvrk/MTML/", "MTMR", "MTML"]
     if parsed_args.mtm_name in mtm_valid_list:
-        if parsed_args.mtm_name in ['MTMR', 'MTML']:
-            parsed_args.mtm_name = '/' + parsed_args.mtm_name + '/'
+        if parsed_args.mtm_name in ["MTMR", "MTML"]:
+            parsed_args.mtm_name = "/" + parsed_args.mtm_name + "/"
     else:
-        print('ERROR! --mtm argument should be one of the following', mtm_valid_list)
+        print("ERROR! --mtm argument should be one of the following", mtm_valid_list)
         raise ValueError
 
-    if parsed_args.run_psm_one in ['True', 'true', '1']:
+    if parsed_args.run_psm_one in ["True", "true", "1"]:
         parsed_args.run_psm_one = True
-    elif parsed_args.run_psm_one in ['False', 'false', '0']:
+    elif parsed_args.run_psm_one in ["False", "false", "0"]:
         parsed_args.run_psm_one = False
 
-    if parsed_args.run_psm_two in ['True', 'true', '1']:
+    if parsed_args.run_psm_two in ["True", "true", "1"]:
         parsed_args.run_psm_two = True
-    elif parsed_args.run_psm_two in ['False', 'false', '0']:
+    elif parsed_args.run_psm_two in ["False", "false", "0"]:
         parsed_args.run_psm_two = False
-    if parsed_args.run_psm_three in ['True', 'true', '1']:
+    if parsed_args.run_psm_three in ["True", "true", "1"]:
         parsed_args.run_psm_three = True
-    elif parsed_args.run_psm_three in ['False', 'false', '0']:
+    elif parsed_args.run_psm_three in ["False", "false", "0"]:
         parsed_args.run_psm_three = False
 
     simulation_manager = SimulationManager(parsed_args.client_name)
 
-    cam = ECM(simulation_manager, 'CameraFrame')
+    cam = ECM(simulation_manager, "CameraFrame")
     time.sleep(0.5)
 
     controllers = []
@@ -185,8 +218,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_one is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm1'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm1"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False, tool_id=tool_id)
         if psm.is_present():
             T_psmtip_c = coordinate_frames.PSM1.T_tip_cam
@@ -197,8 +230,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_two is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm2'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm2"
+        print("LOADING CONTROLLER FOR ", arm_name)
         theta_base = -0.7
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False, tool_id=tool_id)
         if psm.is_present():
@@ -210,8 +243,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_three is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm3'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm3"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False, tool_id=tool_id)
         if psm.is_present():
             T_psmtip_c = coordinate_frames.PSM3.T_tip_cam
@@ -220,12 +253,14 @@ if __name__ == "__main__":
             psm_arms.append(psm)
 
     if len(psm_arms) == 0:
-        print('No Valid PSM Arms Specified')
-        print('Exiting')
+        print("No Valid PSM Arms Specified")
+        print("Exiting")
 
     else:
         leader = MTM(parsed_args.mtm_name)
-        leader.set_base_frame(Frame(Rotation.RPY((3.14 - 0.8) / 2, 0, 0), Vector(0, 0, 0)))
+        leader.set_base_frame(
+            Frame(Rotation.RPY((3.14 - 0.8) / 2, 0, 0), Vector(0, 0, 0))
+        )
         controller1 = ControllerInterface(leader, psm_arms, cam)
         controllers.append(controller1)
 
@@ -238,5 +273,4 @@ if __name__ == "__main__":
                 rate.sleep()
         except Exception as e:
             print(e)
-            print('Exception! Goodbye')
-            
+            print("Exception! Goodbye")

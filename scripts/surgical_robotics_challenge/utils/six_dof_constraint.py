@@ -71,13 +71,15 @@ def compute_ang_error(set_point, cur_pos):
 tk = Tkinter.Tk()
 tk.title("Constraint")
 tk.geometry("250x250")
-activate_button_lin = Tkinter.Button(tk, text="Activate", command=activate_cb_lin, height=3, width=50, bg="red")
+activate_button_lin = Tkinter.Button(
+    tk, text="Activate", command=activate_cb_lin, height=3, width=50, bg="red"
+)
 
 activate_button_lin.pack()
 
-simulation_manager = SimulationManager('six_dof_constraint_test')
+simulation_manager = SimulationManager("six_dof_constraint_test")
 
-box = simulation_manager.get_obj_handle('Cube')
+box = simulation_manager.get_obj_handle("Cube")
 time.sleep(0.5)
 
 # Linear
@@ -140,11 +142,15 @@ while not rospy.is_shutdown():
     dt = min(cur_time - last_time, 0.001)
 
     if activate_lin_constraint:
-        lin_cmd = lin_P_gains * lin_error + lin_D_gains * (lin_error - last_lin_error) / dt
+        lin_cmd = (
+            lin_P_gains * lin_error + lin_D_gains * (lin_error - last_lin_error) / dt
+        )
         box.set_linear_vel(lin_cmd[0], lin_cmd[1], lin_cmd[2])
         # box.set_force(lin_cmd[0], lin_cmd[1], lin_cmd[2])
 
-        ang_cmd = ang_P_gains * ang_error + ang_D_gains * (ang_error - last_ang_error) / dt
+        ang_cmd = (
+            ang_P_gains * ang_error + ang_D_gains * (ang_error - last_ang_error) / dt
+        )
         box.set_angular_vel(ang_cmd[0], ang_cmd[1], ang_cmd[2])
         # box.set_torque(ang_cmd[0], ang_cmd[1], ang_cmd[2])
     else:

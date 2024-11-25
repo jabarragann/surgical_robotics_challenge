@@ -132,7 +132,9 @@ if __name__ == "__main__":
 
     # Display image
     for i in range(img_pt.shape[0]):
-        img = cv2.circle(img, (int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])), 3, (255, 0, 0), -1)
+        img = cv2.circle(
+            img, (int(img_pt[i, 0, 0]), int(img_pt[i, 0, 1])), 3, (255, 0, 0), -1
+        )
 
     cv2.imshow("img", img)
     cv2.waitKey(0)

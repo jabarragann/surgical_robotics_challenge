@@ -60,5 +60,3 @@ def collision_shape_set_scale(shape_prop, scale):
 def set_scale_of_selected(scale):
     for o in C.selected_objects:
         ambf_rigid_body_set_scale(o, scale)
-
-

@@ -51,7 +51,7 @@ import json
 import re
 
 PI = np.pi
-PI_2 = np.pi/2
+PI_2 = np.pi / 2
 
 
 # The up vector is useful to define angles > PI. Since otherwise
@@ -97,10 +97,9 @@ def round_transform(mat, precision=4):
 
 
 def convert_frame_to_mat(frame):
-    np_mat = np.mat([[1, 0, 0, 0],
-                     [0, 1, 0, 0],
-                     [0, 0, 1, 0],
-                     [0, 0, 0, 1]], dtype=float)
+    np_mat = np.mat(
+        [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]], dtype=float
+    )
     for i in range(3):
         for j in range(3):
             np_mat[i, j] = frame.M[(i, j)]
@@ -124,9 +123,17 @@ def convert_mat_to_frame(mat):
 
 
 def rot_mat_to_quat(cp):
-    R = Rotation(cp[0, 0], cp[0, 1], cp[0, 2],
-                 cp[1, 0], cp[1, 1], cp[1, 2],
-                 cp[2, 0], cp[2, 1], cp[2, 2])
+    R = Rotation(
+        cp[0, 0],
+        cp[0, 1],
+        cp[0, 2],
+        cp[1, 0],
+        cp[1, 1],
+        cp[1, 2],
+        cp[2, 0],
+        cp[2, 1],
+        cp[2, 2],
+    )
 
     return R.GetQuaternion()
 
@@ -154,13 +161,10 @@ def np_mat_to_pose_stamped(cp):
 
 def pose_to_frame(cp):
     frame = Frame()
-    frame.p = Vector(cp.position.x,
-                     cp.position.y,
-                     cp.position.z)
-    frame.M = Rotation.Quaternion(cp.orientation.x,
-                                  cp.orientation.y,
-                                  cp.orientation.z,
-                                  cp.orientation.w)
+    frame.p = Vector(cp.position.x, cp.position.y, cp.position.z)
+    frame.M = Rotation.Quaternion(
+        cp.orientation.x, cp.orientation.y, cp.orientation.z, cp.orientation.w
+    )
     return frame
 
 
@@ -188,9 +192,9 @@ def frame_to_pose_stamped(T):
 
 
 def get_boolean_from_opt(opt):
-    if opt in ['True', 'true', '1', True]:
+    if opt in ["True", "true", "1", True]:
         return True
-    elif opt in ['False', 'false', '0', False]:
+    elif opt in ["False", "false", "0", False]:
         return False
     else:
         print("Error: Option is invalid: ", opt)
@@ -205,33 +209,35 @@ def cartesian_interpolate_step(T_curr, T_goal, max_delta=0.01, deadband=0.01):
         if i < 3:
             error[i] = pe[i]
         else:
-            error[i] = re[i-3]
+            error[i] = re[i - 3]
 
     done = False
     error_max = max(np.abs(error))
     if error_max <= deadband:
-        error_scaled = error * 0.
+        error_scaled = error * 0.0
         done = True
     else:
         error_scaled = error / error_max
 
     error_scaled = error_scaled * max_delta
 
-    T_step = Frame(Rotation.RPY(error_scaled[3], error_scaled[4], error_scaled[5]),
-                                Vector(error_scaled[0], error_scaled[1], error_scaled[2]))
+    T_step = Frame(
+        Rotation.RPY(error_scaled[3], error_scaled[4], error_scaled[5]),
+        Vector(error_scaled[0], error_scaled[1], error_scaled[2]),
+    )
     return T_step, done
 
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 def toStr(f):
@@ -273,27 +279,28 @@ def FAIL_STR(val):
     return valStr
 
 
-def load_json_dvrk(file_path:str)->dict:
-    '''
+def load_json_dvrk(file_path: str) -> dict:
+    """
     Load json files from dVRK repository
     :param file_path: json file path
     :return: a dictionary with loaded json file content
-    '''
+    """
     with open(file_path) as f:
         data = f.read()
         data = re.sub("//.*?\n", "", data)
         data = re.sub("/\\*.*?\\*/", "", data)
-        obj = data[data.find('{'): data.rfind('}') + 1]
+        obj = data[data.find("{") : data.rfind("}") + 1]
         jsonObj = json.loads(obj)
     return jsonObj
 
-def get_input_in_range(input_val:float, min:float, max:float):
-    '''
+
+def get_input_in_range(input_val: float, min: float, max: float):
+    """
     Get the input number in a certain range
     :param input_val: input values
     :param max: the upper threshold
     :param min: the lower threshold
-    '''
+    """
     if input_val < min:
         return min
     elif input_val > max:

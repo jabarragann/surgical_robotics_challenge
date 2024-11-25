@@ -63,8 +63,13 @@ class ControllerInterface:
         self.leader = leader
         self.psm_arms = cycle(psm_arms)
         self.active_psm = next(self.psm_arms)
-        self.gui = JointGUI('ECM JP', 4, ["ecm j0", "ecm j1", "ecm j2", "ecm j3"], lower_lims=cam.get_lower_limits(),
-                            upper_lims=cam.get_upper_limits())
+        self.gui = JointGUI(
+            "ECM JP",
+            4,
+            ["ecm j0", "ecm j1", "ecm j2", "ecm j3"],
+            lower_lims=cam.get_lower_limits(),
+            upper_lims=cam.get_upper_limits(),
+        )
 
         self.cmd_xyz = self.active_psm.T_t_b_home.p
         self.cmd_rpy = None
@@ -80,7 +85,7 @@ class ControllerInterface:
             self.active_psm = next(self.psm_arms)
         else:
             self.active_psm = self.active_psm.next()
-        print('Switching Control of Next PSM Arm: ', self.active_psm.name)
+        print("Switching Control of Next PSM Arm: ", self.active_psm.name)
 
     def update_T_c_b(self):
         if self._update_T_c_b or self._ecm.has_pose_changed():
@@ -100,7 +105,11 @@ class ControllerInterface:
             self.cmd_xyz = self.cmd_xyz + delta_t
             self.active_psm.T_t_b_home.p = self.cmd_xyz
 
-        self.cmd_rpy = self._T_c_b.M * self.leader.measured_cp().M * Rotation.RPY(3.14, 0, 3.14 / 2)
+        self.cmd_rpy = (
+            self._T_c_b.M
+            * self.leader.measured_cp().M
+            * Rotation.RPY(3.14, 0, 3.14 / 2)
+        )
         self.T_IK = Frame(self.cmd_rpy, self.cmd_xyz)
         self.active_psm.servo_cp(self.T_IK)
         self.active_psm.set_jaw_angle(self.leader.get_jaw_angle())
@@ -131,13 +140,29 @@ class ControllerInterface:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('-c', action='store', dest='client_name', help='Client Name', default='geomagic_sim_teleop')
-    parser.add_argument('--one', action='store', dest='run_psm_one', help='Control PSM1', default=True)
-    parser.add_argument('--two', action='store', dest='run_psm_two', help='Control PSM2', default=True)
-    parser.add_argument('--three', action='store', dest='run_psm_three', help='Control PSM3', default=False)
+    parser.add_argument(
+        "-c",
+        action="store",
+        dest="client_name",
+        help="Client Name",
+        default="geomagic_sim_teleop",
+    )
+    parser.add_argument(
+        "--one", action="store", dest="run_psm_one", help="Control PSM1", default=True
+    )
+    parser.add_argument(
+        "--two", action="store", dest="run_psm_two", help="Control PSM2", default=True
+    )
+    parser.add_argument(
+        "--three",
+        action="store",
+        dest="run_psm_three",
+        help="Control PSM3",
+        default=False,
+    )
 
     parsed_args = parser.parse_args()
-    print('Specified Arguments')
+    print("Specified Arguments")
     print(parsed_args)
 
     parsed_args.run_psm_one = get_boolean_from_opt(parsed_args.run_psm_one)
@@ -146,7 +171,7 @@ if __name__ == "__main__":
 
     simulation_manager = SimulationManager(parsed_args.client_name)
 
-    cam = ECM(simulation_manager, 'CameraFrame')
+    cam = ECM(simulation_manager, "CameraFrame")
     time.sleep(0.5)
 
     controllers = []
@@ -155,8 +180,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_one is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm1'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm1"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False)
         if psm.is_present():
             T_psmtip_c = coordinate_frames.PSM1.T_tip_cam
@@ -167,8 +192,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_two is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm2'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm2"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False)
         if psm.is_present():
             T_psmtip_c = coordinate_frames.PSM2.T_tip_cam
@@ -179,8 +204,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_three is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm3'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm3"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False)
         if psm.is_present():
             T_psmtip_c = coordinate_frames.PSM3.T_tip_cam
@@ -189,15 +214,17 @@ if __name__ == "__main__":
             psm_arms.append(psm)
 
     if len(psm_arms) == 0:
-        print('No Valid PSM Arms Specified')
-        print('Exiting')
+        print("No Valid PSM Arms Specified")
+        print("Exiting")
 
     else:
-        leader = GeomagicDevice('/Geomagic/')
+        leader = GeomagicDevice("/Geomagic/")
         theta_base = -0.9
         theta_tip = -theta_base
         leader.set_base_frame(Frame(Rotation.RPY(theta_base, 0, 0), Vector(0, 0, 0)))
-        leader.set_tip_frame(Frame(Rotation.RPY(theta_base + theta_tip, 0, 0), Vector(0, 0, 0)))
+        leader.set_tip_frame(
+            Frame(Rotation.RPY(theta_base + theta_tip, 0, 0), Vector(0, 0, 0))
+        )
         controller = ControllerInterface(leader, psm_arms, cam)
         controllers.append(controller)
 
@@ -206,8 +233,7 @@ if __name__ == "__main__":
         try:
             while not rospy.is_shutdown():
                 for cont in controllers:
-                        cont.run()
+                    cont.run()
                 rate.sleep()
         except:
-            print('Exception! Goodbye')
-
+            print("Exception! Goodbye")

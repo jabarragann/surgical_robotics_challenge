@@ -45,7 +45,14 @@
 
 import PyKDL
 from PyKDL import Frame, Rotation, Vector
-from geometry_msgs.msg import Pose, PoseStamped, TransformStamped, TwistStamped, WrenchStamped, Wrench
+from geometry_msgs.msg import (
+    Pose,
+    PoseStamped,
+    TransformStamped,
+    TwistStamped,
+    WrenchStamped,
+    Wrench,
+)
 from sensor_msgs.msg import Joy, JointState
 from std_msgs.msg import Bool
 import rospy, rostopic
@@ -120,12 +127,12 @@ def pose_msg_to_kdl_frame(msg_pose):
     f.p[0] = pose.position.x
     f.p[1] = pose.position.y
     f.p[2] = pose.position.z
-    f.M = Rotation.Quaternion(pose.orientation.x,
-                              pose.orientation.y,
-                              pose.orientation.z,
-                              pose.orientation.w)
+    f.M = Rotation.Quaternion(
+        pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+    )
 
     return f
+
 
 def transform_msg_to_kdl_frame(msg_pose):
     pose = msg_pose.transform
@@ -133,10 +140,9 @@ def transform_msg_to_kdl_frame(msg_pose):
     f.p[0] = pose.translation.x
     f.p[1] = pose.translation.y
     f.p[2] = pose.translation.z
-    f.M = Rotation.Quaternion(pose.rotation.x,
-                              pose.rotation.y,
-                              pose.rotation.z,
-                              pose.rotation.w)
+    f.M = Rotation.Quaternion(
+        pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w
+    )
 
     return f
 
@@ -148,12 +154,15 @@ def vector_to_effort_msg(effort):
 
 
 def get_crtk_cp_msg_type_from_str(msg_type_str):
-    if msg_type_str == 'geometry_msgs/PoseStamped':
+    if msg_type_str == "geometry_msgs/PoseStamped":
         return PoseStamped
-    elif msg_type_str == 'geometry_msgs/TransformStamped':
+    elif msg_type_str == "geometry_msgs/TransformStamped":
         return TransformStamped
     else:
-        print("Exception! Message Type: %s CRTK CP MESSAGE TYPE IS NEITHER PoseStamped or TransformStamped", msg_type_str)
+        print(
+            "Exception! Message Type: %s CRTK CP MESSAGE TYPE IS NEITHER PoseStamped or TransformStamped",
+            msg_type_str,
+        )
         raise TypeError
 
 
@@ -161,17 +170,17 @@ def get_crtk_cp_msg_type_from_str(msg_type_str):
 class MTM:
     # The name should include the full qualified prefix. I.e. '/Geomagic/', or '/omniR_' etc.
     def __init__(self, name):
-        pose_sub_topic_name = name + 'measured_cp'
-        twist_topic_name = name + 'measured_cv'
-        joint_state_sub_topic_name = name + 'measured_js'
-        gripper_topic_name = name + 'gripper/measured_js'
-        clutch_topic_name = '/footpedals/clutch'
-        coag_topic_name = '/console/operator_present'
+        pose_sub_topic_name = name + "measured_cp"
+        twist_topic_name = name + "measured_cv"
+        joint_state_sub_topic_name = name + "measured_js"
+        gripper_topic_name = name + "gripper/measured_js"
+        clutch_topic_name = "/footpedals/clutch"
+        coag_topic_name = "/console/operator_present"
 
-        pose_pub_topic_name = name + 'servo_cp'
-        wrench_pub_topic_name = name + 'body/servo_cf'
-        effort_pub_topic_name = name + 'servo_jf'
-        grav_comp_topic_name = name + 'use_gravity_compensation'
+        pose_pub_topic_name = name + "servo_cp"
+        wrench_pub_topic_name = name + "body/servo_cf"
+        effort_pub_topic_name = name + "servo_jf"
+        grav_comp_topic_name = name + "use_gravity_compensation"
 
         self.cur_pos_msg = None
         self.pre_coag_pose_msg = None
@@ -200,32 +209,49 @@ class MTM:
 
         print(rostopic.get_topic_type(pose_sub_topic_name))
         print(rostopic.get_topic_type(pose_pub_topic_name))
-        self.MEASURED_CP_MESSAGE_TYPE = get_crtk_cp_msg_type_from_str(rostopic.get_topic_type(pose_sub_topic_name)[0])
-        self.SERVO_CP_MESSAGE_TYPE = get_crtk_cp_msg_type_from_str(rostopic.get_topic_type(pose_pub_topic_name)[0])
+        self.MEASURED_CP_MESSAGE_TYPE = get_crtk_cp_msg_type_from_str(
+            rostopic.get_topic_type(pose_sub_topic_name)[0]
+        )
+        self.SERVO_CP_MESSAGE_TYPE = get_crtk_cp_msg_type_from_str(
+            rostopic.get_topic_type(pose_pub_topic_name)[0]
+        )
 
         self._pose_sub = rospy.Subscriber(
-            pose_sub_topic_name, self.MEASURED_CP_MESSAGE_TYPE, self.pose_cb, queue_size=1)
+            pose_sub_topic_name,
+            self.MEASURED_CP_MESSAGE_TYPE,
+            self.pose_cb,
+            queue_size=1,
+        )
         self._state_sub = rospy.Subscriber(
-            joint_state_sub_topic_name, JointState, self.state_cb, queue_size=1)
+            joint_state_sub_topic_name, JointState, self.state_cb, queue_size=1
+        )
         self._gripper_sub = rospy.Subscriber(
-            gripper_topic_name, JointState, self.gripper_cb, queue_size=1)
+            gripper_topic_name, JointState, self.gripper_cb, queue_size=1
+        )
         self._twist_sub = rospy.Subscriber(
-            twist_topic_name, TwistStamped, self.twist_cb, queue_size=1)
+            twist_topic_name, TwistStamped, self.twist_cb, queue_size=1
+        )
         self._clutch_button_sub = rospy.Subscriber(
-            clutch_topic_name, Joy, self.clutch_buttons_cb, queue_size=1)
+            clutch_topic_name, Joy, self.clutch_buttons_cb, queue_size=1
+        )
         self._coag_button_sub = rospy.Subscriber(
-            coag_topic_name, Joy, self.coag_buttons_cb, queue_size=1)
+            coag_topic_name, Joy, self.coag_buttons_cb, queue_size=1
+        )
 
         self._pos_pub = rospy.Publisher(
-            pose_pub_topic_name, self.SERVO_CP_MESSAGE_TYPE, queue_size=1)
+            pose_pub_topic_name, self.SERVO_CP_MESSAGE_TYPE, queue_size=1
+        )
         self._wrench_pub = rospy.Publisher(
-            wrench_pub_topic_name, WrenchStamped, queue_size=1)
+            wrench_pub_topic_name, WrenchStamped, queue_size=1
+        )
         self._effort_pub = rospy.Publisher(
-            effort_pub_topic_name, JointState, queue_size=1)
+            effort_pub_topic_name, JointState, queue_size=1
+        )
         self._gravity_comp_pub = rospy.Publisher(
-            grav_comp_topic_name, Bool, queue_size=1)
+            grav_comp_topic_name, Bool, queue_size=1
+        )
 
-        print('Creating MTM Device Named: ', name, ' From ROS Topics')
+        print("Creating MTM Device Named: ", name, " From ROS Topics")
         self._msg_counter = 0
 
     def set_base_frame(self, frame):
@@ -260,7 +286,7 @@ class MTM:
             normalized_val = (qs[4] - b_lim_5) / range
             centerd_val = normalized_val - 0.5
             sign = -centerd_val * 2
-            print('MID VAL:', sign)
+            print("MID VAL:", sign)
             # sign = 0
         else:
             sign = -1
@@ -272,7 +298,7 @@ class MTM:
         tau_6 = -Kp_6 * qs[5] - Kd_6 * vs[5]
         tau_6 = np.clip(tau_6, -lim_6, lim_6)
 
-        js_cmd = [0.0]*7
+        js_cmd = [0.0] * 7
         js_cmd[3] = tau_4
         js_cmd[5] = tau_6
         self.servo_jf(js_cmd)
@@ -311,11 +337,11 @@ class MTM:
         return self._active
 
     def gripper_cb(self, msg):
-        '''
+        """
         Map the MTM input to the gripper
-        '''
-        min = -0.698 # ~ -40 deg
-        max = 1.047 # ~60 deg
+        """
+        min = -0.698  # ~ -40 deg
+        max = 1.047  # ~60 deg
 
         input_val = get_input_in_range(msg.position[0], min, max)
 
@@ -340,7 +366,7 @@ class MTM:
         if self.clutch_button_pressed:
             time_diff = rospy.Time.now() - self._button_msg_time
             if time_diff.to_sec() < self._switch_psm_duration.to_sec():
-                print('Allow PSM Switch')
+                print("Allow PSM Switch")
                 self.switch_psm = True
             self._button_msg_time = rospy.Time.now()
 
@@ -408,10 +434,10 @@ class MTM:
 
 
 def test():
-    rospy.init_node('test_mtm')
+    rospy.init_node("test_mtm")
 
-    d = MTM('/dvrk/MTMR/')
-    d.set_base_frame(Frame(Rotation.RPY(np.pi/2, 0, 0), Vector()))
+    d = MTM("/dvrk/MTMR/")
+    d.set_base_frame(Frame(Rotation.RPY(np.pi / 2, 0, 0), Vector()))
     # rot_offset = Rotation.RPY(np.pi, np.pi/2, 0).Inverse()
     # tip_offset = Frame(rot_offset, Vector(0, 0, 0))
     # d.set_tip_frame(tip_offset)
@@ -432,5 +458,5 @@ def test():
         time.sleep(0.05)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

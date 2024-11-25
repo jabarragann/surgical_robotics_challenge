@@ -14,7 +14,7 @@ from surgical_robotics_challenge.utils.utilities import *
 
 def add_break(s):
     time.sleep(s)
-    print('-------------')
+    print("-------------")
 
 
 class ImageSub:
@@ -27,9 +27,9 @@ class ImageSub:
 
 
 class ArmType(Enum):
-    PSM1=1
-    PSM2=2
-    ECM=3
+    PSM1 = 1
+    PSM2 = 2
+    ECM = 3
 
 
 def list_to_sensor_msg_position(jp_list):
@@ -41,20 +41,28 @@ def list_to_sensor_msg_position(jp_list):
 class ARMInterface:
     def __init__(self, arm_type):
         if arm_type == ArmType.PSM1:
-            arm_name = '/CRTK/psm1'
+            arm_name = "/CRTK/psm1"
         elif arm_type == ArmType.PSM2:
-            arm_name = '/CRTK/psm2'
+            arm_name = "/CRTK/psm2"
         elif arm_type == ArmType.ECM:
-            arm_name = '/CRTK/ecm'
+            arm_name = "/CRTK/ecm"
         else:
             raise ("Error! Invalid Arm Type")
 
-        self._cp_sub = rospy.Subscriber(arm_name + "/measured_cp", PoseStamped, self.cp_cb, queue_size=1)
-        self._T_b_w_sub = rospy.Subscriber(arm_name + "/T_b_w", PoseStamped, self.T_b_w_cb, queue_size=1)
-        self._jp_sub = rospy.Subscriber(arm_name + "/measured_js", JointState, self.jp_cb, queue_size=1)
+        self._cp_sub = rospy.Subscriber(
+            arm_name + "/measured_cp", PoseStamped, self.cp_cb, queue_size=1
+        )
+        self._T_b_w_sub = rospy.Subscriber(
+            arm_name + "/T_b_w", PoseStamped, self.T_b_w_cb, queue_size=1
+        )
+        self._jp_sub = rospy.Subscriber(
+            arm_name + "/measured_js", JointState, self.jp_cb, queue_size=1
+        )
         self.cp_pub = rospy.Publisher(arm_name + "/servo_cp", PoseStamped, queue_size=1)
         self.jp_pub = rospy.Publisher(arm_name + "/servo_jp", JointState, queue_size=1)
-        self.jaw_jp_pub = rospy.Publisher(arm_name + '/jaw/' + 'servo_jp', JointState, queue_size=1)
+        self.jaw_jp_pub = rospy.Publisher(
+            arm_name + "/jaw/" + "servo_jp", JointState, queue_size=1
+        )
 
         self.measured_cp_msg = None
         self.T_b_w_msg = None
@@ -98,15 +106,15 @@ class ARMInterface:
 
 
 class SceneObjectType(Enum):
-    Needle=1
-    Entry1=2
-    Entry2=3
-    Entry3=4
-    Entry4=5
-    Exit1=6
-    Exit2=7
-    Exit3=8
-    Exit4=9
+    Needle = 1
+    Entry1 = 2
+    Entry2 = 3
+    Entry3 = 4
+    Entry4 = 5
+    Exit1 = 6
+    Exit2 = 7
+    Exit3 = 8
+    Exit4 = 9
 
 
 class SceneInterface:
@@ -123,17 +131,30 @@ class SceneInterface:
         self._scene_object_poses[SceneObjectType.Exit4] = None
         self._subs = []
 
-        namespace = '/CRTK/'
-        suffix = '/measured_cp'
+        namespace = "/CRTK/"
+        suffix = "/measured_cp"
         for k, i in self._scene_object_poses.items():
-            self._subs.append(rospy.Subscriber(namespace + k.name + suffix, PoseStamped,
-                                               self.state_cb, callback_args=k, queue_size=1))
+            self._subs.append(
+                rospy.Subscriber(
+                    namespace + k.name + suffix,
+                    PoseStamped,
+                    self.state_cb,
+                    callback_args=k,
+                    queue_size=1,
+                )
+            )
 
         self._task_3_ready = False
-        self._task_3_setup_init_pub = rospy.Publisher('/CRTK/scene/task_3_setup/init', Empty, queue_size=1)
+        self._task_3_setup_init_pub = rospy.Publisher(
+            "/CRTK/scene/task_3_setup/init", Empty, queue_size=1
+        )
 
-        self._task_3_setup_ready_sub = rospy.Subscriber('/CRTK/scene/task_3_setup/ready',
-                                                        Empty, self.task_3_setup_ready_cb, queue_size=1)
+        self._task_3_setup_ready_sub = rospy.Subscriber(
+            "/CRTK/scene/task_3_setup/ready",
+            Empty,
+            self.task_3_setup_ready_cb,
+            queue_size=1,
+        )
 
     def state_cb(self, msg, key):
         self._scene_object_poses[key] = msg
@@ -153,8 +174,12 @@ class SceneInterface:
 
 class WorldInterface:
     def __init__(self):
-        self._reset_world_pub = rospy.Publisher('/ambf/env/World/Command/Reset', Empty, queue_size=1)
-        self._reset_bodies_pub = rospy.Publisher('/ambf/env/World/Command/ResetBodies', Empty, queue_size=1)
+        self._reset_world_pub = rospy.Publisher(
+            "/ambf/env/World/Command/Reset", Empty, queue_size=1
+        )
+        self._reset_bodies_pub = rospy.Publisher(
+            "/ambf/env/World/Command/ResetBodies", Empty, queue_size=1
+        )
 
     def reset(self):
         self._reset_world_pub.publish(Empty())
@@ -164,7 +189,7 @@ class WorldInterface:
 
 
 # Create an instance of the client
-rospy.init_node('your_name_node')
+rospy.init_node("your_name_node")
 time.sleep(0.5)
 world_handle = WorldInterface()
 
@@ -177,13 +202,13 @@ ecm = ARMInterface(ArmType.ECM)
 # Get a handle to scene to access its elements, i.e. needle and entry / exit points
 scene = SceneInterface()
 # Create an instance of task completion report with you team name
-task_report = TaskCompletionReport(team_name='my_team_name')
+task_report = TaskCompletionReport(team_name="my_team_name")
 # Small sleep to let the handles initialize properly
 add_break(0.5)
 
 # Add you camera stream subs
-cameraL_sub = ImageSub('/ambf/env/cameras/cameraL/ImageData')
-cameraR_sub = ImageSub('/ambf/env/cameras/cameraR/ImageData')
+cameraL_sub = ImageSub("/ambf/env/cameras/cameraL/ImageData")
+cameraR_sub = ImageSub("/ambf/env/cameras/cameraR/ImageData")
 
 print("Resetting the world")
 world_handle.reset()
@@ -191,27 +216,27 @@ add_break(3.0)
 
 # The PSMs can be controlled either in joint space or cartesian space. For the
 # latter, the `servo_cp` command sets the end-effector pose w.r.t its Base frame.
-T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi/2.), Vector(0., 0., -0.13))
+T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi / 2.0), Vector(0.0, 0.0, -0.13))
 print("Setting the end-effector frame of PSM1 w.r.t Base", T_e_b)
 psm1.servo_cp(T_e_b)
 psm1.set_jaw_angle(0.2)
 add_break(1.0)
-T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi/4.), Vector(0.01, -0.01, -0.13))
+T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi / 4.0), Vector(0.01, -0.01, -0.13))
 print("Setting the end-effector frame of PSM2 w.r.t Base", T_e_b)
 psm2.servo_cp(T_e_b)
 psm2.set_jaw_angle(0.5)
 add_break(1.0)
 # Controlling in joint space
-jp = [0., 0., 0.135, 0.2, 0.3, 0.2]
+jp = [0.0, 0.0, 0.135, 0.2, 0.3, 0.2]
 print("Setting PSM1 joint positions to ", jp)
 psm1.servo_jp(jp)
 add_break(1.0)
-jp = [0., 0., 0.135, -0.2, -0.3, -0.2]
+jp = [0.0, 0.0, 0.135, -0.2, -0.3, -0.2]
 print("Setting PSM2 joint positions to ", jp)
 psm2.servo_jp(jp)
 add_break(1.0)
 # The ECM should always be controlled using its joint interface
-jp = [0., 0.2, -0.03, 0.2]
+jp = [0.0, 0.2, -0.03, 0.2]
 print("Setting ECM joint positions to ", jp)
 ecm.servo_jp(jp)
 add_break(5.0)
@@ -239,7 +264,7 @@ add_break(1.0)
 # When you are done with each task, you can report your results.
 my_found_needle_pose = PoseStamped()
 my_found_needle_pose.pose.orientation.w = 1.0
-my_found_needle_pose.header.frame_id = 'CameraFrame'
+my_found_needle_pose.header.frame_id = "CameraFrame"
 task_report.task_1_report(my_found_needle_pose)
 
 # For task 2, report when you think you are done
@@ -249,16 +274,24 @@ task_report.task_2_report(complete=True)
 task_report.task_3_report(complete=True)
 
 # Query Image Subs
-print('cameraL Image Data Size: ', cameraL_sub.image_msg.height, cameraL_sub.image_msg.width)
-print('cameraR Image Data Size: ', cameraR_sub.image_msg.height, cameraR_sub.image_msg.width)
+print(
+    "cameraL Image Data Size: ",
+    cameraL_sub.image_msg.height,
+    cameraL_sub.image_msg.width,
+)
+print(
+    "cameraR Image Data Size: ",
+    cameraR_sub.image_msg.height,
+    cameraR_sub.image_msg.width,
+)
 
 # Reset ECM Back to Start
 print("Resetting ECM pose")
-ecm.servo_jp([0., 0., 0., 0.])
+ecm.servo_jp([0.0, 0.0, 0.0, 0.0])
 add_break(1.0)
 
 # Open the jaw angle to drop the needle
 psm2.set_jaw_angle(0.8)
 add_break(1.0)
 
-print('END')
+print("END")

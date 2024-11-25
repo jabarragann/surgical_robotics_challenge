@@ -78,8 +78,12 @@ measured_cp_name = namespace + arm_name + "/measured_cp"
 servo_jp_name = namespace + arm_name + "/servo_jp"
 servo_cp_name = namespace + arm_name + "/servo_cp"
 
-measured_js_sub = rospy.Subscriber(measured_js_name, JointState, measured_js_cb, queue_size=1)
-measured_cp_sub = rospy.Subscriber(measured_cp_name, PoseStamped, measured_cp_cb, queue_size=1)
+measured_js_sub = rospy.Subscriber(
+    measured_js_name, JointState, measured_js_cb, queue_size=1
+)
+measured_cp_sub = rospy.Subscriber(
+    measured_cp_name, PoseStamped, measured_cp_cb, queue_size=1
+)
 
 servo_jp_pub = rospy.Publisher(servo_jp_name, JointState, queue_size=1)
 servo_cp_pub = rospy.Publisher(servo_cp_name, PoseStamped, queue_size=1)
@@ -87,7 +91,7 @@ servo_cp_pub = rospy.Publisher(servo_cp_name, PoseStamped, queue_size=1)
 rate = rospy.Rate(50)
 
 servo_jp_msg = JointState()
-servo_jp_msg.position = [0., 0., 0.1 * SimToSI.linear_factor, 0., 0., 0.]
+servo_jp_msg.position = [0.0, 0.0, 0.1 * SimToSI.linear_factor, 0.0, 0.0, 0.0]
 
 servo_cp_msg = PoseStamped()
 servo_cp_msg.pose.position.x = 0.0 * SimToSI.linear_factor
@@ -103,11 +107,15 @@ servo_cp_msg.pose.orientation.w = R_7_0.GetQuaternion()[3]
 valid_key = False
 key = None
 while not valid_key:
-    print("NOTE!!! For this example to work, please RUN the launch_crtk_interface.py script before hand.")
-    key = input("Press: \n"
-                "1 - (For reading joint and Cartesian state), \n"
-                "2 - (For joint control demo), \n"
-                "3 - (For Cartesian control demo)) \n")
+    print(
+        "NOTE!!! For this example to work, please RUN the launch_crtk_interface.py script before hand."
+    )
+    key = input(
+        "Press: \n"
+        "1 - (For reading joint and Cartesian state), \n"
+        "2 - (For joint control demo), \n"
+        "3 - (For Cartesian control demo)) \n"
+    )
     try:
         key = int(key)
     except ValueError:
@@ -137,8 +145,12 @@ while not rospy.is_shutdown():
     # ######
     # The following 3 lines move the robot in cartesian space in sinusoidal fashion
     elif key == 3:
-        servo_cp_msg.pose.position.x = 0.02 * SimToSI.linear_factor * math.sin(rospy.Time.now().to_sec())
-        servo_cp_msg.pose.position.y = 0.02 * SimToSI.linear_factor * math.cos(rospy.Time.now().to_sec())
+        servo_cp_msg.pose.position.x = (
+            0.02 * SimToSI.linear_factor * math.sin(rospy.Time.now().to_sec())
+        )
+        servo_cp_msg.pose.position.y = (
+            0.02 * SimToSI.linear_factor * math.cos(rospy.Time.now().to_sec())
+        )
         servo_cp_pub.publish(servo_cp_msg)
 
     rate.sleep()

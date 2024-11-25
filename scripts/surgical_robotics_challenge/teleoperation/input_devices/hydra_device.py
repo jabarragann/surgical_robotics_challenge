@@ -80,10 +80,9 @@ def pose_msg_to_kdl_frame(msg_pose):
     f.p[0] = pose.position.x
     f.p[1] = pose.position.y
     f.p[2] = pose.position.z
-    f.M = Rotation.Quaternion(pose.orientation.x,
-                              pose.orientation.y,
-                              pose.orientation.z,
-                              pose.orientation.w)
+    f.M = Rotation.Quaternion(
+        pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w
+    )
 
     return f
 
@@ -94,20 +93,19 @@ def hydra_msg_to_kdl_frame(msg_hydra):
     f.p[0] = pose.translation.x
     f.p[1] = pose.translation.y
     f.p[2] = pose.translation.z
-    f.M = Rotation.Quaternion(pose.rotation.x,
-                              pose.rotation.y,
-                              pose.rotation.z,
-                              pose.rotation.w)
+    f.M = Rotation.Quaternion(
+        pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w
+    )
     return f
 
 
 # Init everything related to Geomagic
 class HydraDevice:
     # The name should include the full qualified prefix. I.e. '/Geomagic/', or '/omniR_' etc.
-    def __init__(self, name='hydra_calib', hydra_idx=0):
+    def __init__(self, name="hydra_calib", hydra_idx=0):
         ### hydra_idx=0 --> left, hydra_idx=1 --> right
         self.pose_topic_name = name
-        assert (hydra_idx == 0) or (hydra_idx == 1), 'Incorrect hydra controller index'
+        assert (hydra_idx == 0) or (hydra_idx == 1), "Incorrect hydra controller index"
         self.hydra_idx = hydra_idx
         self._active = False
         self._scale = [1.0, 1.0, 1.0]
@@ -116,12 +114,16 @@ class HydraDevice:
         self.gripper_button_pressed = False  # Used as Gripper Open Close Binary Angle
         self.reset_pos = [0.0, 0.0, 0.0]
         self.reset_mtx = np.eye(3)
-        ### if you would like to init the device before picking up, you may uncomment following lines. 
+        ### if you would like to init the device before picking up, you may uncomment following lines.
         # init_msg = rospy.wait_for_message(self.pose_topic_name, Hydra, timeout=1)
         # self.set_reset_pos(init_msg)
         self.is_reset_rot = False
-        self._pose_sub = rospy.Subscriber(self.pose_topic_name, Hydra, self.pose_cb, queue_size=1)
-        self._twist_sub = rospy.Subscriber(self.pose_topic_name, Hydra, self.twist_cb, queue_size=1)
+        self._pose_sub = rospy.Subscriber(
+            self.pose_topic_name, Hydra, self.pose_cb, queue_size=1
+        )
+        self._twist_sub = rospy.Subscriber(
+            self.pose_topic_name, Hydra, self.twist_cb, queue_size=1
+        )
         self.pose = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         self.jaw = 0.0
         self.reset_button = False
@@ -140,11 +142,13 @@ class HydraDevice:
         self._switch_psm_duration = rospy.Duration(0.5)
 
         if hydra_idx == 0:
-            hydra_name = 'Left Paddle'
+            hydra_name = "Left Paddle"
         else:
-            hydra_name = 'Right Paddle'
+            hydra_name = "Right Paddle"
 
-        print('Creating Razer Device Named: ', name, 'of ', hydra_name, ' From ROS Topics')
+        print(
+            "Creating Razer Device Named: ", name, "of ", hydra_name, " From ROS Topics"
+        )
         self._msg_counter = 0
 
     def set_base_frame(self, frame):
@@ -173,14 +177,20 @@ class HydraDevice:
     def set_reset_frame(self, msg):
         data = msg.paddles[self.hydra_idx]
         if data.buttons[0]:
-            mtx_read = Rot.from_quat([data.transform.rotation.x,
-                                      data.transform.rotation.y,
-                                      data.transform.rotation.z,
-                                      data.transform.rotation.w])
+            mtx_read = Rot.from_quat(
+                [
+                    data.transform.rotation.x,
+                    data.transform.rotation.y,
+                    data.transform.rotation.z,
+                    data.transform.rotation.w,
+                ]
+            )
             self.reset_mtx = mtx_read.as_matrix()
-            self.reset_pos = [data.transform.translation.x,
-                              data.transform.translation.y,
-                              data.transform.translation.z]
+            self.reset_pos = [
+                data.transform.translation.x,
+                data.transform.translation.y,
+                data.transform.translation.z,
+            ]
             self.reset_button = True
         else:
             self.reset_button = False
@@ -188,9 +198,11 @@ class HydraDevice:
 
     def set_reset_pos(self, msg):
         data = msg.paddles[self.hydra_idx]
-        self.reset_pos = [data.transform.translation.x,
-                          data.transform.translation.y,
-                          data.transform.translation.z]
+        self.reset_pos = [
+            data.transform.translation.x,
+            data.transform.translation.y,
+            data.transform.translation.z,
+        ]
         pass
 
     def get_clutch(self, msg):
@@ -204,13 +216,10 @@ class HydraDevice:
     def hydra_msg_read(self, msg_hydra):
         self.set_reset_frame(msg_hydra)
         data = msg_hydra.paddles[self.hydra_idx].transform
-        pos_temp = [data.translation.x,
-                    data.translation.y,
-                    data.translation.z]
-        rot_temp = Rot.from_quat([data.rotation.x,
-                                  data.rotation.y,
-                                  data.rotation.z,
-                                  data.rotation.w])
+        pos_temp = [data.translation.x, data.translation.y, data.translation.z]
+        rot_temp = Rot.from_quat(
+            [data.rotation.x, data.rotation.y, data.rotation.z, data.rotation.w]
+        )
         return pos_temp, rot_temp.as_matrix()
 
     def pose_cb(self, msg):
@@ -220,11 +229,11 @@ class HydraDevice:
         pos_temp, rot_temp = self.hydra_msg_read(msg)
         # print(msg.paddles[0].transform.translation.x)
         pose_output = []
-        pos_init = [x-y for x, y in zip(pos_temp, self.reset_pos)]
-        pos_output = [x*y for x, y in zip(self._scale, pos_init)]
+        pos_init = [x - y for x, y in zip(pos_temp, self.reset_pos)]
+        pos_output = [x * y for x, y in zip(self._scale, pos_init)]
         pose_output.extend(pos_output)
         mtx_temp = Rot.from_matrix(np.dot(np.transpose(self.reset_mtx), rot_temp))
-        ori_output = mtx_temp.as_euler('xyz', degrees=False)
+        ori_output = mtx_temp.as_euler("xyz", degrees=False)
         pose_output.extend(ori_output)
         self.pose = pose_output
         self.jaw = self._jaw_scale * msg.paddles[self.hydra_idx].trigger
@@ -235,10 +244,12 @@ class HydraDevice:
         twist = PyKDL.Twist()
         self.set_reset_frame(msg)
         data = msg.paddles[self.hydra_idx].transform
-        pos_temp = [-(data.translation.y - self.reset_pos[1]) * 0.226,
-                    (data.translation.z - self.reset_pos[2]) * 0.25,
-                    -(data.translation.x - self.reset_pos[0]) * 0.19]
-        vel = [x-y for x, y in zip(pos_temp, self.pos_pre)]
+        pos_temp = [
+            -(data.translation.y - self.reset_pos[1]) * 0.226,
+            (data.translation.z - self.reset_pos[2]) * 0.25,
+            -(data.translation.x - self.reset_pos[0]) * 0.19,
+        ]
+        vel = [x - y for x, y in zip(pos_temp, self.pos_pre)]
         self.pos_pre = pos_temp
         vel_out = [x if x <= 0.005 else 0.005 for x in vel]
         twist[0] = vel_out[0]
@@ -263,12 +274,14 @@ class HydraDevice:
 
     def hydra_pose_to_kdl_frame(self):
         cur_frame = PyKDL.Frame()
-        cur_frame.p = PyKDL.Vector(-float(self.pose[1]) * 0.226,
-                                   float(self.pose[2]) * 0.25,
-                                   -float(self.pose[0]) * 0.19)
-        cur_frame.M = PyKDL.Rotation.EulerZYX(-float(self.pose[3]),
-                                              float(self.pose[5]),
-                                              -float(self.pose[4]))
+        cur_frame.p = PyKDL.Vector(
+            -float(self.pose[1]) * 0.226,
+            float(self.pose[2]) * 0.25,
+            -float(self.pose[0]) * 0.19,
+        )
+        cur_frame.M = PyKDL.Rotation.EulerZYX(
+            -float(self.pose[3]), float(self.pose[5]), -float(self.pose[4])
+        )
         self.pose_hydra = self._T_baseoffset_inverse * cur_frame * self._T_tipoffset
 
     def command_force(self, force):
@@ -289,27 +302,27 @@ class HydraDevice:
 
 
 def test():
-    rospy.init_node('test_hydra')
+    rospy.init_node("test_hydra")
 
     d = HydraDevice()
 
     while not rospy.is_shutdown():
         [r, p, y] = d.measured_cp().M.GetRPY()
         [p_x, p_y, p_z] = d.measured_cp().p
-        print('x: ', p_x, ', Y: ', p_y, ', Z: ', p_z)
+        print("x: ", p_x, ", Y: ", p_y, ", Z: ", p_z)
 
         f = 180.0 / 3.1404
         r = round(r * f, 2)
         p = round(p * f, 2)
         y = round(y * f, 2)
-        print('Roll: ', r, ', Pitch: ', p, ', Yaw: ', y)
+        print("Roll: ", r, ", Pitch: ", p, ", Yaw: ", y)
         # tst = d.measured_cv()
         # print(tst.vel)
         time.sleep(1)
 
 
 def test_np():
-    rospy.init_node('test_hydra')
+    rospy.init_node("test_hydra")
 
     d = HydraDevice()
 
@@ -319,6 +332,6 @@ def test_np():
         time.sleep(0.5)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()
     test_np()

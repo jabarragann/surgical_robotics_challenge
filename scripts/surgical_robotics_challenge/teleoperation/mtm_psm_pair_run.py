@@ -67,7 +67,7 @@ class ControllerInterface:
         self.leader_2 = leader_r
         self.psm_1 = psm_arm_l
         self.psm_2 = psm_arm_r
-        self.gui = JointGUI('ECM JP', 4, ["ecm j0", "ecm j1", "ecm j2", "ecm j3"])
+        self.gui = JointGUI("ECM JP", 4, ["ecm j0", "ecm j1", "ecm j2", "ecm j3"])
 
         self.cmd1_xyz = self.psm_1.T_t_b_home.p
         self.cmd1_rpy = None
@@ -80,7 +80,9 @@ class ControllerInterface:
         self._T1_c_b = None
         self._T2_c_b = None
         self._update_T_c_b = True
-        self._pub_ecm = rospy.Publisher('/ecm/setpoint_js', Float64MultiArray, queue_size=1)
+        self._pub_ecm = rospy.Publisher(
+            "/ecm/setpoint_js", Float64MultiArray, queue_size=1
+        )
         self.leader_1.enable_gravity_comp()
         self.leader_2.enable_gravity_comp()
 
@@ -178,35 +180,57 @@ class ControllerInterface:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('-c', action='store', dest='client_name', help='Client Name', default='mtm_sim_teleop')
-    parser.add_argument('-t', action='store', dest='tool_id', help='Surgical Instrument Serial Number', default='400006')
-    parser.add_argument('--one', action='store', dest='run_psm_one', help='Control PSM1', default=True)
-    parser.add_argument('--two', action='store', dest='run_psm_two', help='Control PSM2', default=True)
-    parser.add_argument('--three', action='store', dest='run_psm_three', help='Control PSM3', default=False)
+    parser.add_argument(
+        "-c",
+        action="store",
+        dest="client_name",
+        help="Client Name",
+        default="mtm_sim_teleop",
+    )
+    parser.add_argument(
+        "-t",
+        action="store",
+        dest="tool_id",
+        help="Surgical Instrument Serial Number",
+        default="400006",
+    )
+    parser.add_argument(
+        "--one", action="store", dest="run_psm_one", help="Control PSM1", default=True
+    )
+    parser.add_argument(
+        "--two", action="store", dest="run_psm_two", help="Control PSM2", default=True
+    )
+    parser.add_argument(
+        "--three",
+        action="store",
+        dest="run_psm_three",
+        help="Control PSM3",
+        default=False,
+    )
 
     parsed_args = parser.parse_args()
-    print('Specified Arguments')
+    print("Specified Arguments")
     print(parsed_args)
 
-    if parsed_args.run_psm_one in ['True', 'true', '1']:
+    if parsed_args.run_psm_one in ["True", "true", "1"]:
         parsed_args.run_psm_one = True
-    elif parsed_args.run_psm_one in ['False', 'false', '0']:
+    elif parsed_args.run_psm_one in ["False", "false", "0"]:
         parsed_args.run_psm_one = False
 
-    if parsed_args.run_psm_two in ['True', 'true', '1']:
+    if parsed_args.run_psm_two in ["True", "true", "1"]:
         parsed_args.run_psm_two = True
-    elif parsed_args.run_psm_two in ['False', 'false', '0']:
+    elif parsed_args.run_psm_two in ["False", "false", "0"]:
         parsed_args.run_psm_two = False
-    if parsed_args.run_psm_three in ['True', 'true', '1']:
+    if parsed_args.run_psm_three in ["True", "true", "1"]:
         parsed_args.run_psm_three = True
-    elif parsed_args.run_psm_three in ['False', 'false', '0']:
+    elif parsed_args.run_psm_three in ["False", "false", "0"]:
         parsed_args.run_psm_three = False
 
     simulation_manager = SimulationManager(parsed_args.client_name)
 
     # tool_id = int(parsed_args.tool_id)
 
-    cam = ECM(simulation_manager, 'CameraFrame')
+    cam = ECM(simulation_manager, "CameraFrame")
     time.sleep(0.5)
 
     controllers = []
@@ -215,8 +239,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_one is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm1'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm1"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm1 = PSM(simulation_manager, arm_name, add_joint_errors=False)
         if psm1.is_present():
             T_psmtip_c = coordinate_frames.PSM1.T_tip_cam
@@ -227,8 +251,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_two is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm2'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm2"
+        print("LOADING CONTROLLER FOR ", arm_name)
         theta_base = -0.7
         psm2 = PSM(simulation_manager, arm_name, add_joint_errors=False)
         if psm2.is_present():
@@ -240,8 +264,8 @@ if __name__ == "__main__":
     if parsed_args.run_psm_three is True:
         # Initial Target Offset for PSM1
         # init_xyz = [0.1, -0.85, -0.15]
-        arm_name = 'psm3'
-        print('LOADING CONTROLLER FOR ', arm_name)
+        arm_name = "psm3"
+        print("LOADING CONTROLLER FOR ", arm_name)
         psm = PSM(simulation_manager, arm_name, add_joint_errors=False)
         if psm.is_present():
             T_psmtip_c = coordinate_frames.PSM3.T_tip_cam
@@ -250,14 +274,18 @@ if __name__ == "__main__":
             psm_arms.append(psm)
 
     if len(psm_arms) == 0:
-        print('No Valid PSM Arms Specified')
-        print('Exiting')
+        print("No Valid PSM Arms Specified")
+        print("Exiting")
 
     else:
-        leader_l = MTM('/MTML/')
-        leader_r = MTM('/MTMR/')
-        leader_l.set_base_frame(Frame(Rotation.RPY((3.14 - 0.8) / 2, 0, 0), Vector(0, 0, 0)))
-        leader_r.set_base_frame(Frame(Rotation.RPY((3.14 - 0.8) / 2, 0, 0), Vector(0, 0, 0)))
+        leader_l = MTM("/MTML/")
+        leader_r = MTM("/MTMR/")
+        leader_l.set_base_frame(
+            Frame(Rotation.RPY((3.14 - 0.8) / 2, 0, 0), Vector(0, 0, 0))
+        )
+        leader_r.set_base_frame(
+            Frame(Rotation.RPY((3.14 - 0.8) / 2, 0, 0), Vector(0, 0, 0))
+        )
         controller1 = ControllerInterface(leader_l, leader_r, psm1, psm2, cam)
         controllers.append(controller1)
 
@@ -270,4 +298,4 @@ if __name__ == "__main__":
                 rate.sleep()
         except Exception as e:
             print(e)
-            print('Exception! Goodbye')
+            print("Exception! Goodbye")

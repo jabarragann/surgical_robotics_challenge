@@ -61,7 +61,7 @@ class Options:
     run_psm_three = False
     run_ecm = True
     run_scene = True
-    namespace = '/CRTK'
+    namespace = "/CRTK"
     rate = 120
 
 
@@ -72,43 +72,71 @@ class PSMCRTKWrapper:
         self.arm = psm_arm.PSM(client, name, add_joint_errors=True)
         time.sleep(0.1)
 
-        self.measured_js_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_js', JointState,
-                                               queue_size=1)
+        self.measured_js_pub = rospy.Publisher(
+            namespace + "/" + name + "/" + "measured_js", JointState, queue_size=1
+        )
 
-        self.measured_cp_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cp', PoseStamped,
-                                               queue_size=1)
+        self.measured_cp_pub = rospy.Publisher(
+            namespace + "/" + name + "/" + "measured_cp", PoseStamped, queue_size=1
+        )
 
-        self.T_b_w_pub = rospy.Publisher(namespace + '/' + name + '/' + 'T_b_w', PoseStamped,
-                                         queue_size=1)
+        self.T_b_w_pub = rospy.Publisher(
+            namespace + "/" + name + "/" + "T_b_w", PoseStamped, queue_size=1
+        )
 
-        self.measured_cv_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cv', TwistStamped,
-                                               queue_size=1)
+        self.measured_cv_pub = rospy.Publisher(
+            namespace + "/" + name + "/" + "measured_cv", TwistStamped, queue_size=1
+        )
 
-        self.servo_jp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jp', JointState,
-                                             self.servo_jp_cb, queue_size=1)
+        self.servo_jp_sub = rospy.Subscriber(
+            namespace + "/" + name + "/" + "servo_jp",
+            JointState,
+            self.servo_jp_cb,
+            queue_size=1,
+        )
 
-        self.servo_jp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'move_jp', JointState,
-                                             self.move_jp_cb, queue_size=1)
+        self.servo_jp_sub = rospy.Subscriber(
+            namespace + "/" + name + "/" + "move_jp",
+            JointState,
+            self.move_jp_cb,
+            queue_size=1,
+        )
 
-        self.servo_jv_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jv', JointState,
-                                             self.servo_jv_cb, queue_size=1)
+        self.servo_jv_sub = rospy.Subscriber(
+            namespace + "/" + name + "/" + "servo_jv",
+            JointState,
+            self.servo_jv_cb,
+            queue_size=1,
+        )
 
-        self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_cp', PoseStamped,
-                                             self.servo_cp_cb, queue_size=1)
+        self.servo_cp_sub = rospy.Subscriber(
+            namespace + "/" + name + "/" + "servo_cp",
+            PoseStamped,
+            self.servo_cp_cb,
+            queue_size=1,
+        )
 
-        self.servo_cp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'move_cp', PoseStamped,
-                                             self.move_cp_cb, queue_size=1)
+        self.servo_cp_sub = rospy.Subscriber(
+            namespace + "/" + name + "/" + "move_cp",
+            PoseStamped,
+            self.move_cp_cb,
+            queue_size=1,
+        )
 
-        self.servo_jaw_jp_sub = rospy.Subscriber(namespace + '/' + name + '/jaw/' + 'servo_jp', JointState,
-                                                 self.servo_jaw_jp_cb, queue_size=1)
+        self.servo_jaw_jp_sub = rospy.Subscriber(
+            namespace + "/" + name + "/jaw/" + "servo_jp",
+            JointState,
+            self.servo_jaw_jp_cb,
+            queue_size=1,
+        )
 
         self._measured_js_msg = JointState()
         self._measured_js_msg.name = self.arm.get_joint_names()
 
         self._measured_cp_msg = PoseStamped()
-        self._measured_cp_msg.header.frame_id = name + '/baselink'
+        self._measured_cp_msg.header.frame_id = name + "/baselink"
         self._T_b_w_msg = PoseStamped()
-        self._T_b_w_msg.header.frame_id = 'world'
+        self._T_b_w_msg.header.frame_id = "world"
         self._jaw_angle = 0.5
 
     def servo_cp_cb(self, cp):
@@ -160,18 +188,24 @@ class ECMCRTKWrapper:
     def __init__(self, client, name, namespace):
         self.arm_name = name
         self.namespace = namespace
-        self.arm = ecm_arm.ECM(client, 'CameraFrame')
+        self.arm = ecm_arm.ECM(client, "CameraFrame")
         self._servo_jp_cmd = [0.0, 0.0, 0.0, 0.0]
         time.sleep(0.1)
 
-        self.measured_js_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_js', JointState,
-                                               queue_size=1)
+        self.measured_js_pub = rospy.Publisher(
+            namespace + "/" + name + "/" + "measured_js", JointState, queue_size=1
+        )
 
-        self.measured_cp_pub = rospy.Publisher(namespace + '/' + name + '/' + 'measured_cp', PoseStamped,
-                                               queue_size=1)
+        self.measured_cp_pub = rospy.Publisher(
+            namespace + "/" + name + "/" + "measured_cp", PoseStamped, queue_size=1
+        )
 
-        self.servo_jp_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jp', JointState,
-                                             self.servo_jp_cb, queue_size=1)
+        self.servo_jp_sub = rospy.Subscriber(
+            namespace + "/" + name + "/" + "servo_jp",
+            JointState,
+            self.servo_jp_cb,
+            queue_size=1,
+        )
 
         # self.servo_jv_sub = rospy.Subscriber(namespace + '/' + name + '/' + 'servo_jv', JointState,
         #                                      self.servo_jv_cb, queue_size=1)
@@ -183,10 +217,10 @@ class ECMCRTKWrapper:
         self._measured_js_msg.name = ["j0", "j1", "j2", "j3"]
 
         self._measured_cp_msg = PoseStamped()
-        self._measured_cp_msg.header.frame_id = name + '/baselink'
+        self._measured_cp_msg.header.frame_id = name + "/baselink"
 
         self._measured_cv_msg = TwistStamped()
-        self._measured_cv_msg.header.frame_id = 'world'
+        self._measured_cv_msg.header.frame_id = "world"
 
     # def servo_cp_cb(self, cp):
     #     frame = pose_to_frame(cp.pose)
@@ -215,15 +249,15 @@ class ECMCRTKWrapper:
 
 
 class SceneObjectType(Enum):
-    Needle=1
-    Entry1=2
-    Entry2=3
-    Entry3=4
-    Entry4=5
-    Exit1=6
-    Exit2=7
-    Exit3=8
-    Exit4=9
+    Needle = 1
+    Entry1 = 2
+    Entry2 = 3
+    Entry3 = 4
+    Entry4 = 5
+    Exit1 = 6
+    Exit2 = 7
+    Exit3 = 8
+    Exit4 = 9
 
 
 class SceneCRTKWrapper:
@@ -231,20 +265,58 @@ class SceneCRTKWrapper:
         self.namespace = namespace
         self.scene = scene.Scene(simulation_manager)
         self._scene_object_pubs = dict()
-        self._scene_object_pubs[SceneObjectType.Needle] = [None, self.scene.needle_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Entry1] = [None, self.scene.entry1_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Entry2] = [None, self.scene.entry2_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Entry3] = [None, self.scene.entry3_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Entry4] = [None, self.scene.entry4_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Exit1] = [None, self.scene.exit1_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Exit2] = [None, self.scene.exit2_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Exit3] = [None, self.scene.exit3_measured_cp, PoseStamped()]
-        self._scene_object_pubs[SceneObjectType.Exit4] = [None, self.scene.exit4_measured_cp, PoseStamped()]
+        self._scene_object_pubs[SceneObjectType.Needle] = [
+            None,
+            self.scene.needle_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Entry1] = [
+            None,
+            self.scene.entry1_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Entry2] = [
+            None,
+            self.scene.entry2_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Entry3] = [
+            None,
+            self.scene.entry3_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Entry4] = [
+            None,
+            self.scene.entry4_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Exit1] = [
+            None,
+            self.scene.exit1_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Exit2] = [
+            None,
+            self.scene.exit2_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Exit3] = [
+            None,
+            self.scene.exit3_measured_cp,
+            PoseStamped(),
+        ]
+        self._scene_object_pubs[SceneObjectType.Exit4] = [
+            None,
+            self.scene.exit4_measured_cp,
+            PoseStamped(),
+        ]
 
-        suffix = '/measured_cp'
+        suffix = "/measured_cp"
         for k, i in self._scene_object_pubs.items():
-            i[0] = rospy.Publisher(namespace + '/' + k.name + suffix, PoseStamped, queue_size=1)
-            i[2].header.frame_id = 'world'
+            i[0] = rospy.Publisher(
+                namespace + "/" + k.name + suffix, PoseStamped, queue_size=1
+            )
+            i[2].header.frame_id = "world"
 
     def publish_cs(self):
         for k, i in self._scene_object_pubs.items():
@@ -263,29 +335,38 @@ class SceneManager:
         self._components = []
         if options.run_psm_one is True:
             print("Launching CRTK-ROS Interface for PSM1 ")
-            self.psm1 = PSMCRTKWrapper(self.simulation_manager, 'psm1', options.namespace)
+            self.psm1 = PSMCRTKWrapper(
+                self.simulation_manager, "psm1", options.namespace
+            )
             self._components.append(self.psm1)
         if options.run_psm_two is True:
             print("Launching CRTK-ROS Interface for PSM2 ")
-            self.psm2 = PSMCRTKWrapper(self.simulation_manager, 'psm2', options.namespace)
+            self.psm2 = PSMCRTKWrapper(
+                self.simulation_manager, "psm2", options.namespace
+            )
             self._components.append(self.psm2)
         if options.run_psm_three is True:
             print("Launching CRTK-ROS Interface for PSM3 ")
-            self.psm3 = PSMCRTKWrapper(self.simulation_manager, 'psm3', options.namespace)
+            self.psm3 = PSMCRTKWrapper(
+                self.simulation_manager, "psm3", options.namespace
+            )
             self._components.append(self.psm3)
         if options.run_ecm:
             print("Launching CRTK-ROS Interface for ECM ")
-            self.ecm = ECMCRTKWrapper(self.simulation_manager, 'ecm', options.namespace)
+            self.ecm = ECMCRTKWrapper(self.simulation_manager, "ecm", options.namespace)
             self._components.append(self.ecm)
         if options.run_scene:
             print("Launching CRTK-ROS Interface for Scene ")
             self.scene = SceneCRTKWrapper(self.simulation_manager, options.namespace)
             self._components.append(self.scene)
 
-        self._task_3_init_sub = rospy.Subscriber('/CRTK/scene/task_3_setup/init',
-                                                Empty, self.task_3_setup_cb, queue_size=1)
+        self._task_3_init_sub = rospy.Subscriber(
+            "/CRTK/scene/task_3_setup/init", Empty, self.task_3_setup_cb, queue_size=1
+        )
 
-        self._task_3_setup_reaady_pub = rospy.Publisher('/CRTK/scene/task_3_setup/ready', Empty, queue_size=1)
+        self._task_3_setup_reaady_pub = rospy.Publisher(
+            "/CRTK/scene/task_3_setup/ready", Empty, queue_size=1
+        )
 
         self._rate = rospy.Rate(options.rate)
 
@@ -303,16 +384,30 @@ class SceneManager:
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--one', action='store', dest='run_psm_one', help='RUN PSM1', default=True)
-    parser.add_argument('--two', action='store', dest='run_psm_two', help='RUN PSM2', default=True)
-    parser.add_argument('--three', action='store', dest='run_psm_three', help='RUN PSM3', default=False)
-    parser.add_argument('--ecm', action='store', dest='run_ecm', help='RUN ECM', default=True)
-    parser.add_argument('--scene', action='store', dest='run_scene', help='RUN Scene', default=True)
-    parser.add_argument('--ns', action='store', dest='namespace', help='Namespace', default='/CRTK')
-    parser.add_argument('--rate', action='store', dest='rate', help='Rate of Publishing', default=120)
+    parser.add_argument(
+        "--one", action="store", dest="run_psm_one", help="RUN PSM1", default=True
+    )
+    parser.add_argument(
+        "--two", action="store", dest="run_psm_two", help="RUN PSM2", default=True
+    )
+    parser.add_argument(
+        "--three", action="store", dest="run_psm_three", help="RUN PSM3", default=False
+    )
+    parser.add_argument(
+        "--ecm", action="store", dest="run_ecm", help="RUN ECM", default=True
+    )
+    parser.add_argument(
+        "--scene", action="store", dest="run_scene", help="RUN Scene", default=True
+    )
+    parser.add_argument(
+        "--ns", action="store", dest="namespace", help="Namespace", default="/CRTK"
+    )
+    parser.add_argument(
+        "--rate", action="store", dest="rate", help="Rate of Publishing", default=120
+    )
 
     parsed_args = parser.parse_args()
-    print('Specified Arguments')
+    print("Specified Arguments")
     print(parsed_args)
     options = Options()
 

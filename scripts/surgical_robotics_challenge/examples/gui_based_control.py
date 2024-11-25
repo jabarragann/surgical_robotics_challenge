@@ -46,6 +46,7 @@ from surgical_robotics_challenge.kinematics.psmKinematics import *
 from surgical_robotics_challenge.simulation_manager import SimulationManager
 from surgical_robotics_challenge.psm_arm import PSM
 import time
+
 # import rospy
 from PyKDL import Frame, Rotation, Vector
 from argparse import ArgumentParser
@@ -73,7 +74,9 @@ class PSMController:
         # Move the Target Position Based on the GUI
         if self.arm.target_IK is not None:
             gui = self.GUI
-            T_ik_w = self.arm.get_T_b_w() * Frame(Rotation.RPY(gui.ro, gui.pi, gui.ya), Vector(gui.x, gui.y, gui.z))
+            T_ik_w = self.arm.get_T_b_w() * Frame(
+                Rotation.RPY(gui.ro, gui.pi, gui.ya), Vector(gui.x, gui.y, gui.z)
+            )
             self.arm.target_IK.set_pose(T_ik_w)
         if self.arm.target_FK is not None:
             ik_solution = self.arm.get_ik_solution()
@@ -83,8 +86,8 @@ class PSMController:
             self.arm.target_FK.set_pose(T_t_w)
 
     def run(self):
-            self.update_arm_pose()
-            self.update_visual_markers()
+        self.update_arm_pose()
+        self.update_visual_markers()
 
 
 class ECMController:
@@ -98,19 +101,37 @@ class ECMController:
         self._ecm.servo_jp(self._cam_gui.jnt_cmds)
 
     def run(self):
-            self.update_camera_pose()
+        self.update_camera_pose()
 
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('-c', action='store', dest='client_name', help='Client Name', default='ambf_client')
-    parser.add_argument('--one', action='store', dest='run_psm_one', help='Control PSM1', default=True)
-    parser.add_argument('--two', action='store', dest='run_psm_two', help='Control PSM2', default=True)
-    parser.add_argument('--three', action='store', dest='run_psm_three', help='Control PSM3', default=False)
-    parser.add_argument('--ecm', action='store', dest='run_ecm', help='Control ECM', default=True)
+    parser.add_argument(
+        "-c",
+        action="store",
+        dest="client_name",
+        help="Client Name",
+        default="ambf_client",
+    )
+    parser.add_argument(
+        "--one", action="store", dest="run_psm_one", help="Control PSM1", default=True
+    )
+    parser.add_argument(
+        "--two", action="store", dest="run_psm_two", help="Control PSM2", default=True
+    )
+    parser.add_argument(
+        "--three",
+        action="store",
+        dest="run_psm_three",
+        help="Control PSM3",
+        default=False,
+    )
+    parser.add_argument(
+        "--ecm", action="store", dest="run_ecm", help="Control ECM", default=True
+    )
 
     parsed_args = parser.parse_args()
-    print('Specified Arguments')
+    print("Specified Arguments")
     print(parsed_args)
 
     parsed_args.run_psm_one = get_boolean_from_opt(parsed_args.run_psm_one)
@@ -123,56 +144,67 @@ if __name__ == "__main__":
     controllers = []
 
     if parsed_args.run_psm_one is True:
-        arm_name = 'psm1'
+        arm_name = "psm1"
         psm = PSM(simulation_manager, arm_name)
         if psm.base is not None:
-            print('LOADING CONTROLLER FOR ', arm_name)
+            print("LOADING CONTROLLER FOR ", arm_name)
             # Initial Target Offset for PSM1
             # init_xyz = [0.1, -0.85, -0.15]
             init_xyz = [0, 0, -0.10]
             init_rpy = [3.14, 0, 1.57079]
-            gui = ObjectGUI(arm_name + '/baselink', init_xyz, init_rpy, 0.3, 10.0, 0.000001)
+            gui = ObjectGUI(
+                arm_name + "/baselink", init_xyz, init_rpy, 0.3, 10.0, 0.000001
+            )
             controller = PSMController(gui, psm)
             controllers.append(controller)
 
     if parsed_args.run_psm_two is True:
-        arm_name = 'psm2'
+        arm_name = "psm2"
         psm = PSM(simulation_manager, arm_name)
         if psm.base is not None:
-            print('LOADING CONTROLLER FOR ', arm_name)
+            print("LOADING CONTROLLER FOR ", arm_name)
             # Initial Target Offset for PSM2
             init_xyz = [0, 0.0, -0.10]
             init_rpy = [3.14, 0, 1.57079]
-            gui = ObjectGUI(arm_name + '/baselink', init_xyz, init_rpy, 0.3, 12, 0.000001)
+            gui = ObjectGUI(
+                arm_name + "/baselink", init_xyz, init_rpy, 0.3, 12, 0.000001
+            )
             controller = PSMController(gui, psm)
             controllers.append(controller)
 
     if parsed_args.run_psm_three is True:
-        arm_name = 'psm3'
+        arm_name = "psm3"
         psm = PSM(simulation_manager, arm_name)
         if psm.base is not None:
-            print('LOADING CONTROLLER FOR ', arm_name)
+            print("LOADING CONTROLLER FOR ", arm_name)
             # Initial Target Offset for PSM2
             init_xyz = [0, 0.0, -0.10]
             init_rpy = [3.14, 0, 1.57079]
-            gui = ObjectGUI(arm_name + '/baselink', init_xyz, init_rpy, 0.3, 3.14, 0.000001)
+            gui = ObjectGUI(
+                arm_name + "/baselink", init_xyz, init_rpy, 0.3, 3.14, 0.000001
+            )
             controller = PSMController(gui, psm)
             controllers.append(controller)
 
     if parsed_args.run_ecm is True:
-        arm_name = 'CameraFrame'
+        arm_name = "CameraFrame"
         ecm = ECM(simulation_manager, arm_name)
-        gui = JointGUI('ECM JP', 4, ["ecm j0", "ecm j1", "ecm j2", "ecm j3"], lower_lims=ecm.get_lower_limits(),
-                       upper_lims=ecm.get_upper_limits())
+        gui = JointGUI(
+            "ECM JP",
+            4,
+            ["ecm j0", "ecm j1", "ecm j2", "ecm j3"],
+            lower_lims=ecm.get_lower_limits(),
+            upper_lims=ecm.get_upper_limits(),
+        )
         controller = ECMController(gui, ecm)
         controllers.append(controller)
 
     if len(controllers) == 0:
-        print('No Valid PSM Arms Specified')
-        print('Exiting')
+        print("No Valid PSM Arms Specified")
+        print("Exiting")
 
     else:
-        while not simulation_manager.ral.is_shutdown(): 
+        while not simulation_manager.ral.is_shutdown():
             for cont in controllers:
                 cont.run()
             time.sleep(0.005)

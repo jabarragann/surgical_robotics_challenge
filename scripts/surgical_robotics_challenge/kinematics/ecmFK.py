@@ -59,14 +59,13 @@ class ECMKinematicData:
 
         # PSM DH Params
         # alpha | a | theta | d | offset | type | convention
-        self.kinematics = [DH(PI_2, 0, 0, 0, PI_2, JointType.REVOLUTE, Convention.MODIFIED),
-                           DH(-PI_2, 0, 0, 0, -PI_2,
-                              JointType.REVOLUTE, Convention.MODIFIED),
-                           DH(PI_2, 0, 0, 0, -self.L_rcc,
-                              JointType.PRISMATIC, Convention.MODIFIED),
-                           DH(0, 0, 0, self.L_scopelen, 0,
-                              JointType.REVOLUTE, Convention.MODIFIED),
-                           DH(PI, 0, 0, 0, PI_2, JointType.REVOLUTE, Convention.MODIFIED)]  # LAST DH TO COMPENSATION THE FRAME OFFSET
+        self.kinematics = [
+            DH(PI_2, 0, 0, 0, PI_2, JointType.REVOLUTE, Convention.MODIFIED),
+            DH(-PI_2, 0, 0, 0, -PI_2, JointType.REVOLUTE, Convention.MODIFIED),
+            DH(PI_2, 0, 0, 0, -self.L_rcc, JointType.PRISMATIC, Convention.MODIFIED),
+            DH(0, 0, 0, self.L_scopelen, 0, JointType.REVOLUTE, Convention.MODIFIED),
+            DH(PI, 0, 0, 0, PI_2, JointType.REVOLUTE, Convention.MODIFIED),
+        ]  # LAST DH TO COMPENSATION THE FRAME OFFSET
         self.lower_limits = [-1.5, -1.5, -0.1, -1.57]
         self.upper_limits = [1.5, 1.5, 0.1, 1.57]
 

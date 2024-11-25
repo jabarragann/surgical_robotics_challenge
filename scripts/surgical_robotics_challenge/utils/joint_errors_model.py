@@ -43,18 +43,21 @@
 # */
 # //==============================================================================
 import numpy as np
+
 # import rospy
 # from sensor_msgs.msg import ChannelFloat32
 from random import random
+
 
 class JointErrorsModel:
     def __init__(self, arm_name, num_joints):
         self._arm_name = arm_name
         self.num_jnts = num_joints
-        self._joint_errors = [0.] * num_joints
+        self._joint_errors = [0.0] * num_joints
         # Subscriber to set errors on the fly
-#        self._errors_sub = rospy.Subscriber('/ambf/env/' + arm_name + '/errors_model/set_errors',
-#                                            ChannelFloat32, self._errors_sub, queue_size=1)
+
+    #        self._errors_sub = rospy.Subscriber('/ambf/env/' + arm_name + '/errors_model/set_errors',
+    #                                            ChannelFloat32, self._errors_sub, queue_size=1)
 
     def _errors_sub(self, msg):
         errors = msg.values
@@ -69,9 +72,9 @@ class JointErrorsModel:
         :param max_errors_list:
         """
         for i in range(self.num_jnts):
-            rand_val = 2. * random() - 1.
+            rand_val = 2.0 * random() - 1.0
             self._joint_errors[i] = rand_val * max_errors_list[i]
-        print('Joint Errors: ', self._joint_errors)
+        print("Joint Errors: ", self._joint_errors)
 
     def set_errors(self, errors_list):
         """
@@ -80,18 +83,28 @@ class JointErrorsModel:
         """
         for i in range(len(errors_list)):
             self._joint_errors[i] = errors_list[i]
-        print('Joint Errors: ', self._joint_errors)
+        print("Joint Errors: ", self._joint_errors)
 
     def _size_check(self, q, joint_mask):
         qs_size = len(q)
         jnt_mask_size = len(joint_mask)
         if qs_size > self.num_jnts:
-            print("ERROR! size of joint positions: ", qs_size, " > num of joints: ", self.num_jnts)
+            print(
+                "ERROR! size of joint positions: ",
+                qs_size,
+                " > num of joints: ",
+                self.num_jnts,
+            )
             print("IGNORING! ")
             return False
 
         if jnt_mask_size > qs_size:
-            print("ERROR! JOINT MASK: ", joint_mask, " > size of joint positions: ", qs_size)
+            print(
+                "ERROR! JOINT MASK: ",
+                joint_mask,
+                " > size of joint positions: ",
+                qs_size,
+            )
             print("IGNORING! ")
             return False
 

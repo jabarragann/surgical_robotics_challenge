@@ -62,19 +62,19 @@ UDP_PORT = 8080
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(("", UDP_PORT))
 
-simulation_manager = SimulationManager('my_example_client')
+simulation_manager = SimulationManager("my_example_client")
 print(simulation_manager._client.get_obj_names())
 w = simulation_manager.get_world_handle()
 w.reset_bodies()
 tool_id = ToolType.Default
-psm1 = PSM(simulation_manager, 'psm1', tool_id=tool_id)
-psm2 = PSM(simulation_manager, 'psm2', tool_id=tool_id)
-ecm = ECM(simulation_manager, 'CameraFrame')
-psms = {"left": psm1,
-            "right": psm2}
+psm1 = PSM(simulation_manager, "psm1", tool_id=tool_id)
+psm2 = PSM(simulation_manager, "psm2", tool_id=tool_id)
+ecm = ECM(simulation_manager, "CameraFrame")
+psms = {"left": psm1, "right": psm2}
 
 # The PSMs can be controlled either in joint space or cartesian space. For the
 # latter, the `servo_cp` command sets the end-effector pose w.r.t its Base frame.
+
 
 def signal_handler(signum, frame):
     print("\nCtrl+C clicked!")
@@ -83,18 +83,21 @@ def signal_handler(signum, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+
 def set_psm_translation(psm_info, psm):
-    if psm == 'right':
-        return Vector(psm_info['x'] + 0.1, psm_info['y'] + 0.5, psm_info['z'] - 1.3)
-    return Vector(psm_info['x'], psm_info['y'], psm_info['z'] - 1.3)
+    if psm == "right":
+        return Vector(psm_info["x"] + 0.1, psm_info["y"] + 0.5, psm_info["z"] - 1.3)
+    return Vector(psm_info["x"], psm_info["y"], psm_info["z"] - 1.3)
+
 
 def set_end_effector(psm_info, psm_end_effector, psm, end_effector):
-    if psm == 'right' and psm_info['end_effector'] != end_effector:
-        psm_end_effector.set_jaw_angle(psm_info['end_effector'])
-        return psm_info['end_effector']
-    elif psm == 'left' and psm_info['end_effector'] != end_effector_left:
-        psm_end_effector.set_jaw_angle(psm_info['end_effector'])
-        return psm_info['end_effector']
+    if psm == "right" and psm_info["end_effector"] != end_effector:
+        psm_end_effector.set_jaw_angle(psm_info["end_effector"])
+        return psm_info["end_effector"]
+    elif psm == "left" and psm_info["end_effector"] != end_effector_left:
+        psm_end_effector.set_jaw_angle(psm_info["end_effector"])
+        return psm_info["end_effector"]
+
 
 print("Starting TeleOp")
 print("Comment out pose print statements for better performance")
@@ -108,24 +111,41 @@ translation_right = Vector(0.1, 0.5, -1.3)
 translation_left = Vector(0, 0, -1.3)
 
 while not rospy.is_shutdown():
-    data,_ = sock.recvfrom(1024)
+    data, _ = sock.recvfrom(1024)
     if data is not None:
         print(data)
         psm_info = json.loads(data)
-        if psm_info['camera'] == 'true':
-            ecm.servo_jp([psm_info['yaw'], psm_info['pitch'], psm_info['insert'], psm_info['roll']])
+        if psm_info["camera"] == "true":
+            ecm.servo_jp(
+                [
+                    psm_info["yaw"],
+                    psm_info["pitch"],
+                    psm_info["insert"],
+                    psm_info["roll"],
+                ]
+            )
         else:
-            psm = psms[psm_info['psm']]
-            if psm_info['psm'] == 'right':
-                cmd_rpy = Rotation.RPY(-1 * psm_info['yaw'] + np.pi, psm_info['pitch'], psm_info['roll'] - (np.pi / 4))
-                if psm_info['transformation'] == 'true':
-                    translation_right = set_psm_translation(psm_info, 'right')
+            psm = psms[psm_info["psm"]]
+            if psm_info["psm"] == "right":
+                cmd_rpy = Rotation.RPY(
+                    -1 * psm_info["yaw"] + np.pi,
+                    psm_info["pitch"],
+                    psm_info["roll"] - (np.pi / 4),
+                )
+                if psm_info["transformation"] == "true":
+                    translation_right = set_psm_translation(psm_info, "right")
                 psm.servo_cp(Frame(cmd_rpy, translation_right))
-                end_effector_right = set_end_effector(psm_info, psm, 'right', end_effector_right)
+                end_effector_right = set_end_effector(
+                    psm_info, psm, "right", end_effector_right
+                )
             else:
-                cmd_rpy = Rotation.RPY(psm_info['pitch'], psm_info['yaw'], psm_info['roll'])
-                if psm_info['transformation'] == 'true':
-                    translation_left = set_psm_translation(psm_info, 'left')
+                cmd_rpy = Rotation.RPY(
+                    psm_info["pitch"], psm_info["yaw"], psm_info["roll"]
+                )
+                if psm_info["transformation"] == "true":
+                    translation_left = set_psm_translation(psm_info, "left")
                 psm.servo_cp(Frame(cmd_rpy, translation_left))
-                end_effector_left = set_end_effector(psm_info, psm, 'left', end_effector_left)
+                end_effector_left = set_end_effector(
+                    psm_info, psm, "left", end_effector_left
+                )
     rate.sleep()

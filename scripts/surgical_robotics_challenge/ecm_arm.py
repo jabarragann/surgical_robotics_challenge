@@ -46,6 +46,7 @@ from surgical_robotics_challenge.kinematics.ecmFK import *
 from surgical_robotics_challenge.utils.utilities import cartesian_interpolate_step
 from PyKDL import Frame, Rotation, Vector, Twist
 import time
+
 # import rospy
 from threading import Thread
 
@@ -65,7 +66,7 @@ class ECM:
         self._num_joints = 5
         self._update_camera_pose()
         self._T_c_w_init = self._T_c_w
-        self._measured_jp = np.array([.0, .0, .0, .0])
+        self._measured_jp = np.array([0.0, 0.0, 0.0, 0.0])
         self._measured_cp = None
         self._max_vel = 0.002
         self._T_cmd = Frame()
@@ -85,7 +86,9 @@ class ECM:
                 if self._force_exit_thread:
                     break
 
-                T_step, done = cartesian_interpolate_step(self._measured_cp, self._T_c_w_cmd, self._max_vel)
+                T_step, done = cartesian_interpolate_step(
+                    self._measured_cp, self._T_c_w_cmd, self._max_vel
+                )
                 self._T_cmd.p = self._measured_cp.p + T_step.p
                 self._T_cmd.M = self._measured_cp.M * T_step.M
                 self._measured_cp = self._T_cmd
@@ -170,7 +173,7 @@ class ECM:
         j2 = jp[2]
         j3 = jp[3]
         cmd = [j0, j1, j2, j3, 0.0]
-        T_t_c = convert_mat_to_frame(compute_FK(cmd, 5)) # Tip if camera frame
+        T_t_c = convert_mat_to_frame(compute_FK(cmd, 5))  # Tip if camera frame
         self.servo_cp(self._T_c_w_init * T_t_c)
 
     def measured_cp(self):
@@ -178,4 +181,3 @@ class ECM:
 
     def measured_jp(self):
         return self._measured_jp
-

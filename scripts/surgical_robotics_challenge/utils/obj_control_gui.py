@@ -43,6 +43,7 @@
 # */
 # //==============================================================================
 import sys
+
 if sys.version_info[0] >= 3:
     from tkinter import *
 else:
@@ -50,7 +51,15 @@ else:
 
 
 class ObjectGUI:
-    def __init__(self, obj_name, initial_xyz=[0, 0, 0], initial_rpy=[0, 0, 0], range_xyz=1.0, range_rpy=3.14, resolution=0.0001):
+    def __init__(
+        self,
+        obj_name,
+        initial_xyz=[0, 0, 0],
+        initial_rpy=[0, 0, 0],
+        range_xyz=1.0,
+        range_rpy=3.14,
+        resolution=0.0001,
+    ):
         self.App = Tk()
         self.initial_xyz = initial_xyz
         self.initial_rpy = initial_rpy
@@ -149,15 +158,23 @@ class ObjectGUI:
         # Define Sliders and Labels
 
         row_count = 0
-        obj_label = Label(app, text='CONTROLLING OBJECT: ' + obj_name, fg="Red")
+        obj_label = Label(app, text="CONTROLLING OBJECT: " + obj_name, fg="Red")
         obj_label.grid(row=row_count, columnspan=2, pady=5)
 
         row_count = row_count + 1
 
         min_v = self.initial_xyz[0] - self.range_xyz / 2.0
         max_v = self.initial_xyz[0] + self.range_xyz / 2.0
-        self.x_slider = Scale(app, from_=min_v, to=max_v, resolution=self.resolution, width=_width, length=_length, orient=HORIZONTAL,
-                         command=self.x_cb)
+        self.x_slider = Scale(
+            app,
+            from_=min_v,
+            to=max_v,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.x_cb,
+        )
         self.x_slider.grid(row=row_count, column=1)
 
         self.x_slider.set(self.x)
@@ -171,8 +188,16 @@ class ObjectGUI:
 
         min_v = self.initial_xyz[1] - self.range_xyz / 2.0
         max_v = self.initial_xyz[1] + self.range_xyz / 2.0
-        self.y_slider = Scale(app, from_=min_v, to=max_v, resolution=self.resolution, width=_width, length=_length, orient=HORIZONTAL,
-                         command=self.y_cb)
+        self.y_slider = Scale(
+            app,
+            from_=min_v,
+            to=max_v,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.y_cb,
+        )
         self.y_slider.grid(row=row_count, column=1)
 
         self.y_slider.set(self.y)
@@ -185,8 +210,16 @@ class ObjectGUI:
         row_count = row_count + 1
         min_v = self.initial_xyz[2] - self.range_xyz / 2.0
         max_v = self.initial_xyz[2] + self.range_xyz / 2.0
-        self.z_slider = Scale(app, from_=min_v, to=max_v, resolution=self.resolution, width=_width, length=_length, orient=HORIZONTAL,
-                         command=self.z_cb)
+        self.z_slider = Scale(
+            app,
+            from_=min_v,
+            to=max_v,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.z_cb,
+        )
         self.z_slider.grid(row=row_count, column=1)
         self.z_slider.set(self.z)
 
@@ -209,8 +242,16 @@ class ObjectGUI:
 
         min_v = self.initial_rpy[0] - self.range_rpy / 2.0
         max_v = self.initial_rpy[0] + self.range_rpy / 2.0
-        self.ro_slider = Scale(app, from_=min_v, to=max_v, resolution=self.resolution, width=_width, length=_length, orient=HORIZONTAL,
-                               command=self.roll_cb)
+        self.ro_slider = Scale(
+            app,
+            from_=min_v,
+            to=max_v,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.roll_cb,
+        )
         self.ro_slider.grid(row=row_count, column=1)
         self.ro_slider.set(self.ro)
 
@@ -223,8 +264,16 @@ class ObjectGUI:
 
         min_v = self.initial_rpy[1] - self.range_rpy / 2.0
         max_v = self.initial_rpy[1] + self.range_rpy / 2.0
-        self.pi_slider = Scale(app, from_=min_v, to=max_v, resolution=self.resolution, width=_width, length=_length, orient=HORIZONTAL,
-                               command=self.pitch_cb)
+        self.pi_slider = Scale(
+            app,
+            from_=min_v,
+            to=max_v,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.pitch_cb,
+        )
         self.pi_slider.grid(row=row_count, column=1)
         self.pi_slider.set(self.pi)
 
@@ -237,8 +286,16 @@ class ObjectGUI:
 
         min_v = self.initial_rpy[2] - self.range_rpy / 2.0
         max_v = self.initial_rpy[2] + self.range_rpy / 2.0
-        self.ya_slider = Scale(app, from_=min_v, to=max_v, resolution=self.resolution, width=_width, length=_length, orient=HORIZONTAL,
-                               command=self.yaw_cb)
+        self.ya_slider = Scale(
+            app,
+            from_=min_v,
+            to=max_v,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.yaw_cb,
+        )
         self.ya_slider.grid(row=row_count, column=1)
         self.ya_slider.set(self.ya)
 
@@ -269,9 +326,16 @@ class ObjectGUI:
 
         row_count = row_count + 1
 
-        self.gr_slider = Scale(app, from_=0, to=1.0, resolution=self.resolution, width=_width, length=_length,
-                               orient=HORIZONTAL,
-                               command=self.gr_cb)
+        self.gr_slider = Scale(
+            app,
+            from_=0,
+            to=1.0,
+            resolution=self.resolution,
+            width=_width,
+            length=_length,
+            orient=HORIZONTAL,
+            command=self.gr_cb,
+        )
         self.gr_slider.grid(row=row_count, column=1)
         self.gr_slider.set(0.5)
 

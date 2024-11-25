@@ -5,7 +5,10 @@ from surgical_robotics_challenge.ecm_arm import ECM
 from surgical_robotics_challenge.scene import Scene
 import rospy
 from sensor_msgs.msg import Image
-from surgical_robotics_challenge.task_completion_report import TaskCompletionReport, PoseStamped
+from surgical_robotics_challenge.task_completion_report import (
+    TaskCompletionReport,
+    PoseStamped,
+)
 from surgical_robotics_challenge.kinematics.psmKinematics import ToolType
 
 from PyKDL import Frame, Rotation, Vector
@@ -18,7 +21,7 @@ import time
 
 def add_break(s):
     time.sleep(s)
-    print('-------------')
+    print("-------------")
 
 
 class ImageSub:
@@ -31,26 +34,26 @@ class ImageSub:
 
 
 # Create an instance of the client
-simulation_manager = SimulationManager('my_example_client')
+simulation_manager = SimulationManager("my_example_client")
 time.sleep(0.5)
 world_handle = simulation_manager.get_world_handle()
 
 # Get a handle to PSM1
-psm1 = PSM(simulation_manager, 'psm1')
+psm1 = PSM(simulation_manager, "psm1")
 # Get a handle  to PSM2
-psm2 = PSM(simulation_manager, 'psm2')
+psm2 = PSM(simulation_manager, "psm2")
 # Get a handle to ECM
-ecm = ECM(simulation_manager, 'CameraFrame')
+ecm = ECM(simulation_manager, "CameraFrame")
 # Get a handle to scene to access its elements, i.e. needle and entry / exit points
 scene = Scene(simulation_manager)
 # Create an instance of task completion report with you team name
-task_report = TaskCompletionReport(team_name='my_team_name')
+task_report = TaskCompletionReport(team_name="my_team_name")
 # Small sleep to let the handles initialize properly
 add_break(0.5)
 
 # Add you camera stream subs
-cameraL_sub = ImageSub('/ambf/env/cameras/cameraL/ImageData')
-cameraR_sub = ImageSub('/ambf/env/cameras/cameraR/ImageData')
+cameraL_sub = ImageSub("/ambf/env/cameras/cameraL/ImageData")
+cameraR_sub = ImageSub("/ambf/env/cameras/cameraR/ImageData")
 
 print("Resetting the world")
 world_handle.reset()
@@ -62,27 +65,27 @@ add_break(3.0)
 
 # The PSMs can be controlled either in joint space or cartesian space. For the
 # latter, the `servo_cp` command sets the end-effector pose w.r.t its Base frame.
-T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi/2.), Vector(0., 0., -0.13))
+T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi / 2.0), Vector(0.0, 0.0, -0.13))
 print("Setting the end-effector frame of PSM1 w.r.t Base", T_e_b)
 psm1.servo_cp(T_e_b)
 psm1.set_jaw_angle(0.2)
 add_break(1.0)
-T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi/4.), Vector(0.01, -0.01, -0.13))
+T_e_b = Frame(Rotation.RPY(np.pi, 0, np.pi / 4.0), Vector(0.01, -0.01, -0.13))
 print("Setting the end-effector frame of PSM2 w.r.t Base", T_e_b)
 psm2.servo_cp(T_e_b)
 psm2.set_jaw_angle(0.5)
 add_break(1.0)
 # Controlling in joint space
-jp = [0., 0., 0.135, 0.2, 0.3, 0.2]
+jp = [0.0, 0.0, 0.135, 0.2, 0.3, 0.2]
 print("Setting PSM1 joint positions to ", jp)
 psm1.servo_jp(jp)
 add_break(1.0)
-jp = [0., 0., 0.135, -0.2, -0.3, -0.2]
+jp = [0.0, 0.0, 0.135, -0.2, -0.3, -0.2]
 print("Setting PSM2 joint positions to ", jp)
 psm2.servo_jp(jp)
 add_break(1.0)
 # The ECM should always be controlled using its joint interface
-jp = [0., 0.2, -0.03, 0.2]
+jp = [0.0, 0.2, -0.03, 0.2]
 print("Setting ECM joint positions to ", jp)
 ecm.servo_jp(jp)
 add_break(5.0)
@@ -110,7 +113,7 @@ add_break(1.0)
 # When you are done with each task, you can report your results.
 my_found_needle_pose = PoseStamped()
 my_found_needle_pose.pose.orientation.w = 1.0
-my_found_needle_pose.header.frame_id = 'CameraFrame'
+my_found_needle_pose.header.frame_id = "CameraFrame"
 task_report.task_1_report(my_found_needle_pose)
 
 # For task 2, report when you think you are done
@@ -120,16 +123,24 @@ task_report.task_2_report(complete=True)
 task_report.task_3_report(complete=True)
 
 # Query Image Subs
-print('cameraL Image Data Size: ', cameraL_sub.image_msg.height, cameraL_sub.image_msg.width)
-print('cameraR Image Data Size: ', cameraR_sub.image_msg.height, cameraR_sub.image_msg.width)
+print(
+    "cameraL Image Data Size: ",
+    cameraL_sub.image_msg.height,
+    cameraL_sub.image_msg.width,
+)
+print(
+    "cameraR Image Data Size: ",
+    cameraR_sub.image_msg.height,
+    cameraR_sub.image_msg.width,
+)
 
 # Reset ECM Back to Start
 print("Resetting ECM pose")
-ecm.servo_jp([0., 0., 0., 0.])
+ecm.servo_jp([0.0, 0.0, 0.0, 0.0])
 add_break(1.0)
 
 # Open the jaw angle to drop the needle
 psm2.set_jaw_angle(0.8)
 add_break(1.0)
 
-print('END')
+print("END")

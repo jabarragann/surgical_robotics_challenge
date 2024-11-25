@@ -93,7 +93,7 @@ class Scene:
 
     def task_3_setup_init(self, psm):
         ni = NeedleInitialization(self.simulation_manager)
-        psm_tip = self.simulation_manager.get_obj_handle(psm.name + '/toolyawlink')
+        psm_tip = self.simulation_manager.get_obj_handle(psm.name + "/toolyawlink")
         # First we shall move the PSM to its initial pose using joint commands OR pose command
         psm.servo_jp([-0.4, -0.22, 0.139, -1.64, -0.37, -0.11])
         # Open the Jaws

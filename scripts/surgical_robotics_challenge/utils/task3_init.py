@@ -54,9 +54,11 @@ from surgical_robotics_challenge.utils import coordinate_frames
 class NeedleInitialization:
     def __init__(self, simulation_manager):
         self.T_needle_psmtip = coordinate_frames.Needle.T_center_psmtip
-        self.T_needle_psmtip_far = self.T_needle_psmtip * Frame(Rotation.RPY(0., 0., 0.), Vector(0., 0., -0.010))
+        self.T_needle_psmtip_far = self.T_needle_psmtip * Frame(
+            Rotation.RPY(0.0, 0.0, 0.0), Vector(0.0, 0.0, -0.010)
+        )
 
-        self.needle = simulation_manager.get_obj_handle('Needle')
+        self.needle = simulation_manager.get_obj_handle("Needle")
         time.sleep(1.0)
         self._release = False
         self._reached = False
@@ -65,10 +67,10 @@ class NeedleInitialization:
         return self.T_needle_psmtip
 
     def move_to(self, psm_tip):
-        print('Moving Needle to PSM 2 Tip')
+        print("Moving Needle to PSM 2 Tip")
         self._release = False
         if psm_tip is None:
-            print('Not a valid link, returning')
+            print("Not a valid link, returning")
             return
         T_nINw = self.needle.get_pose()
         T_tINw = psm_tip.get_pose()
@@ -105,11 +107,10 @@ class NeedleInitialization:
         self._reached = True
 
     def release(self):
-        print('Releasing Needle')
+        print("Releasing Needle")
         self._release = True
         self.needle.set_force(Vector(0, 0, 0))
         self.needle.set_torque(Vector(0, 0, 0))
 
     def has_reached(self):
         return self._reached
-

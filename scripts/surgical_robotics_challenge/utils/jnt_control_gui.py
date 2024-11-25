@@ -45,6 +45,7 @@
 
 import functools
 import sys
+
 if sys.version_info[0] >= 3:
     from tkinter import *
 else:
@@ -52,7 +53,15 @@ else:
 
 
 class JointGUI:
-    def __init__(self, obj_name, num_jnts, jnt_names, resolution=0.0001, lower_lims=None, upper_lims=None):
+    def __init__(
+        self,
+        obj_name,
+        num_jnts,
+        jnt_names,
+        resolution=0.0001,
+        lower_lims=None,
+        upper_lims=None,
+    ):
         self.App = Tk()
         self.jnt_cmds = []
         self.jnt_mode = []
@@ -61,9 +70,9 @@ class JointGUI:
         self.obj_name = obj_name
         self.resolution = resolution
         if not lower_lims:
-            lower_lims = [-1. for i in range(num_jnts)]
+            lower_lims = [-1.0 for i in range(num_jnts)]
         if not upper_lims:
-            upper_lims = [1. for i in range(num_jnts)]
+            upper_lims = [1.0 for i in range(num_jnts)]
         self.create_gui(self.App, num_jnts, jnt_names, lower_lims, upper_lims)
 
     def get_app_handle(self):
@@ -92,7 +101,7 @@ class JointGUI:
     # Define Callbacks for Tkinter GUI Sliders
     def reset_scale_cb(self):
         for cs in self.cmd_scales:
-            cs.set('1.0')
+            cs.set("1.0")
 
     # Define Callbacks for Tkinter GUI Sliders
     def reset_cmds_cb(self):
@@ -105,54 +114,75 @@ class JointGUI:
         _length = 300
         check_buttons = []
         self.jnt_cmds = [0.0] * num_jnts
-        self.jnt_mode = [0]*num_jnts
-        self.cmd_scales = [0]*num_jnts
+        self.jnt_mode = [0] * num_jnts
+        self.cmd_scales = [0] * num_jnts
 
-        obj_label = Label(app, text='CONTROLLING OBJECT: ' +
-                          self.obj_name, fg="Red")
+        obj_label = Label(app, text="CONTROLLING OBJECT: " + self.obj_name, fg="Red")
         obj_label.grid(row=0, columnspan=2, pady=5)
 
-        for i in range(2*num_jnts):
+        for i in range(2 * num_jnts):
             if i % 2 == 0:
                 sv = StringVar()
                 scale_input = Entry(app, textvariable=sv)
                 scale_input.grid(row=i, column=0)
                 sv.set("1.0")
-                jidx = int(i/2)
+                jidx = int(i / 2)
                 self.cmd_scales[jidx] = sv
 
-                slider = Scale(app, from_=lower_lims[jidx], to=upper_lims[jidx], resolution=self.resolution, orient=HORIZONTAL,
-                               command=functools.partial(self.slider_cb, idx=jidx))
+                slider = Scale(
+                    app,
+                    from_=lower_lims[jidx],
+                    to=upper_lims[jidx],
+                    resolution=self.resolution,
+                    orient=HORIZONTAL,
+                    command=functools.partial(self.slider_cb, idx=jidx),
+                )
                 slider.grid(row=i, column=1)
                 self._cmd_sliders.append(slider)
 
                 v = IntVar(value=0)
-                eff_cb = Radiobutton(app, text="Effort", variable=v, indicatoron=False, value=0,
-                                     command=functools.partial(self.effort_button_cb, idx=jidx))
+                eff_cb = Radiobutton(
+                    app,
+                    text="Effort",
+                    variable=v,
+                    indicatoron=False,
+                    value=0,
+                    command=functools.partial(self.effort_button_cb, idx=jidx),
+                )
                 eff_cb.grid(row=i, column=2)
 
-                pos_cb = Radiobutton(app, text="Position", variable=v, indicatoron=False, value=1,
-                                     command=functools.partial(self.position_button_cb, idx=jidx))
+                pos_cb = Radiobutton(
+                    app,
+                    text="Position",
+                    variable=v,
+                    indicatoron=False,
+                    value=1,
+                    command=functools.partial(self.position_button_cb, idx=jidx),
+                )
                 pos_cb.grid(row=i, column=3)
 
-                vel_cb = Radiobutton(app, text="Velocity", variable=v, indicatoron=False, value=2,
-                                     command=functools.partial(self.velocity_button_cb, idx=jidx))
+                vel_cb = Radiobutton(
+                    app,
+                    text="Velocity",
+                    variable=v,
+                    indicatoron=False,
+                    value=2,
+                    command=functools.partial(self.velocity_button_cb, idx=jidx),
+                )
                 vel_cb.grid(row=i, column=4)
 
             else:
-                scale_label = Label(app, text='Cmd ('+str(jidx) + ') Scale')
+                scale_label = Label(app, text="Cmd (" + str(jidx) + ") Scale")
                 scale_label.grid(row=i, column=0)
 
                 label = Label(app, text=jnt_names[jidx])
                 label.grid(row=i, column=1)
 
-        reset_scale_btn = Button(
-            app, text='Reset Scales', command=self.reset_scale_cb)
-        reset_scale_btn.grid(row=num_jnts*2, column=0)
+        reset_scale_btn = Button(app, text="Reset Scales", command=self.reset_scale_cb)
+        reset_scale_btn.grid(row=num_jnts * 2, column=0)
 
-        reset_cmd_btn = Button(app, text='Reset Cmds',
-                               command=self.reset_cmds_cb)
-        reset_cmd_btn.grid(row=num_jnts*2, column=1)
+        reset_cmd_btn = Button(app, text="Reset Cmds", command=self.reset_cmds_cb)
+        reset_cmd_btn.grid(row=num_jnts * 2, column=1)
 
     def set_limit(self, idx, lower_limit, upper_limit):
         if idx > (len(self.cmd_scales) - 1):
